@@ -91,14 +91,14 @@ export function generatePDF(data: PDFExportData): void {
         alternateRowStyles: {
             fillColor: [245, 245, 250],
         },
-        margin: { left: 14, right: 14 },
+        margin: { left: 14, right: 14, bottom: 25 },
     });
 
     // Get Y position after table
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
     // ===== TQB CALCULATION SUMMARY =====
-    if (yPos > 240) {
+    if (yPos > 230) {
         doc.addPage();
         yPos = 20;
     }
@@ -192,7 +192,7 @@ export function generatePDF(data: PDFExportData): void {
         alternateRowStyles: {
             fillColor: [245, 245, 250],
         },
-        margin: { left: 14, right: 14 },
+        margin: { left: 14, right: 14, bottom: 25 },
     });
 
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
@@ -251,14 +251,14 @@ export function generatePDF(data: PDFExportData): void {
         alternateRowStyles: {
             fillColor: [245, 245, 250],
         },
-        margin: { left: 14, right: 14 },
+        margin: { left: 14, right: 14, bottom: 25 },
     });
 
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
     // ===== FORMULAS REFERENCE =====
     // Check if we need a new page
-    if (yPos > 250) {
+    if (yPos > 230) {
         doc.addPage();
         yPos = 20;
     }
@@ -278,15 +278,25 @@ export function generatePDF(data: PDFExportData): void {
     doc.text(t.rankings.formula.erText, 14, yPos);
     yPos += 15;
 
-    // ===== FOOTER =====
-    doc.setFontSize(8);
-    doc.setFont('helvetica', 'italic');
-    doc.setTextColor(...textMuted);
+    // ===== FOOTER & PAGE NUMBERS =====
+    const totalPages = doc.getNumberOfPages();
+    const footerY = 278;
 
-    const footerY = 275;
-    doc.text(t.common.footer.version, pageWidth / 2, footerY, { align: 'center' });
-    doc.text(t.common.footer.dev, pageWidth / 2, footerY + 5, { align: 'center' });
-    doc.text(t.common.footer.rights, pageWidth / 2, footerY + 10, { align: 'center' });
+    for (let i = 1; i <= totalPages; i++) {
+        doc.setPage(i);
+
+        // Footer text (centered)
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...textMuted);
+        doc.text(t.common.footer.version, pageWidth / 2, footerY, { align: 'center' });
+        doc.text(t.common.footer.dev, pageWidth / 2, footerY + 4, { align: 'center' });
+        doc.text(t.common.footer.rights, pageWidth / 2, footerY + 8, { align: 'center' });
+
+        // Page number (bottom right)
+        doc.setFont('helvetica', 'normal');
+        doc.text(`${i}`, pageWidth - 14, footerY + 8, { align: 'right' });
+    }
 
     // Save PDF
     const sanitizedName = data.tournamentName

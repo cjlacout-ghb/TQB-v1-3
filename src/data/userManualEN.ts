@@ -128,20 +128,15 @@ When multiple teams have the same win-loss record, the following criteria are ap
 
 ---
 
-**1. Win-Loss Record**
-Teams are first sorted by their total wins.
+**1. Win-Loss Record and Head-to-Head Results**
+Teams are first sorted by their overall record. For teams with identical records:
+- **2 teams**: The winner of their direct matchup ranks higher.
+- **3+ teams**: The team with the best record in games among ONLY the tied teams ranks higher.
+- If circular (A beat B, B beat C, C beat A), proceed to TQB.
 
 ---
 
-**2. Head-to-Head Results**
-For teams with identical records:
-- **2 teams**: The winner of their direct matchup ranks higher
-- **3+ teams**: The team with the best record in games among ONLY the tied teams ranks higher
-- If circular (A beat B, B beat C, C beat A), proceed to TQB
-
----
-
-**3. Team Quality Balance (TQB)**
+**2. Team Quality Balance (TQB)**
 
 **Formula:**
 \`\`\`
@@ -155,7 +150,7 @@ TQB = (Runs Scored ÷ Innings at Bat) - (Runs Allowed ÷ Innings on Defense)
 
 ---
 
-**4. Earned Runs TQB (ER-TQB)**
+**3. Earned Runs TQB (ER-TQB)**
 
 Only used if TQB doesn't resolve ties.
 
@@ -170,13 +165,13 @@ ER-TQB = (Earned Runs Scored ÷ Innings at Bat) - (Earned Runs Allowed ÷ Inning
 
 ---
 
-**5. Batting Average**
+**4. Batting Average**
 If ER-TQB doesn't resolve ties, compare batting averages among tied teams.
 *Note: This requires manual review*
 
 ---
 
-**6. Coin Toss**
+**5. Coin Toss**
 As a last resort, ties are broken by coin toss.
 *Note: This requires manual execution*
     `,

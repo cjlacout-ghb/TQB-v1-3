@@ -128,20 +128,15 @@ Cuando múltiples equipos tienen el mismo récord de victorias-derrotas, se apli
 
 ---
 
-**1. Récord de Victorias-Derrotas**
-Los equipos se ordenan primero por su total de victorias.
+**1. Récord de Victorias-Derrotas y Resultados Directos (Head-to-Head)**
+Los equipos se clasifican primero por su récord general. Para equipos con récords idénticos:
+- **2 equipos**: El ganador de su enfrentamiento directo se clasifica más alto.
+- **3+ equipos**: El equipo con mejor récord en partidos SOLO entre los equipos empatados se clasifica más alto.
+- Si es circular (A venció a B, B venció a C, C venció a A), se procede al TQB.
 
 ---
 
-**2. Resultados Directos (Head-to-Head)**
-Para equipos con récords idénticos:
-- **2 equipos**: El ganador de su enfrentamiento directo se clasifica más alto
-- **3+ equipos**: El equipo con mejor récord en partidos SOLO entre los equipos empatados se clasifica más alto
-- Si es circular (A venció a B, B venció a C, C venció a A), se procede al TQB
-
----
-
-**3. Balance de Calidad del Equipo (TQB)**
+**2. Balance de Calidad del Equipo (TQB)**
 
 **Fórmula:**
 \`\`\`
@@ -155,7 +150,7 @@ TQB = (Carreras Anotadas ÷ Entradas al Bate) - (Carreras Permitidas ÷ Entradas
 
 ---
 
-**4. TQB de Carreras Limpias (ER-TQB)**
+**3. TQB de Carreras Limpias (ER-TQB)**
 
 Solo se usa si el TQB no resuelve los empates.
 
@@ -170,13 +165,13 @@ ER-TQB = (Carreras Limpias Anotadas ÷ Entradas al Bate) - (Carreras Limpias Per
 
 ---
 
-**5. Promedio de Bateo**
+**4. Promedio de Bateo**
 Si el ER-TQB no resuelve los empates, se comparan los promedios de bateo entre equipos empatados.
 *Nota: Esto requiere revisión manual*
 
 ---
 
-**6. Lanzamiento de Moneda**
+**5. Lanzamiento de Moneda**
 Como último recurso, los empates se resuelven por lanzamiento de moneda.
 *Nota: Esto requiere ejecución manual*
     `,

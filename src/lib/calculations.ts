@@ -346,18 +346,18 @@ export function formatTQBValue(value: number): string {
 export function getTieBreakMethodText(method: TieBreakMethod, lang: 'en' | 'es' = 'en'): string {
     const texts = {
         en: {
-            WIN_LOSS: 'Rankings determined by Win-Loss Record',
-            HEAD_TO_HEAD: 'Ties resolved using Head-to-Head Results',
-            TQB: 'Ties resolved using TQB (Team Quality Balance)',
-            ER_TQB: 'Ties resolved using ER-TQB (Earned Runs Team Quality Balance)',
-            UNRESOLVED: 'ER-TQB did not resolve all ties. Manual review needed for Batting Average or Coin Toss.',
+            WIN_LOSS: '1) Rankings determined by Win-Loss Record',
+            HEAD_TO_HEAD: '1) Ties resolved using Head-to-Head Results',
+            TQB: '2) Ties resolved using TQB (Team Quality Balance)',
+            ER_TQB: '3) Ties resolved using ER-TQB (Earned Runs Team Quality Balance)',
+            UNRESOLVED: 'ER-TQB did not resolve all ties. Manual review needed for 4) Batting Average or 5) Coin Toss.',
         },
         es: {
-            WIN_LOSS: 'Clasificación determinada por Récord de Victorias-Derrotas',
-            HEAD_TO_HEAD: 'Empates resueltos usando Resultados Directos',
-            TQB: 'Empates resueltos usando TQB (Balance de Calidad del Equipo)',
-            ER_TQB: 'Empates resueltos usando ER-TQB (Balance de Calidad por Carreras Limpias)',
-            UNRESOLVED: 'ER-TQB no resolvió todos los empates. Se requiere revisión manual para Promedio de Bateo o Lanzamiento de Moneda.',
+            WIN_LOSS: '1) Clasificación determinada por Récord de Victorias-Derrotas',
+            HEAD_TO_HEAD: '1) Empates resueltos usando Resultados Directos',
+            TQB: '2) Empates resueltos usando TQB (Balance de Calidad del Equipo)',
+            ER_TQB: '3) Empates resueltos usando ER-TQB (Balance de Calidad por Carreras Limpias)',
+            UNRESOLVED: 'ER-TQB no resolvió todos los empates. Se requiere revisión manual para 4) Promedio de Bateo o 5) Lanzamiento de Moneda.',
         },
     };
 
