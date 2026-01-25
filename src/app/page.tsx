@@ -201,7 +201,7 @@ export default function Home() {
         }
     };
 
-    const { t } = useLanguage();
+    const { language, t } = useLanguage();
 
     return (
         <div className="min-h-screen flex flex-col">
@@ -246,6 +246,7 @@ export default function Home() {
                     games,
                     tieBreakMethod,
                     useERTQB: currentScreen === 5,
+                    language,
                 }}
             />
 

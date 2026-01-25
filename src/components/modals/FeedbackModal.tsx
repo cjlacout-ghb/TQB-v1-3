@@ -99,7 +99,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             } else {
                 setError(t.feedback.tryAgain);
             }
-        } catch (err) {
+        } catch {
             setError(t.feedback.tryAgain);
         } finally {
             setIsSubmitting(false);
