@@ -230,9 +230,14 @@ function resolveTieWaterfall(
     }
 
     // IF SEPARATED: Narrow the tie group and move to NEXT criteria level
+    // CRITICAL (Softball C11): We move to criteriaLevel + 1 for each subgroup.
+    // We NEVER go back to Step 1 (Head-to-Head) once we've reached a higher level.
     const result: TeamStats[] = [];
     for (const group of subgroups) {
         if (group.length > 1) {
+            // Move to next level (e.g., TQB -> ER-TQB)
+            // The "relevantGames" will be naturally re-filtered inside the recursive call
+            // because tiedIds will now only contain IDs from this specific subgroup.
             result.push(...resolveTieWaterfall(group, allGames, criteriaLevel + 1, context));
         } else {
             result.push(group[0]);

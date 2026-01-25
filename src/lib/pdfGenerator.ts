@@ -289,7 +289,8 @@ export function generatePDF(data: PDFExportData): void {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'italic');
         doc.setTextColor(...textMuted);
-        doc.text(t.common.footer.version, pageWidth / 2, footerY, { align: 'center' });
+        const versionText = `${t.common.footer.version} (Softball Standard)`;
+        doc.text(versionText, pageWidth / 2, footerY, { align: 'center' });
         doc.text(t.common.footer.dev, pageWidth / 2, footerY + 4, { align: 'center' });
         doc.text(t.common.footer.rights, pageWidth / 2, footerY + 8, { align: 'center' });
 
