@@ -1,8 +1,18 @@
 @import url('https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&display=swap');
 
+@font-face {
+  font-family: 'Simplifica';
+  src: url('/fonts/SIMPLIFICA%20Typeface.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
 
 :root {
   --primary: #8B5CF6;

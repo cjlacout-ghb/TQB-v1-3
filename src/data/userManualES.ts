@@ -10,24 +10,43 @@ La **Calculadora TQB** es una herramienta diseñada para calcular las clasificac
 
 Esta aplicación ayuda a oficiales de torneos y entrenadores a determinar con precisión las clasificaciones de equipos cuando múltiples equipos tienen el mismo récord de victorias-derrotas.
 
-### Propósito
-- Calcular y mostrar clasificaciones de torneos
-- Aplicar automáticamente las reglas oficiales de desempate de la WBSC
-- Generar informes profesionales en PDF
-- Soportar formatos de torneo round-robin (hasta 8 equipos)
+### Funcionalidades
+- Calcula y muestra las clasificaciones del torneo según la oficial Regla C11 de la WBSC.
+- **Guardado Automático**: Los datos se guardan en su dispositivo. Puede cerrar el navegador en cualquier momento y retomar exactamente donde quedó.
+- Genera informes profesionales en PDF.
+- Soporta formatos de torneo round-robin (hasta 8 equipos).
+    `,
+    },
+    {
+        id: 'persistencia-datos',
+        title: 'Persistencia de Datos y Privacidad',
+        content: `
+### ¿Dónde se guardan los datos?
+Los datos se almacenan localmente en el **almacenamiento de su navegador (localStorage)**. Esto implica:
+- **Sin Servidor**: Sus datos nunca se envían a un servidor externo. La privacidad es 100% local.
+- **Persistencia**: La información permanece en el dispositivo incluso si cierra el navegador o reinicia su equipo/móvil.
+
+### Escenarios de Pérdida de Datos
+Sus datos se borrarán permanentemente en los siguientes casos:
+1. **Modo Incógnito**: Los datos se eliminan al cerrar la pestaña o ventana privada.
+2. **Borrar Datos del Navegador**: Si limpia manualmente la "Caché" o los "Datos de sitios" del navegador.
+3. **Cambiar de Dispositivo/Navegador**: Los datos son exclusivos del navegador y dispositivo donde se ingresaron (ej. no aparecerán en otro móvil o se cambia de Chrome a Safari).
+4. **Nuevo Torneo**: Al hacer clic en **"Nuevo Torneo"** dentro de la app, se borra el registro actual.
     `,
     },
     {
         id: 'getting-started',
         title: 'Primeros Pasos',
         content: `
-### Paso 1: Ingresar Nombres de Equipos
+### Pantalla de Bienvenida
+1. **Continuar Torneo**: Retoma la sesión anterior con todos los datos previamente ingresados.
+2. **Nuevo Torneo**: Borra todos los datos actuales para iniciar un cálculo desde cero (Paso 1).
 
-1. En la primera pantalla, ingrese los nombres de todos los equipos en su torneo
-2. Haga clic en **"Agregar Equipo"** para añadir más equipos (máximo 8 equipos)
-3. Haga clic en el **icono de papelera** junto a un equipo para eliminarlo (mínimo 3 equipos requeridos)
-4. Los nombres de equipos no pueden contener caracteres especiales
-5. Una vez que proceda a la siguiente pantalla, los nombres de equipos no pueden ser editados
+### Paso 1: Ingresar Nombres de Equipos
+1. Ingrese los nombres de todos los equipos involucrados.
+2. Haga clic en **"Agregar Equipo"** para añadir más (mínimo 3, máximo 8).
+3. Use el **icono de papelera** para eliminar un equipo.
+4. Una vez que avance a la siguiente pantalla, los nombres no podrán ser editados.
 
 ### Consejos
 - Use nombres oficiales de equipos para un registro preciso
@@ -311,58 +330,28 @@ Haga clic en **"Iniciar Nuevo Cálculo"** en cualquier pantalla de resultados pa
     },
     {
         id: 'official-rule-c11',
-        title: 'Regla Oficial C11: Desempates',
+        title: 'Referencia Oficial y Descargo',
         content: `
 ### Reglamento de Torneos WBSC - Regla C11
 
-Todos los empates después de la Ronda de Apertura, Super Ronda y Finales se resolverán en el siguiente orden:
+Todos los empates se resolverán en el siguiente orden secuencial:
+1. **Resultados Directos (Head-to-Head)**: El ganador de los enfrentamientos directos se clasifica más alto.
+2. **Balance de Calidad del Equipo (TQB)**: (Carreras Anotadas / Entradas Bateo) – (Carreras Permitidas / Entradas Defensa).
+3. **TQB de Carreras Limpias (ER-TQB)**: (Carreras Limpias Anotadas / Entradas Bateo) – (Carreras Limpias Permitidas / Entradas Defensa).
+4. **Promedio de Bateo Más Alto**: Comparación entre los equipos empatados.
+5. **Lanzamiento de Moneda**: Como último recurso.
 
----
+### La Regla de Cascada
+Los criterios de desempate se aplican en orden secuencial. Una vez que un empate pasa a un nivel superior (como el TQB), el cálculo se basa ÚNICAMENTE en los juegos jugados entre los equipos involucrados en ese empate específico.
 
-**1. Resultados Directos (Head-to-Head)**
-El equipo que ganó el partido(s) jugado entre los equipos empatados recibirá la posición más alta.
-
-**2. Balance de Calidad del Equipo (TQB)**
-Si hay un empate entre tres o más equipos y los resultados directos no resuelven el empate, se utilizará el balance de calidad del equipo (TQB) para determinar la clasificación.
-- **Fórmula**: (Carreras Anotadas / Entradas Jugadas al Bate) – (Carreras Permitidas / Entradas Jugadas en Defensa).
-- El TQB incorpora tanto el rendimiento ofensivo como el defensivo.
-
-**3. TQB de Carreras Limpias (ER-TQB)**
-Si el empate persiste, se utilizará el ER-TQB para determinar la clasificación.
-- **Fórmula**: (Carreras Limpias Anotadas / Entradas Jugadas al Bate) – (Carreras Limpias Permitidas / Entradas Jugadas en Defensa).
-
-**4. Promedio de Bateo Más Alto**
-El equipo con el promedio de bateo más alto en los partidos jugados entre los equipos empatados recibirá la posición más alta.
-
-**5. Lanzamiento de Moneda**
-Un lanzamiento de moneda determinará la clasificación como último recurso.
-
----
-
-### IMPORTANTE: La Regla de Cascada
-Según las regulaciones de la WBSC Softball:
-> *"Los criterios de desempate se aplican en orden secuencial. Una vez que un empate pasa a un paso posterior (como el TQB), el cálculo se basa ÚNICAMENTE en los juegos jugados entre los equipos involucrados en ese empate específico."*
-
-**Ejemplo**: Si los Equipos A, B y C están empatados y los resultados Directos son circulares, la aplicación pasa al TQB. Si el TQB separa al Equipo A como el #1, pero B y C permanecen iguales, la aplicación pasa al Paso 3 (ER-TQB) para B y C, usando solo el juego entre ellos. La lógica avanza y nunca regresa al enfrentamiento Directo.
-    `,
-    },
-    {
-        id: 'about',
-        title: 'Acerca de la Regla C11 de WBSC',
-        content: `
-### Referencia Oficial
-
-Esta calculadora implementa los procedimientos de desempate del **Reglamento de Torneos de WBSC, Regla C11**.
-
-La Confederación Mundial de Béisbol y Softbol (WBSC) es el organismo rector mundial para béisbol y softbol. Sus reglamentos de torneos proporcionan procedimientos estandarizados para determinar clasificaciones cuando los equipos tienen récords de victorias-derrotas iguales.
+### Acerca de la Regla C11 de WBSC
+Esta calculadora implementa los procedimientos oficiales de la **WBSC (Confederación Mundial de Béisbol y Softbol)**.
 
 ### Descargo de Responsabilidad
-
-Aunque esta calculadora implementa la fórmula oficial de desempate de WBSC, siempre verifique los resultados con la documentación oficial del torneo. Para las reglas oficiales de WBSC, visite: [wbsc.org](https://www.wbsc.org)
+Aunque esta calculadora usa las fórmulas oficiales de WBSC, siempre verifique resultados con la documentación oficial del torneo. Visite [wbsc.org](https://www.wbsc.org) para reglas oficiales.
 
 ### Versión
-
-Calculadora TQB v1.1.0
+Calculadora TQB v1.2
     `,
     },
 ];

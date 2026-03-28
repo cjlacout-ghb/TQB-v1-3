@@ -13,10 +13,12 @@ import ERTQBRankings from '@/components/screens/ERTQBRankings';
 import UserManualModal from '@/components/modals/UserManualModal';
 import PDFExportModal from '@/components/modals/PDFExportModal';
 import FeedbackModal from '@/components/modals/FeedbackModal';
+import LandingScreen from '@/components/screens/LandingScreen';
+import { loadState, saveState, clearState, hasSavedState } from '@/lib/storage';
 
 export default function Home() {
     // App state
-    const [currentScreen, setCurrentScreen] = useState<ScreenNumber>(1);
+    const [currentScreen, setCurrentScreen] = useState<ScreenNumber>(0);
     const [teams, setTeams] = useState<Team[]>([
         { id: 'team-1', name: '' },
         { id: 'team-2', name: '' },
@@ -43,6 +45,34 @@ export default function Home() {
     useEffect(() => {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }, [currentScreen]);
+
+    // Load state on mount
+    useEffect(() => {
+        const saved = loadState();
+        if (saved) {
+            setTeams(saved.teams);
+            setGames(saved.games);
+            setRankings(saved.rankings);
+            setTieBreakMethod(saved.tieBreakMethod);
+            setNeedsERTQB(saved.needsERTQB);
+            setHasUnresolvedTies(saved.hasUnresolvedTies);
+        }
+    }, []);
+
+    // Auto-save state on any relevant change
+    useEffect(() => {
+        if (currentScreen !== 0) {
+            saveState({
+                currentScreen,
+                teams,
+                games,
+                rankings,
+                tieBreakMethod,
+                needsERTQB,
+                hasUnresolvedTies
+            });
+        }
+    }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB, hasUnresolvedTies]);
 
     // Calculate total steps dynamically
     const totalSteps = useMemo(() => {
@@ -101,7 +131,7 @@ export default function Home() {
 
     // Handle starting new calculation
     const handleStartNew = useCallback(() => {
-        setCurrentScreen(1);
+        clearState();
         setTeams([
             { id: 'team-1', name: '' },
             { id: 'team-2', name: '' },
@@ -112,6 +142,16 @@ export default function Home() {
         setTieBreakMethod('WIN_LOSS');
         setNeedsERTQB(false);
         setHasUnresolvedTies(false);
+        setCurrentScreen(1);
+    }, []);
+
+    const handleContinueTournament = useCallback(() => {
+        const saved = loadState();
+        if (saved) {
+            setCurrentScreen(saved.currentScreen || 1);
+        } else {
+            setCurrentScreen(1);
+        }
     }, []);
 
     // Handle going back
@@ -132,6 +172,15 @@ export default function Home() {
     // Render current screen
     const renderScreen = () => {
         switch (currentScreen) {
+            case 0:
+                return (
+                    <LandingScreen 
+                        onNewTournament={handleStartNew}
+                        onContinueTournament={handleContinueTournament}
+                        canContinue={hasSavedState()}
+                    />
+                );
+
             case 1:
                 return (
                     <TeamEntry
@@ -205,7 +254,10 @@ export default function Home() {
 
     return (
         <div className="min-h-screen flex flex-col">
-            <Header onOpenManual={() => handleOpenManual()} />
+            <Header 
+                onOpenManual={() => handleOpenManual()} 
+                onGoHome={() => setCurrentScreen(0)}
+            />
 
             <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
                 {renderScreen()}

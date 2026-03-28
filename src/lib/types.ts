@@ -50,7 +50,7 @@ export type TieBreakMethod =
     | 'ER_TQB'
     | 'UNRESOLVED';
 
-export type ScreenNumber = 1 | 2 | 3 | 4 | 5;
+export type ScreenNumber = 0 | 1 | 2 | 3 | 4 | 5;
 
 export interface AppState {
     currentScreen: ScreenNumber;

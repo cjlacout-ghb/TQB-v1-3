@@ -13,7 +13,7 @@ export const translations = {
             reset: "Reset form",
             required: "Required",
             footer: {
-                version: "TQB Calculator v1.1.0 • WBSC Rule C11 Tie-Breaker",
+                version: "TQB Calculator v1.2",
                 dev: "Dev by Cristian Lacout - WBSC Int'l TC",
                 rights: "2026 - all rights reserved"
             },
@@ -24,6 +24,18 @@ export const translations = {
             step: "Step",
             of: "of",
             feedback: "Suggestions?"
+        },
+        landing: {
+            title: "Tournament Quality Balance",
+            subtitle: "WBSC Rule C11 Calculator",
+            description: "A professional tool for calculating softball tournament rankings and tie-breakers with precision.",
+            newTournament: "New Tournament",
+            continueTournament: "Continue Tournament",
+            startDescription: "Start a fresh calculation naturally from Step 1.",
+            continueDescription: "Resume your previous tournament where you left off.",
+            confirmNew: "Are you sure? This will delete the current tournament data.",
+            yesNew: "Yes, Start New",
+            cancel: "Cancel"
         },
         feedback: {
             title: "Suggestions & Feedback",
@@ -210,7 +222,7 @@ export const translations = {
         common: {
             title: "Calculadora TQB",
             subtitle: "Desempate Regla WBSC C11",
-            userManual: "Manual de Usuario",
+            userManual: "Guía de Uso",
             ruleC11: "Regla C11",
             viewOfficialRule: "Ver Regla Oficial C11",
             back: "Volver",
@@ -219,7 +231,7 @@ export const translations = {
             reset: "Reiniciar formulario",
             required: "Requerido",
             footer: {
-                version: "Calculadora TQB v1.1.0 • Desempate Regla WBSC C11",
+                version: "Calculadora TQB v1.2",
                 dev: "Dev por Cristian Lacout - WBSC Int'l TC",
                 rights: "2026 - todos los derechos reservados"
             },
@@ -230,6 +242,18 @@ export const translations = {
             step: "Paso",
             of: "de",
             feedback: "¿Sugerencias?"
+        },
+        landing: {
+            title: "calculadora de torneo",
+            subtitle: "Calculadora automática de posiciones. Incluye resolución de empates por TQB",
+            description: "Regla C11 . Reglamento de torneos WBSC Softball",
+            newTournament: "Nuevo Torneo",
+            continueTournament: "Continuar Torneo",
+            startDescription: "Comienza un nuevo cálculo",
+            continueDescription: "Retoma tu cálculo exactamente donde lo dejaste",
+            confirmNew: "¿Estás seguro? Esto borrará los datos del torneo actual.",
+            yesNew: "Sí, Empezar Nuevo",
+            cancel: "Cancelar"
         },
         feedback: {
             title: "Sugerencias y Comentarios",
@@ -254,7 +278,7 @@ export const translations = {
         },
         teamEntry: {
             title: "Ingresar Equipos",
-            description: "Agregue los equipos involucrados en el desempate",
+            description: "Agrega los equipos involucrados en el desempate",
             inputPlaceholder: "Nombre del Equipo {n}",
             addTeam: "Agregar Equipo",
             removeTeam: "Eliminar equipo",
@@ -295,10 +319,9 @@ export const translations = {
             inningsExamples: [
                 { val: "7", desc: "7 entradas completas" },
                 { val: "7.1", desc: "7 entradas + 1 out (7⅓ entradas)" },
-                { val: "7.2", desc: "7 entradas + 2 outs (7⅔ entradas)" },
-                { val: "6.2", desc: "6 entradas + 2 outs (juego terminó antes)" }
+                { val: "7.2", desc: "7 entradas + 2 outs (7⅔ entradas)" }
             ],
-            softballNote: "En softbol los juegos pueden terminar a mitad de entrada (regla de la misericordia, lluvia, etc).",
+            softballNote: "",
             tieBreakerMatchup: "Partido de Desempate",
             swapSides: "Cambiar Lados",
             visitor: "Visitante",

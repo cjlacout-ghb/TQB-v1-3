@@ -10,24 +10,43 @@ The **TQB Calculator** is a tool designed to calculate softball tournament stand
 
 This application helps tournament officials and coaches accurately determine team rankings when multiple teams have the same win-loss record.
 
-### Purpose
-- Calculate and display tournament standings
-- Apply official WBSC tie-breaking rules automatically
-- Generate professional PDF reports
-- Support round-robin tournament formats (up to 8 teams)
+### Features
+- Calculate and display tournament standings based on official WBSC Rule C11.
+- **Auto-Save**: Data is automatically saved to your device. Close the browser at any time and resume exactly where you left off.
+- Generate professional PDF reports.
+- Support round-robin tournament formats (up to 8 teams).
+    `,
+    },
+    {
+        id: 'data-persistence',
+        title: 'Data Persistence & Privacy',
+        content: `
+### Where is data saved?
+Data is stored locally in your **browser's storage (localStorage)**. This means:
+- **No Server**: Your tournament data is never sent to a server. Privacy is 100% maintained.
+- **Persistence**: Data remains on your device even if you close the browser or restart your computer/mobile device.
+
+### Data Loss Scenarios
+Your data will be permanently cleared in the following cases:
+1. **Incognito Mode**: Data is deleted once you close your private/incognito tab or window.
+2. **Clearing Browser Data**: If you manually clear your browser's "Site Data" or "Cache".
+3. **Switching Devices/Browsers**: Data is local to the specific browser and device where it was entered. It will not appear on a different computer or a different browser (e.g., moving from Chrome to Safari).
+4. **New Tournament**: Clicking **"New Tournament"** in the app manually clears the current data.
     `,
     },
     {
         id: 'getting-started',
         title: 'Getting Started',
         content: `
-### Step 1: Enter Team Names
+### Welcome Screen
+1. **Continue Tournament**: Automatically resumes your last session with all previously entered data.
+2. **New Tournament**: Clears all current data to start a completely new tournament calculation (Step 1).
 
-1. On the first screen, enter the names of all teams in your tournament
-2. Click **"Add Team"** to add more teams (maximum 8 teams)
-3. Click the **trash icon** next to a team to remove it (minimum 3 teams required)
-4. Team names cannot contain special characters
-5. Once you proceed to the next screen, team names cannot be edited
+### Step 1: Enter Team Names
+1. Enter the names of all teams in your tournament.
+2. Click **"Add Team"** to add more teams (minimum 3, maximum 8).
+3. Click the **trash icon** to remove a team.
+4. Once you proceed to the next screen, team names cannot be edited.
 
 ### Tips
 - Use official team names for accurate record-keeping
@@ -311,58 +330,28 @@ Click **"Start New Calculation"** on any results screen to return to the beginni
     },
     {
         id: 'official-rule-c11',
-        title: 'Official Rule C11: Tie-Breaking',
+        title: 'Official Reference & Disclaimer',
         content: `
 ### WBSC Tournament Regulations - Rule C11
 
-All ties after the Opening Round, Super Round, and Finals shall be settled in the following order:
+All ties shall be settled in the following sequential order:
+1. **Head-to-Head Results**: Winners of direct matchups rank higher.
+2. **Team Quality Balance (TQB)**: (Runs Scored / Innings at Bat) – (Runs Allowed / Innings on Defense).
+3. **Earned Runs TQB (ER-TQB)**: (Earned Runs Scored / Innings at Bat) – (Earned Runs Allowed / Innings on Defense).
+4. **Highest Batting Average**: Comparison among tied teams.
+5. **Coin Toss**: As a last resort.
 
----
+### The Waterfall Rule
+Tie-breaking criteria are applied in sequential order. Once a tie moves to a subsequent step (like TQB), the calculation is based ONLY on the games played between the teams currently involved in that specific tie.
 
-**1. Head-to-Head Results**
-The team that won the game(s) played between the tied teams shall be given the higher position.
-
-**2. Team\'s Quality Balance (TQB)**
-If there is a tie between three or more teams and the head-to-head results do not break the tie, the team\'s quality balance (TQB) will be used to determine the ranking.
-- **Formula**: (Runs Scored / Innings Played at Bat) – (Runs Allowed / Innings Played on Defense).
-- TQB incorporates both offensive and defensive performance.
-
-**3. Best Earned Runs Team\'s Quality Balance (ER-TQB)**
-If the tie still persists, the ER-TQB will be used to determine the ranking.
-- **Formula**: (Earned Runs Scored / Innings Played at Bat) – (Earned Runs Allowed / Innings Played on Defense).
-
-**4. Highest Batting Average**
-The team with the highest batting average in games played between the tied teams shall be given the higher position.
-
-**5. Coin Toss**
-A coin toss will determine the ranking as a last resort.
-
----
-
-### IMPORTANT: The Waterfall Rule
-According to WBSC Softball regulations:
-> *"Tie-breaking criteria are applied in a sequential order. Once a tie moves to a subsequent step (like TQB), the calculation is based ONLY on the games played between the teams currently involved in that specific tie."*
-
-**Example**: If Teams A, B, and C are tied and Head-to-Head results are circular, the app moves to TQB. If TQB separates Team A as #1, but B and C remain equal, the app moves to Step 3 (ER-TQB) for B and C, using only the game between them. The logic moves forward and never returns to Head-to-Head.
-    `,
-    },
-    {
-        id: 'about',
-        title: 'About WBSC Rule C11',
-        content: `
-### Official Reference
-
-This calculator implements the tie-breaking procedures from the **WBSC Tournament Regulations, Rule C11**.
-
-The World Baseball Softball Confederation (WBSC) is the world governing body for baseball and softball. Their tournament regulations provide standardized procedures for determining standings when teams have equal win-loss records.
+### About WBSC Rule C11
+This calculator implements the official procedures from the **WBSC (World Baseball Softball Confederation)** Tournament Regulations.
 
 ### Disclaimer
-
-While this calculator implements the official WBSC tie-breaking formula, always verify results with official tournament documentation. For official WBSC rules, visit: [wbsc.org](https://www.wbsc.org)
+While this calculator implements official formulas, always verify results with official tournament documentation. Visit [wbsc.org](https://www.wbsc.org) for official rules.
 
 ### Version
-
-TQB Calculator v1.1.0
+TQB Calculator v1.2
     `,
     },
 ];

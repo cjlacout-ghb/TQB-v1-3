@@ -203,9 +203,11 @@ export default function GameEntry({
                                     <li key={i}><span className="font-mono text-primary-300">{ex.val}</span> = {ex.desc}</li>
                                 ))}
                             </ul>
-                            <p className="text-xs text-gray-400 mt-2">
-                                {t.gameEntry.softballNote}
-                            </p>
+                            {t.gameEntry.softballNote && (
+                                <p className="text-xs text-gray-400 mt-2">
+                                    {t.gameEntry.softballNote}
+                                </p>
+                            )}
                         </div>
                     )}
 

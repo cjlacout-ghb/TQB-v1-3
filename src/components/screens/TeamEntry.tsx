@@ -164,26 +164,9 @@ export default function TeamEntry({
                         <div>
                             <div className="flex items-center gap-2">
                                 <h2 className="text-2xl font-bold text-white">{t.teamEntry.title}</h2>
-                                <div className="group relative">
-                                    <button
-                                        onClick={() => onOpenManual?.('official-rule-c11')}
-                                        className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary-500/10 border border-primary-500/20 text-[10px] font-bold text-primary-400 uppercase tracking-wider cursor-pointer hover:bg-primary-500/20 transition-colors"
-                                    >
-                                        {t.common.ruleC11}
-                                        <HelpCircle size={10} />
-                                    </button>
-                                    {/* Tooltip */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 bg-dark-800 border border-dark-500 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
-                                        <p className="text-xs text-gray-300 leading-relaxed">
-                                            {t.teamEntry.tooltips.ruleC11}
-                                        </p>
-                                        <div className="absolute top-full left-1/2 -translate-x-1/2 border-8 border-transparent border-t-dark-800"></div>
-                                    </div>
-                                </div>
+
                             </div>
-                            <p className="text-sm text-gray-400 mt-1">
-                                {t.teamEntry.description}
-                            </p>
+
                         </div>
                     </div>
                 </div>
