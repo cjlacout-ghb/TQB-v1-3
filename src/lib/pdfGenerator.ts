@@ -94,7 +94,21 @@ export function generatePDF(data: PDFExportData): void {
     });
 
     // Get Y position after table
-    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+
+    // ===== TIE-BREAKING METHOD =====
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    const methodLabel = t.pdf.methodLabel;
+    doc.text(methodLabel, 14, yPos);
+    yPos += 6;
+
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    const methodText = getTieBreakMethodText(data.tieBreakMethod, lang);
+    doc.text(methodText, 14, yPos);
+    yPos += 15;
 
     // ===== TQB CALCULATION SUMMARY =====
     if (yPos > 230) {
@@ -188,21 +202,7 @@ export function generatePDF(data: PDFExportData): void {
         margin: { left: 14, right: 14, bottom: 25 },
     });
 
-    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 10;
-
-    // ===== TIE-BREAKING METHOD =====
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    const methodLabel = t.pdf.methodLabel;
-    doc.text(methodLabel, 14, yPos);
-    yPos += 6;
-
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(0, 0, 0);
-    const methodText = getTieBreakMethodText(data.tieBreakMethod, lang);
-    doc.text(methodText, 14, yPos);
-    yPos += 15;
+    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
     // ===== GAME RESULTS SUMMARY =====
     doc.setFontSize(14);
