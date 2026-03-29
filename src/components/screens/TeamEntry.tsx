@@ -13,7 +13,6 @@ interface TeamEntryProps {
     onContinue: () => void;
     onCSVImport: (teams: Team[], games: GameData[]) => void;
     onBack?: () => void;
-    onOpenManual?: (section?: string) => void;
 }
 
 const MAX_TEAMS = 8;
@@ -24,8 +23,7 @@ export default function TeamEntry({
     onTeamsChange,
     onContinue,
     onCSVImport,
-    onBack,
-    onOpenManual
+    onBack
 }: TeamEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, string>>({});

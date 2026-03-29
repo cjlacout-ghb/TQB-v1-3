@@ -181,8 +181,7 @@ export const translations = {
                 standings: "Final standings table",
                 teams: "teams ranked",
                 games: "game results",
-                tieBreaker: "Tie-breaking method used",
-                formula: "Formula reference"
+                tieBreaker: "Tie-breaking method used"
             },
             cancel: "Cancel",
             generate: "Generate PDF",
@@ -204,11 +203,11 @@ export const translations = {
             ratioScoredShort: "Ratio S.",
             ratioAllowedShort: "Ratio A.",
             methodLabel: "Tie-Breaking Method:",
+            tournamentPrefix: "Tournament",
             resultsSummary: "Game Results Summary",
             teamA: "Team A",
             teamB: "Team B",
             runs: "Runs",
-            formulaReference: "Formulas Reference",
             filename: "WBSC_Tie-Breaker_Report"
         }
     },
@@ -239,8 +238,8 @@ export const translations = {
         },
         landing: {
             title: "calculadora de torneo",
-            subtitle: "Calculadora automática de posiciones. Incluye resolución de empates por TQB",
-            description: "Regla C11 . Reglamento de torneos WBSC Softball",
+            subtitle: "Calculadora automática de posiciones. Incluye resolución de empates por TQB(*)",
+            description: "(*)Team Quality Balance . Regla C11 . Reglamento de torneos WBSC Softball",
             newTournament: "Nuevo Torneo",
             continueTournament: "Continuar Torneo",
             startDescription: "Comienza un nuevo cálculo",
@@ -392,8 +391,7 @@ export const translations = {
                 standings: "Tabla de posiciones final",
                 teams: "equipos clasificados",
                 games: "resultados de juegos",
-                tieBreaker: "Método de desempate utilizado",
-                formula: "Referencia de fórmulas"
+                tieBreaker: "Método de desempate utilizado"
             },
             cancel: "Cancelar",
             generate: "Generar PDF",
@@ -415,11 +413,11 @@ export const translations = {
             ratioScoredShort: "Ratio S.",
             ratioAllowedShort: "Ratio A.",
             methodLabel: "Método de Desempate:",
+            tournamentPrefix: "Torneo",
             resultsSummary: "Resumen de Resultados",
             teamA: "Equipo A",
             teamB: "Equipo B",
             runs: "Carreras",
-            formulaReference: "Referencia de Fórmulas",
             filename: "WBSC_Reporte_de_Desempate"
         }
     },

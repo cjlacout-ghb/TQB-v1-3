@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber } from '@/lib/types';
 import { generateMatchups, calculateRankings } from '@/lib/calculations';
@@ -10,9 +11,15 @@ import GameEntry from '@/components/screens/GameEntry';
 import TQBRankings from '@/components/screens/TQBRankings';
 import EarnedRunsEntry from '@/components/screens/EarnedRunsEntry';
 import ERTQBRankings from '@/components/screens/ERTQBRankings';
-import UserManualModal from '@/components/modals/UserManualModal';
-import PDFExportModal from '@/components/modals/PDFExportModal';
-import FeedbackModal from '@/components/modals/FeedbackModal';
+const UserManualModal = dynamic(() => import('@/components/modals/UserManualModal'), {
+    ssr: false,
+});
+const PDFExportModal = dynamic(() => import('@/components/modals/PDFExportModal'), {
+    ssr: false,
+});
+const FeedbackModal = dynamic(() => import('@/components/modals/FeedbackModal'), {
+    ssr: false,
+});
 import LandingScreen from '@/components/screens/LandingScreen';
 import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
 import { loadState, saveState, clearState, hasSavedState } from '@/lib/storage';
@@ -199,7 +206,6 @@ export default function Home() {
                         onContinue={handleContinueToGames}
                         onCSVImport={handleCSVImport}
                         onBack={handleBack}
-                        onOpenManual={handleOpenManual}
                     />
                 );
 

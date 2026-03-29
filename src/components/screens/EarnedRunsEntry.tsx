@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Calculator, AlertCircle, Info, ArrowLeft } from 'lucide-react';
 import { GameData } from '@/lib/types';
 import StepIndicator from '../StepIndicator';
@@ -134,7 +134,7 @@ export default function EarnedRunsEntry({
                                 game={game}
                                 gameNumber={index + 1}
                                 errors={errors[game.id] || {}}
-                                onUpdate={(field, value) => updateGame(game.id, field, value)}
+                                onUpdate={updateGame}
                             />
                         ))}
                     </div>
@@ -176,16 +176,16 @@ interface EarnedRunsCardProps {
     game: GameData;
     gameNumber: number;
     errors: Record<string, string>;
-    onUpdate: (field: 'earnedRunsA' | 'earnedRunsB', value: number | null) => void;
+    onUpdate: (gameId: string, field: 'earnedRunsA' | 'earnedRunsB', value: number | null) => void;
 }
 
-function EarnedRunsCard({ game, gameNumber, errors, onUpdate }: EarnedRunsCardProps) {
+const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, errors, onUpdate }: EarnedRunsCardProps) {
     const { t } = useLanguage();
 
     const handleChange = (field: 'earnedRunsA' | 'earnedRunsB', value: string) => {
         const num = value === '' ? null : parseInt(value, 10);
         if (value === '' || (!isNaN(num!) && num! >= 0)) {
-            onUpdate(field, num);
+            onUpdate(game.id, field, num);
         }
     };
 
@@ -283,4 +283,4 @@ function EarnedRunsCard({ game, gameNumber, errors, onUpdate }: EarnedRunsCardPr
             </div>
         </div>
     );
-}
+});

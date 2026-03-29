@@ -1,6 +1,5 @@
 // TQB and ER-TQB calculation utilities
 import { GameData, TeamStats, RankingResult, TieBreakMethod } from './types';
-import { Translation } from '@/data/translations';
 
 const TIE_TOLERANCE = 0.0001;
 

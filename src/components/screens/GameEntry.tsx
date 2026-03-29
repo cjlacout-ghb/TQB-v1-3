@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Calculator, AlertCircle, HelpCircle, ArrowLeftRight, ArrowLeft } from 'lucide-react';
 import { Team, GameData } from '@/lib/types';
 import { validateInningsFormat, inningsToOuts } from '@/lib/calculations';
@@ -219,8 +219,8 @@ export default function GameEntry({
                                 game={game}
                                 gameNumber={index + 1}
                                 errors={errors[game.id] || {}}
-                                onUpdate={(updates) => updateGame(game.id, updates)}
-                                onSwap={() => swapTeams(game.id)}
+                                onUpdate={updateGame}
+                                onSwap={swapTeams}
                             />
                         ))}
                     </div>
@@ -262,17 +262,17 @@ interface GameCardProps {
     game: GameData;
     gameNumber: number;
     errors: Record<string, string>;
-    onUpdate: (updates: Partial<GameData>) => void;
-    onSwap: () => void;
+    onUpdate: (gameId: string, updates: Partial<GameData>) => void;
+    onSwap: (gameId: string) => void;
 }
 
-function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps) {
+const GameCard = React.memo(function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps) {
     const { t } = useLanguage();
 
     const handleRunsChange = (field: 'runsA' | 'runsB', value: string) => {
         const num = value === '' ? null : parseInt(value, 10);
         if (value === '' || (!isNaN(num!) && num! >= 0)) {
-            onUpdate({ [field]: num });
+            onUpdate(game.id, { [field]: num });
         }
     };
 
@@ -287,7 +287,7 @@ function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps)
             if (field === 'inningsBBatting') updates.inningsADefense = value;
             if (field === 'inningsBDefense') updates.inningsABatting = value;
 
-            onUpdate(updates);
+            onUpdate(game.id, updates);
         }
     };
 
@@ -314,7 +314,7 @@ function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps)
                 </div>
 
                 <button
-                    onClick={onSwap}
+                    onClick={() => onSwap(game.id)}
                     className="flex items-center gap-2 px-4 py-2 bg-dark-600/50 hover:bg-primary-500/10 text-gray-400 hover:text-primary-400 border border-dark-500 hover:border-primary-500/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider"
                 >
                     <ArrowLeftRight size={14} />
@@ -440,4 +440,4 @@ function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps)
             </div>
         </div>
     );
-}
+});

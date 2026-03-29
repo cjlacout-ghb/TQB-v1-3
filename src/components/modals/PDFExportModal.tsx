@@ -153,7 +153,6 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                                     <li>• {data.rankings.length} {t.pdfExport.summaryItems.teams}</li>
                                     <li>• {data.games.length} {t.pdfExport.summaryItems.games}</li>
                                     <li>• {t.pdfExport.summaryItems.tieBreaker}</li>
-                                    <li>• {t.pdfExport.summaryItems.formula}</li>
                                 </ul>
                             </div>
 

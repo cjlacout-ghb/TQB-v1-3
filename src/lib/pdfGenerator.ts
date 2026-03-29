@@ -34,17 +34,16 @@ export function generatePDF(data: PDFExportData): void {
     doc.setFontSize(22);
     doc.setFont('helvetica', 'bold');
 
-    const titleText = data.tournamentName
-        ? `${data.tournamentName} | ${t.pdf.report}`
-        : t.pdf.report;
-
+    const titleText = t.pdf.report;
     doc.text(titleText, pageWidth / 2, 20, { align: 'center' });
 
     // Subtitle
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(...primaryColor);
-    const subtitle = t.pdf.subtitle;
+    const subtitle = data.tournamentName
+        ? `${t.pdf.tournamentPrefix}: ${data.tournamentName}`
+        : t.pdf.subtitle;
     doc.text(subtitle, pageWidth / 2, 30, { align: 'center' });
 
     // Date
@@ -250,27 +249,7 @@ export function generatePDF(data: PDFExportData): void {
 
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
-    // ===== FORMULAS REFERENCE =====
-    // Check if we need a new page
-    if (yPos > 230) {
-        doc.addPage();
-        yPos = 20;
-    }
 
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'bold');
-    const formulaRefTitle = t.pdf.formulaReference;
-    doc.text(formulaRefTitle, 14, yPos);
-    yPos += 8;
-
-    doc.setFontSize(10);
-    doc.setFont('courier', 'normal');
-
-    doc.text(t.rankings.formula.text, 14, yPos);
-    yPos += 6;
-
-    doc.text(t.rankings.formula.erText, 14, yPos);
-    yPos += 15;
 
     // ===== FOOTER & PAGE NUMBERS =====
     const totalPages = doc.getNumberOfPages();
@@ -281,9 +260,9 @@ export function generatePDF(data: PDFExportData): void {
 
         // Footer text (centered)
         doc.setFontSize(8);
-        doc.setFont('helvetica', 'italic');
+        doc.setFont('helvetica', 'normal');
         doc.setTextColor(...textMuted);
-        const versionText = `${t.common.footer.version} (Softball Standard)`;
+        const versionText = t.common.footer.version;
         doc.text(versionText, pageWidth / 2, footerY, { align: 'center' });
         doc.text(t.common.footer.dev, pageWidth / 2, footerY + 4, { align: 'center' });
         doc.text(t.common.footer.rights, pageWidth / 2, footerY + 8, { align: 'center' });
