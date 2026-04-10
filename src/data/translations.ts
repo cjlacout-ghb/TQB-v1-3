@@ -14,7 +14,7 @@ export const translations = {
             required: "Required",
             footer: {
                 version: "TQB Calculator v1.3",
-                dev: "Dev by Cristian Lacout - WBSC Int'l TC",
+                dev: "Cristian Lacout - WBSC International TC",
                 rights: "2026 - all rights reserved"
             },
             exportPDF: "Export to PDF",
@@ -23,16 +23,16 @@ export const translations = {
             final: "Final",
             step: "Step",
             of: "of",
-            feedback: "Suggestions?"
+            feedback: "💡 Leave me your feedback"
         },
         landing: {
-            title: "Tournament Quality Balance",
-            subtitle: "WBSC Rule C11 Calculator",
-            description: "A professional tool for calculating softball tournament rankings and tie-breakers with precision.",
+            title: "Tournament Calculator / Softball",
+            subtitle: "Automatic standings calculation. Includes tiebreaker resolution by TQB(*).",
+            description: "(*)Team Quality Balance. Rule C11. WBSC Softball Tournament Regulations.",
             newTournament: "New Tournament",
             continueTournament: "Continue Tournament",
-            startDescription: "Start a fresh calculation naturally from Step 1.",
-            continueDescription: "Resume your previous tournament where you left off.",
+            startDescription: "Start a new calculation.",
+            continueDescription: "Resume your calculation exactly where you left off.",
             confirmNew: "Are you sure? This will delete the current tournament data.",
             yesNew: "Yes, Start New",
             cancel: "Cancel"
@@ -225,7 +225,7 @@ export const translations = {
             required: "Requerido",
             footer: {
                 version: "Calculadora TQB v1.3",
-                dev: "Dev por Cristian Lacout - WBSC Int'l TC",
+                dev: "Cristian Lacout - TC Internacional WBSC",
                 rights: "2026 - todos los derechos reservados"
             },
             exportPDF: "Exportar a PDF",
@@ -234,11 +234,11 @@ export const translations = {
             final: "Final",
             step: "Paso",
             of: "de",
-            feedback: "Dejame tu comentario"
+            feedback: "💡 Dejame tu comentario"
         },
         landing: {
-            title: "calculadora de torneo",
-            subtitle: "Calculadora automática de posiciones. Incluye resolución de empates por TQB(*)",
+            title: "Calculadora de torneo / Softbol",
+            subtitle: "Cálculo automático de posiciones. Incluye resolución de empates por TQB(*)",
             description: "(*)Team Quality Balance . Regla C11 . Reglamento de torneos WBSC Softball",
             newTournament: "Nuevo Torneo",
             continueTournament: "Continuar Torneo",

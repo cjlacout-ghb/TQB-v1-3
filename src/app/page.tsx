@@ -203,7 +203,7 @@ export default function Home() {
                             onClick={() => setIsFeedbackOpen(true)}
                             className="text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mx-auto"
                         >
-                            <span className="text-lg">💡</span> {t.common.feedback}
+                            {t.common.feedback}
                         </button>
                     </div>
                 </div>
