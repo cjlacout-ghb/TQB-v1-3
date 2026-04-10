@@ -72,4 +72,6 @@ const LandingScreen = React.memo(({
     );
 });
 
+LandingScreen.displayName = 'LandingScreen';
+
 export default LandingScreen;

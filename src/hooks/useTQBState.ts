@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber, AppState } from '@/lib/types';
+import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber } from '@/lib/types';
 import { generateMatchups, calculateRankings } from '@/lib/calculations';
-import { loadState, saveState, clearState, hasSavedState } from '@/lib/storage';
+import { loadState, saveState, clearState } from '@/lib/storage';
 
 export function useTQBState() {
     const [currentScreen, setCurrentScreen] = useState<ScreenNumber>(0);

@@ -1,5 +1,5 @@
 import { calculateRankings, inningsToOuts } from '../lib/calculations';
-import { GameData, TeamStats } from '../lib/types';
+import { GameData } from '../lib/types';
 
 function runTest() {
     console.log('--- Starting TQB Calculation Tests ---');
