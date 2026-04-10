@@ -9,11 +9,11 @@ interface LandingScreenProps {
     canContinue: boolean;
 }
 
-const LandingScreen: React.FC<LandingScreenProps> = ({ 
+const LandingScreen = React.memo(({ 
     onNewTournament, 
     onContinueTournament, 
     canContinue 
-}) => {
+}: LandingScreenProps) => {
     const { t } = useLanguage();
     return (
         <div className="max-w-4xl mx-auto px-4 py-12 flex flex-col items-center justify-center min-h-[70vh] animate-fade-in text-center">
@@ -70,6 +70,6 @@ const LandingScreen: React.FC<LandingScreenProps> = ({
             </div>
         </div>
     );
-};
+});
 
 export default LandingScreen;

@@ -24,19 +24,32 @@ import LandingScreen from '@/components/screens/LandingScreen';
 import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
 import { loadState, saveState, clearState, hasSavedState } from '@/lib/storage';
 
+import { useTQBState } from '@/hooks/useTQBState';
+
 export default function Home() {
-    // App state
-    const [currentScreen, setCurrentScreen] = useState<ScreenNumber>(0);
-    const [teams, setTeams] = useState<Team[]>([
-        { id: 'team-1', name: '' },
-        { id: 'team-2', name: '' },
-        { id: 'team-3', name: '' },
-    ]);
-    const [games, setGames] = useState<GameData[]>([]);
-    const [rankings, setRankings] = useState<TeamStats[]>([]);
-    const [tieBreakMethod, setTieBreakMethod] = useState<TieBreakMethod>('WIN_LOSS');
-    const [needsERTQB, setNeedsERTQB] = useState(false);
-    const [hasUnresolvedTies, setHasUnresolvedTies] = useState(false);
+    const { state, actions } = useTQBState();
+    const {
+        currentScreen,
+        teams,
+        games,
+        rankings,
+        tieBreakMethod,
+        needsERTQB,
+        hasUnresolvedTies,
+        totalSteps
+    } = state;
+
+    const {
+        setCurrentScreen,
+        setTeams,
+        setGames,
+        handleCSVImport,
+        handleContinueToGames,
+        handleCalculateTQB,
+        handleCalculateERTQB,
+        handleStartNew,
+        handleBack: baseHandleBack
+    } = actions;
 
     // Modal states
     const [isManualOpen, setIsManualOpen] = useState(false);
@@ -55,105 +68,6 @@ export default function Home() {
         window.scrollTo({ top: 0, behavior: 'instant' });
     }, [currentScreen]);
 
-    // Load state on mount
-    useEffect(() => {
-        const saved = loadState();
-        if (saved) {
-            setTeams(saved.teams);
-            setGames(saved.games);
-            setRankings(saved.rankings);
-            setTieBreakMethod(saved.tieBreakMethod);
-            setNeedsERTQB(saved.needsERTQB);
-            setHasUnresolvedTies(saved.hasUnresolvedTies);
-        }
-    }, []);
-
-    // Auto-save state on any relevant change
-    useEffect(() => {
-        if (currentScreen !== 0) {
-            saveState({
-                currentScreen,
-                teams,
-                games,
-                rankings,
-                tieBreakMethod,
-                needsERTQB,
-                hasUnresolvedTies
-            });
-        }
-    }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB, hasUnresolvedTies]);
-
-    // Calculate total steps dynamically
-    const totalSteps = useMemo(() => {
-        return needsERTQB ? 5 : 3;
-    }, [needsERTQB]);
-
-    // Handle CSV import - go to Step 2 (Game Entry) for verification
-    const handleCSVImport = useCallback((importedTeams: Team[], importedGames: GameData[]) => {
-        setTeams(importedTeams);
-        setGames(importedGames);
-        setCurrentScreen(2);
-    }, []);
-
-    // Handle proceeding from Screen 1 to Screen 2
-    const handleContinueToGames = useCallback(() => {
-        // Generate matchups for all teams
-        const matchups = generateMatchups(teams);
-        const initialGames: GameData[] = matchups.map(match => ({
-            ...match,
-            runsA: null,
-            runsB: null,
-            inningsABatting: '',
-            inningsADefense: '',
-            inningsBBatting: '',
-            inningsBDefense: '',
-            earnedRunsA: null,
-            earnedRunsB: null,
-        }));
-
-        setGames(initialGames);
-        setCurrentScreen(2);
-    }, [teams]);
-
-    // Handle TQB calculation from Screen 2
-    const handleCalculateTQB = useCallback(() => {
-        const result = calculateRankings(teams, games, false);
-        setRankings(result.rankings);
-        setTieBreakMethod(result.tieBreakMethod);
-        setNeedsERTQB(result.needsERTQB);
-        setCurrentScreen(3);
-    }, [teams, games]);
-
-    // Handle proceeding to ER-TQB entry
-    const handleProceedToERTQB = useCallback(() => {
-        setCurrentScreen(4);
-    }, []);
-
-    // Handle ER-TQB calculation from Screen 4
-    const handleCalculateERTQB = useCallback(() => {
-        const result = calculateRankings(teams, games, true);
-        setRankings(result.rankings);
-        setTieBreakMethod(result.tieBreakMethod);
-        setHasUnresolvedTies(result.hasTies);
-        setCurrentScreen(5);
-    }, [teams, games]);
-
-    // Handle starting new calculation
-    const handleStartNew = useCallback(() => {
-        clearState();
-        setTeams([
-            { id: 'team-1', name: '' },
-            { id: 'team-2', name: '' },
-            { id: 'team-3', name: '' },
-        ]);
-        setGames([]);
-        setRankings([]);
-        setTieBreakMethod('WIN_LOSS');
-        setNeedsERTQB(false);
-        setHasUnresolvedTies(false);
-        setCurrentScreen(1);
-    }, []);
-
     const handleStartNewConfirm = useCallback(() => {
         if (hasSavedState()) {
             setIsConfirmResetOpen(true);
@@ -169,22 +83,21 @@ export default function Home() {
         } else {
             setCurrentScreen(1);
         }
-    }, []);
+    }, [setCurrentScreen]);
 
-    // Handle going back
+    // Handle going back with confirm reset on first screen
     const handleBack = useCallback(() => {
         if (currentScreen === 1) {
             handleStartNewConfirm();
-        } else if (currentScreen === 2) {
-            setCurrentScreen(1);
-        } else if (currentScreen === 3) {
-            setCurrentScreen(2);
-        } else if (currentScreen === 4) {
-            setCurrentScreen(3);
-        } else if (currentScreen === 5) {
-            setCurrentScreen(4);
+        } else {
+            baseHandleBack();
         }
-    }, [currentScreen, handleStartNewConfirm]);
+    }, [currentScreen, handleStartNewConfirm, baseHandleBack]);
+
+    // Handle proceeding to ER-TQB entry
+    const handleProceedToERTQB = useCallback(() => {
+        setCurrentScreen(4);
+    }, [setCurrentScreen]);
 
     // Render current screen
     const renderScreen = () => {

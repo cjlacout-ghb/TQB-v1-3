@@ -13,7 +13,7 @@ interface EarnedRunsEntryProps {
     onBack?: () => void;
 }
 
-export default function EarnedRunsEntry({
+const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
     games,
     onGamesChange,
     onCalculate,
@@ -169,7 +169,9 @@ export default function EarnedRunsEntry({
             </div>
         </div>
     );
-}
+});
+
+export default EarnedRunsEntry;
 
 // Subcomponent for each game card
 interface EarnedRunsCardProps {
@@ -205,9 +207,7 @@ const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, er
                                 {game.teamBName}
                             </h3>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5 uppercase tracking-widest font-semibold font-mono">
-                            {t.gameEntry.tieBreakerMatchup}
-                        </p>
+
                     </div>
                 </div>
 

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
 import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
 import { Team, GameData } from '@/lib/types';
 import { parseCSV, getSampleCSV } from '@/lib/csvParser';
@@ -18,7 +18,7 @@ interface TeamEntryProps {
 const MAX_TEAMS = 8;
 const MIN_TEAMS = 3;
 
-export default function TeamEntry({
+const TeamEntry = memo(function TeamEntry({
     teams,
     onTeamsChange,
     onContinue,
@@ -284,13 +284,6 @@ export default function TeamEntry({
                     {showCSVHelp && (
                         <div className="p-4 bg-dark-700/50 rounded-xl border border-dark-500 animate-slide-up">
                             <h4 className="text-sm font-semibold text-gray-300 mb-2">
-                                {t.teamEntry.requiredColumns}
-                            </h4>
-                            <p className="text-xs text-gray-400 font-mono mb-3 break-all">
-                                Team_A, Team_B, Runs_A, Runs_B, Earned_Runs_A, Earned_Runs_B,
-                                Innings_A_Batting, Innings_A_Defense, Innings_B_Batting, Innings_B_Defense
-                            </p>
-                            <h4 className="text-sm font-semibold text-gray-300 mb-2">
                                 {t.teamEntry.example}
                             </h4>
                             <pre className="text-xs text-gray-400 font-mono bg-dark-900 p-3 rounded-lg overflow-x-auto">
@@ -327,4 +320,6 @@ export default function TeamEntry({
             </div>
         </div>
     );
-}
+});
+
+export default TeamEntry;

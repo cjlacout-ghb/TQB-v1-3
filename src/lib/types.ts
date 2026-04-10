@@ -1,14 +1,17 @@
 // Type definitions for TQB Calculator
 
+export type TeamID = string;
+export type GameID = string;
+
 export interface Team {
-    id: string;
+    id: TeamID;
     name: string;
 }
 
 export interface GameData {
-    id: string;
-    teamAId: string;
-    teamBId: string;
+    id: GameID;
+    teamAId: TeamID;
+    teamBId: TeamID;
     teamAName: string;
     teamBName: string;
     runsA: number | null;

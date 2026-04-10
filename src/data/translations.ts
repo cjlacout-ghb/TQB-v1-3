@@ -13,7 +13,7 @@ export const translations = {
             reset: "Reset form",
             required: "Required",
             footer: {
-                version: "TQB Calculator v1.2",
+                version: "TQB Calculator v1.3",
                 dev: "Dev by Cristian Lacout - WBSC Int'l TC",
                 rights: "2026 - all rights reserved"
             },
@@ -106,7 +106,7 @@ export const translations = {
             ],
             softballNote: "Softball games can end mid-inning (mercy rule, rain, etc.), so innings may differ between teams.",
             tieBreakerMatchup: "Tie-Breaker Matchup",
-            swapSides: "Swap Sides",
+            swapSides: "ATAQUE/DEFENSA",
             visitor: "Visitor",
             home: "Home Team",
             runsScored: "Runs Scored",
@@ -224,7 +224,7 @@ export const translations = {
             reset: "Reiniciar formulario",
             required: "Requerido",
             footer: {
-                version: "Calculadora TQB v1.2",
+                version: "Calculadora TQB v1.3",
                 dev: "Dev por Cristian Lacout - WBSC Int'l TC",
                 rights: "2026 - todos los derechos reservados"
             },
@@ -234,7 +234,7 @@ export const translations = {
             final: "Final",
             step: "Paso",
             of: "de",
-            feedback: "¿Sugerencias?"
+            feedback: "Dejame tu comentario"
         },
         landing: {
             title: "calculadora de torneo",
@@ -316,7 +316,7 @@ export const translations = {
             ],
             softballNote: "",
             tieBreakerMatchup: "Partido de Desempate",
-            swapSides: "Cambiar Lados",
+            swapSides: "ATAQUE/DEFENSA",
             visitor: "Visitante",
             home: "Local",
             runsScored: "Carreras Anotadas",

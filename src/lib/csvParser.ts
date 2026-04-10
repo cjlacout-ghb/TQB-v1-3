@@ -18,7 +18,8 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
     const teams = new Map<string, Team>();
     const games: GameData[] = [];
 
-    const lines = content.trim().split(/\r?\n/);
+    // Split by lines and handle potential empty lines
+    const lines = content.trim().split(/\r?\n/).filter(line => line.trim());
 
     if (lines.length < 2) {
         return {
@@ -29,23 +30,42 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
         };
     }
 
-    // Parse header
-    const header = lines[0].split(',').map(h => h.trim().toLowerCase());
-    const expectedHeaders = [
-        'team_a', 'team_b', 'runs_a', 'runs_b',
-        'earned_runs_a', 'earned_runs_b',
-        'innings_a_batting', 'innings_a_defense',
-        'innings_b_batting', 'innings_b_defense'
-    ];
+    // Detect separator (comma or semicolon)
+    const firstLine = lines[0];
+    const separator = firstLine.includes(';') ? ';' : ',';
 
-    // Check for required columns
+    // Parse header and normalize
+    const header = lines[0].split(separator).map(h => h.trim().toLowerCase());
+    
+    // Mapping of expected keys to possible header aliases
+    const aliases: Record<string, string[]> = {
+        'team_a': ['team_a', 'team a', 'equipo_a', 'equipo a', 'team1', 'team 1'],
+        'team_b': ['team_b', 'team b', 'equipo_b', 'equipo b', 'team2', 'team 2'],
+        'runs_a': ['runs_a', 'runs a', 'carreras_a', 'carreras a', 'runs1', 'r1'],
+        'runs_b': ['runs_b', 'runs b', 'carreras_b', 'carreras b', 'runs2', 'r2'],
+        'earned_runs_a': ['earned_runs_a', 'earned runs a', 'carreras_limpias_a', 'cl_a', 'er_a'],
+        'earned_runs_b': ['earned_runs_b', 'earned runs b', 'carreras_limpias_b', 'cl_b', 'er_b'],
+        'innings_a_batting': ['innings_a_batting', 'innings a batting', 'entradas_a_bateo', 'iab_a'],
+        'innings_a_defense': ['innings_a_defense', 'innings a defense', 'entradas_a_defensa', 'iad_a'],
+        'innings_b_batting': ['innings_b_batting', 'innings b batting', 'entradas_b_bateo', 'iab_b'],
+        'innings_b_defense': ['innings_b_defense', 'innings b defense', 'entradas_b_defensa', 'iad_b']
+    };
+
     const headerIndices: Record<string, number> = {};
-    for (const expected of expectedHeaders) {
-        const index = header.indexOf(expected);
-        if (index === -1) {
-            errors.push(t.teamEntry.errors.csv.missingColumn.replace('{column}', expected));
+    for (const [key, variants] of Object.entries(aliases)) {
+        let foundIndex = -1;
+        for (const variant of variants) {
+            const index = header.indexOf(variant.toLowerCase());
+            if (index !== -1) {
+                foundIndex = index;
+                break;
+            }
+        }
+        
+        if (foundIndex === -1) {
+            errors.push(t.teamEntry.errors.csv.missingColumn.replace('{column}', key));
         } else {
-            headerIndices[expected] = index;
+            headerIndices[key] = foundIndex;
         }
     }
 
@@ -58,20 +78,22 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
         const line = lines[i].trim();
         if (!line) continue;
 
-        const values = line.split(',').map(v => v.trim());
+        const values = line.split(separator).map(v => v.trim());
         const rowNum = i + 1;
 
         try {
-            const teamAName = values[headerIndices['team_a']];
-            const teamBName = values[headerIndices['team_b']];
-            const runsA = parseInt(values[headerIndices['runs_a']], 10);
-            const runsB = parseInt(values[headerIndices['runs_b']], 10);
-            const earnedRunsA = parseInt(values[headerIndices['earned_runs_a']], 10);
-            const earnedRunsB = parseInt(values[headerIndices['earned_runs_b']], 10);
-            const inningsABatting = values[headerIndices['innings_a_batting']];
-            const inningsADefense = values[headerIndices['innings_a_defense']];
-            const inningsBBatting = values[headerIndices['innings_b_batting']];
-            const inningsBDefense = values[headerIndices['innings_b_defense']];
+            const getValue = (key: string) => values[headerIndices[key]];
+            
+            const teamAName = getValue('team_a');
+            const teamBName = getValue('team_b');
+            const runsA = parseInt(getValue('runs_a'), 10);
+            const runsB = parseInt(getValue('runs_b'), 10);
+            const earnedRunsA = parseInt(getValue('earned_runs_a'), 10);
+            const earnedRunsB = parseInt(getValue('earned_runs_b'), 10);
+            const inningsABatting = getValue('innings_a_batting');
+            const inningsADefense = getValue('innings_a_defense');
+            const inningsBBatting = getValue('innings_b_batting');
+            const inningsBDefense = getValue('innings_b_defense');
 
             // Validate team names
             if (!teamAName || !teamBName) {
@@ -103,10 +125,10 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
 
             // Add teams to map
             if (!teams.has(teamAName)) {
-                teams.set(teamAName, { id: `team-${teams.size}`, name: teamAName });
+                teams.set(teamAName, { id: `team-${teams.size + 1}`, name: teamAName });
             }
             if (!teams.has(teamBName)) {
-                teams.set(teamBName, { id: `team-${teams.size}`, name: teamBName });
+                teams.set(teamBName, { id: `team-${teams.size + 1}`, name: teamBName });
             }
 
             const teamA = teams.get(teamAName)!;
@@ -114,7 +136,7 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
 
             // Create game data
             games.push({
-                id: `game-${games.length}`,
+                id: `game-${games.length + 1}`,
                 teamAId: teamA.id,
                 teamBId: teamB.id,
                 teamAName: teamA.name,
@@ -138,14 +160,14 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
     if (teamList.length < 3) {
         errors.push(t.teamEntry.errors.csv.minTeams);
     }
-    if (teamList.length > 8) {
-        errors.push(t.teamEntry.errors.csv.maxTeams);
+    if (teamList.length > 32) { // Allow more teams if imported
+        // errors.push(t.teamEntry.errors.csv.maxTeams);
     }
 
     return {
         success: errors.length === 0,
         teams: teamList,
-        games,
+        games: games,
         errors,
     };
 }

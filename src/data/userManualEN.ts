@@ -353,7 +353,7 @@ This calculator implements the official procedures from the **WBSC (World Baseba
 While this calculator implements official formulas, always verify results with official tournament documentation. Visit [wbsc.org](https://www.wbsc.org) for official rules.
 
 ### Version
-TQB Calculator v1.2
+TQB Calculator v1.3
     `,
     },
 ];

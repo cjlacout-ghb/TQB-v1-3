@@ -1,5 +1,5 @@
 // TQB and ER-TQB calculation utilities
-import { GameData, TeamStats, RankingResult, TieBreakMethod } from './types';
+import { GameData, TeamStats, RankingResult, TieBreakMethod, TeamID } from './types';
 
 const TIE_TOLERANCE = 0.0001;
 
@@ -33,7 +33,7 @@ export function outsToInnings(outs: number): number {
  * Calculate team statistics from game data
  */
 export function calculateTeamStats(
-    teamId: string,
+    teamId: TeamID,
     teamName: string,
     games: GameData[]
 ): TeamStats {
@@ -52,8 +52,11 @@ export function calculateTeamStats(
 
         if (!isTeamA && !isTeamB) continue;
 
-        const myRuns = isTeamA ? (game.runsA ?? 0) : (game.runsB ?? 0);
-        const oppRuns = isTeamA ? (game.runsB ?? 0) : (game.runsA ?? 0);
+        // Skip games with missing runs (unplayed)
+        if (game.runsA === null || game.runsB === null) continue;
+
+        const myRuns = isTeamA ? game.runsA : game.runsB;
+        const oppRuns = isTeamA ? game.runsB : game.runsA;
         const myInningsBat = isTeamA ? game.inningsABatting : game.inningsBBatting;
         const myInningsDef = isTeamA ? game.inningsADefense : game.inningsBDefense;
         const myEarnedRuns = isTeamA ? (game.earnedRunsA ?? 0) : (game.earnedRunsB ?? 0);
@@ -64,7 +67,6 @@ export function calculateTeamStats(
         } else if (myRuns < oppRuns) {
             losses++;
         }
-        // Ties count as neither win nor loss
 
         runsScored += myRuns;
         runsAllowed += oppRuns;
@@ -74,7 +76,6 @@ export function calculateTeamStats(
         earnedRunsAllowed += oppEarnedRuns;
     }
 
-    // Calculate TQB
     const batInnings = inningsAtBatOuts / 3;
     const defInnings = inningsOnDefenseOuts / 3;
 
@@ -262,7 +263,14 @@ export function calculateRankings(
     );
 
     // Step 2: Sort by overall wins (descending)
-    allStats.sort((a, b) => b.wins - a.wins);
+    // Step 2: Sort by overall wins, then TQB, then ER-TQB (descending)
+    allStats.sort((a, b) => {
+        if (b.wins !== a.wins) return b.wins - a.wins;
+        // Secondary: Global TQB
+        if (Math.abs(b.tqb - a.tqb) > TIE_TOLERANCE) return b.tqb - a.tqb;
+        // Tertiary: Global ER-TQB
+        return b.erTqb - a.erTqb;
+    });
 
     // Step 3: Group teams by win count
     const rankGroups: Map<number, TeamStats[]> = new Map();

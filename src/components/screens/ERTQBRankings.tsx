@@ -6,6 +6,7 @@ import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
+import React, { memo } from 'react';
 
 interface ERTQBRankingsProps {
     rankings: TeamStats[];
@@ -18,7 +19,7 @@ interface ERTQBRankingsProps {
     onOpenManual?: (section?: string) => void;
 }
 
-export default function ERTQBRankings({
+const ERTQBRankings = memo(function ERTQBRankings({
     rankings,
     tieBreakMethod,
     hasUnresolvedTies,
@@ -274,9 +275,11 @@ export default function ERTQBRankings({
             </div>
         </div>
     );
-}
+});
 
-function RankBadge({ rank }: { rank: number }) {
+export default ERTQBRankings;
+
+const RankBadge = memo(function RankBadge({ rank }: { rank: number }) {
     const getClass = () => {
         switch (rank) {
             case 1: return 'rank-1';
@@ -291,4 +294,4 @@ function RankBadge({ rank }: { rank: number }) {
             #{rank}
         </div>
     );
-}
+});

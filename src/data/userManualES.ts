@@ -353,7 +353,7 @@ Esta calculadora implementa los procedimientos oficiales de la **WBSC (Confedera
 Aunque esta calculadora usa las fórmulas oficiales de WBSC, siempre verifique resultados con la documentación oficial del torneo. Visite [wbsc.org](https://www.wbsc.org) para reglas oficiales.
 
 ### Versión
-Calculadora TQB v1.2
+Calculadora TQB v1.3
     `,
     },
 ];

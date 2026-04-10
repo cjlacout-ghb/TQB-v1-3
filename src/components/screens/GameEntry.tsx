@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, memo } from 'react';
 import { Calculator, AlertCircle, HelpCircle, ArrowLeftRight, ArrowLeft } from 'lucide-react';
 import { Team, GameData } from '@/lib/types';
 import { validateInningsFormat, inningsToOuts } from '@/lib/calculations';
@@ -16,7 +16,7 @@ interface GameEntryProps {
     totalSteps: number;
 }
 
-export default function GameEntry({
+const GameEntry = memo(function GameEntry({
     teams,
     games,
     onGamesChange,
@@ -255,7 +255,9 @@ export default function GameEntry({
             </div>
         </div>
     );
-}
+});
+
+export default GameEntry;
 
 // Subcomponent for each game card
 interface GameCardProps {
@@ -266,7 +268,7 @@ interface GameCardProps {
     onSwap: (gameId: string) => void;
 }
 
-const GameCard = React.memo(function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps) {
+const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps) {
     const { t } = useLanguage();
 
     const handleRunsChange = (field: 'runsA' | 'runsB', value: string) => {
@@ -307,9 +309,7 @@ const GameCard = React.memo(function GameCard({ game, gameNumber, errors, onUpda
                                 {game.teamBName}
                             </h3>
                         </div>
-                        <p className="text-xs text-gray-500 mt-0.5 uppercase tracking-widest font-semibold font-mono">
-                            {t.gameEntry.tieBreakerMatchup}
-                        </p>
+
                     </div>
                 </div>
 
