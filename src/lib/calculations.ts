@@ -79,6 +79,8 @@ export function calculateTeamStats(
     const batInnings = inningsAtBatOuts / 3;
     const defInnings = inningsOnDefenseOuts / 3;
 
+    const winPercentage = (wins + losses) > 0 ? wins / (wins + losses) : 0;
+
     const tqb = batInnings > 0 && defInnings > 0
         ? (runsScored / batInnings) - (runsAllowed / defInnings)
         : 0;
@@ -92,6 +94,7 @@ export function calculateTeamStats(
         name: teamName,
         wins,
         losses,
+        winPercentage,
         runsScored,
         runsAllowed,
         inningsAtBatOuts,
@@ -262,23 +265,27 @@ export function calculateRankings(
         calculateTeamStats(team.id, team.name, games)
     );
 
-    // Step 2: Sort by overall wins (descending)
-    // Step 2: Sort by overall wins, then TQB, then ER-TQB (descending)
+    // Step 2: Sort by overall win percentage, then TQB, then ER-TQB (descending)
     allStats.sort((a, b) => {
-        if (b.wins !== a.wins) return b.wins - a.wins;
+        if (Math.abs(b.winPercentage - a.winPercentage) > TIE_TOLERANCE) 
+            return b.winPercentage - a.winPercentage;
+        
         // Secondary: Global TQB
         if (Math.abs(b.tqb - a.tqb) > TIE_TOLERANCE) return b.tqb - a.tqb;
+        
         // Tertiary: Global ER-TQB
         return b.erTqb - a.erTqb;
     });
 
-    // Step 3: Group teams by win count
-    const rankGroups: Map<number, TeamStats[]> = new Map();
+    // Step 3: Group teams by win percentage
+    const rankGroups: Map<string, TeamStats[]> = new Map();
     for (const team of allStats) {
-        if (!rankGroups.has(team.wins)) {
-            rankGroups.set(team.wins, []);
+        // Use fixed precision for map key to handle floating point issues
+        const key = team.winPercentage.toFixed(4);
+        if (!rankGroups.has(key)) {
+            rankGroups.set(key, []);
         }
-        rankGroups.get(team.wins)!.push(team);
+        rankGroups.get(key)!.push(team);
     }
 
     const context = {
@@ -287,12 +294,12 @@ export function calculateRankings(
         hasUnresolvedTies: false
     };
 
-    // Step 4: Process each group of teams with same wins
+    // Step 4: Process each group of teams with same win percentage
     const finalRankings: TeamStats[] = [];
-    const sortedWins = Array.from(rankGroups.keys()).sort((a, b) => b - a);
+    const sortedKeys = Array.from(rankGroups.keys()).sort((a, b) => parseFloat(b) - parseFloat(a));
 
-    for (const wins of sortedWins) {
-        const group = rankGroups.get(wins)!;
+    for (const key of sortedKeys) {
+        const group = rankGroups.get(key)!;
 
         if (group.length === 1) {
             finalRankings.push(group[0]);
@@ -390,8 +397,8 @@ export function calculateDisplayRanks(rankings: TeamStats[], isERTQB: boolean = 
             const currentVal = isERTQB ? rankings[i].erTqb : rankings[i].tqb;
             const prevVal = isERTQB ? rankings[i - 1].erTqb : rankings[i - 1].tqb;
 
-            // They share a rank if wins are the same AND their TQB/ER-TQB are essentially equal
-            if (rankings[i].wins !== rankings[i - 1].wins || Math.abs(currentVal - prevVal) >= TIE_TOLERANCE) {
+            // They share a rank if win percentages are the same AND their TQB/ER-TQB are essentially equal
+            if (Math.abs(rankings[i].winPercentage - rankings[i - 1].winPercentage) >= TIE_TOLERANCE || Math.abs(currentVal - prevVal) >= TIE_TOLERANCE) {
                 currentRank = i + 1;
             }
         }

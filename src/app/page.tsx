@@ -99,8 +99,8 @@ export default function Home() {
         setCurrentScreen(4);
     }, [setCurrentScreen]);
 
-    // Render current screen
-    const renderScreen = () => {
+    // Render current screen — useMemo prevents re-mounting inputs on every keystroke
+    const renderedScreen = useMemo(() => {
         switch (currentScreen) {
             case 0:
                 return (
@@ -177,7 +177,12 @@ export default function Home() {
             default:
                 return null;
         }
-    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB,
+        hasUnresolvedTies, totalSteps, setTeams, setGames, handleCSVImport,
+        handleContinueToGames, handleCalculateTQB, handleCalculateERTQB,
+        handleProceedToERTQB, handleStartNewConfirm, handleContinueTournament,
+        handleBack, handleOpenManual]);
 
     const { language, t } = useLanguage();
 
@@ -189,7 +194,7 @@ export default function Home() {
             />
 
             <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">
-                {renderScreen()}
+                {renderedScreen}
             </main>
 
             {/* Footer */}

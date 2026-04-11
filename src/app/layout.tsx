@@ -6,9 +6,22 @@ import SplashScreen from "@/components/SplashScreen";
 import "./globals.css";
 
 export const metadata: Metadata = {
-    title: "TQB Calculator - Softball Tie-Breaker",
-    description: "Calculate softball tournament standings using WBSC Rule C11 tie-breaking criteria. Supports TQB, ER-TQB, and head-to-head calculations.",
+    title: "Calculadora de Torneo / Softbol",
+    description: "Herramienta profesional para torneos de softbol. Incluye cálculo TQB y ER-TQB, de acuerdo a Regla C11 - WBSC.",
     keywords: ["softball", "TQB", "tie-breaker", "WBSC", "tournament", "rankings"],
+    openGraph: {
+        title: "Calculadora de Torneo / Softbol",
+        description: "Herramienta profesional para torneos de softbol. Incluye cálculo TQB y ER-TQB, de acuerdo a Regla C11 - WBSC.",
+        url: "https://tqb-v1-3.vercel.app/",
+        siteName: "TQB Calculator",
+        locale: "es_ES",
+        type: "website",
+    },
+    twitter: {
+        card: "summary",
+        title: "Calculadora de Torneo / Softbol",
+        description: "Herramienta profesional para torneos de softbol. Incluye cálculo TQB y ER-TQB, de acuerdo a Regla C11 - WBSC.",
+    },
 };
 
 export default function RootLayout({

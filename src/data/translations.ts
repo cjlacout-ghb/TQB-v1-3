@@ -237,7 +237,7 @@ export const translations = {
             feedback: "💡 Dejame tu comentario"
         },
         landing: {
-            title: "Calculadora de torneo / Softbol",
+            title: "Calculadora de Torneo / Softbol",
             subtitle: "Cálculo automático de posiciones. Incluye resolución de empates por TQB(*)",
             description: "(*)Team Quality Balance . Regla C11 . Reglamento de torneos WBSC Softball",
             newTournament: "Nuevo Torneo",
