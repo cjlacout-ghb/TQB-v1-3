@@ -192,7 +192,7 @@ export const translations = {
             }
         },
         pdf: {
-            report: "Tie-Break Report",
+            report: "Standings Report",
             subtitle: "WBSC Softball Tournament Rankings - Rule C11",
             date: "Date",
             finalStandings: "Final Standings",
@@ -208,7 +208,7 @@ export const translations = {
             teamA: "Team A",
             teamB: "Team B",
             runs: "Runs",
-            filename: "WBSC_Tie-Breaker_Report"
+            filename: "WBSC_Standings_Report"
         }
     },
     es: {
@@ -402,7 +402,7 @@ export const translations = {
             }
         },
         pdf: {
-            report: "Reporte de Desempate",
+            report: "Reporte de Posiciones",
             subtitle: "Posiciones de Torneo Softbol WBSC - Regla C11",
             date: "Fecha",
             finalStandings: "Posiciones Finales",
@@ -418,7 +418,7 @@ export const translations = {
             teamA: "Equipo A",
             teamB: "Equipo B",
             runs: "Carreras",
-            filename: "WBSC_Reporte_de_Desempate"
+            filename: "WBSC_Reporte_de_Posiciones"
         }
     },
 };

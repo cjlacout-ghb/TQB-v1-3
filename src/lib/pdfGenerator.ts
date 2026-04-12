@@ -44,7 +44,8 @@ export function generatePDF(data: PDFExportData): void {
     const subtitle = data.tournamentName
         ? `${t.pdf.tournamentPrefix}: ${data.tournamentName}`
         : t.pdf.subtitle;
-    doc.text(subtitle, pageWidth / 2, 30, { align: 'center' });
+    const subtitleLines = doc.splitTextToSize(subtitle, pageWidth - 40);
+    doc.text(subtitleLines, pageWidth / 2, 30, { align: 'center' });
 
     // Date
     doc.setFontSize(10);
@@ -82,10 +83,10 @@ export function generatePDF(data: PDFExportData): void {
             halign: 'center',
         },
         columnStyles: {
-            0: { halign: 'center', cellWidth: 20 },
+            0: { halign: 'center', cellWidth: 15 },
             1: { halign: 'left' },
-            2: { halign: 'center', cellWidth: 25 },
-            3: { halign: 'center', cellWidth: 30, font: 'courier' },
+            2: { halign: 'center', cellWidth: 20 },
+            3: { halign: 'center', cellWidth: 25, font: 'courier' },
         },
         alternateRowStyles: {
             fillColor: [245, 245, 250],
@@ -107,8 +108,9 @@ export function generatePDF(data: PDFExportData): void {
     doc.setFont('helvetica', 'normal');
     doc.setTextColor(0, 0, 0);
     const methodText = getTieBreakMethodText(data.tieBreakMethod, lang);
-    doc.text(methodText, 14, yPos);
-    yPos += 15;
+    const methodLines = doc.splitTextToSize(methodText, pageWidth - 28);
+    doc.text(methodLines, 14, yPos);
+    yPos += methodLines.length * 5 + 10;
 
     // ===== TQB CALCULATION SUMMARY =====
     if (yPos > 230) {
@@ -182,18 +184,18 @@ export function generatePDF(data: PDFExportData): void {
             textColor: textLight,
             fontStyle: 'bold',
             halign: 'center',
-            fontSize: 8,
+            fontSize: 7.5,
         },
         columnStyles: {
-            0: { halign: 'center', cellWidth: 15 },
-            1: { halign: 'left' },
-            2: { halign: 'center' },
-            3: { halign: 'center' },
-            4: { halign: 'center' },
-            5: { halign: 'center' },
-            6: { halign: 'center', font: 'courier' },
-            7: { halign: 'center', font: 'courier' },
-            8: { halign: 'right', font: 'courier' },
+            0: { halign: 'center', cellWidth: 12 },
+            1: { halign: 'left', minCellWidth: 35 },
+            2: { halign: 'center', cellWidth: 12 },
+            3: { halign: 'center', cellWidth: 12 },
+            4: { halign: 'center', cellWidth: 12 },
+            5: { halign: 'center', cellWidth: 12 },
+            6: { halign: 'center', font: 'courier', cellWidth: 22 },
+            7: { halign: 'center', font: 'courier', cellWidth: 22 },
+            8: { halign: 'right', font: 'courier', fontStyle: 'normal' },
         },
         styles: { fontSize: 8 },
         alternateRowStyles: {
@@ -202,9 +204,13 @@ export function generatePDF(data: PDFExportData): void {
         margin: { left: 14, right: 14, bottom: 25 },
     });
 
-    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
-
     // ===== GAME RESULTS SUMMARY =====
+    // Ensure the entire section starts on a new page if space is limited (less than 80mm)
+    if (yPos > 200) {
+        doc.addPage();
+        yPos = 20;
+    }
+
     doc.setFontSize(14);
     doc.setFont('helvetica', 'bold');
     const gameResultsTitle = t.pdf.resultsSummary;
@@ -244,6 +250,7 @@ export function generatePDF(data: PDFExportData): void {
         alternateRowStyles: {
             fillColor: [245, 245, 250],
         },
+        showHead: 'firstPage',
         margin: { left: 14, right: 14, bottom: 25 },
     });
 

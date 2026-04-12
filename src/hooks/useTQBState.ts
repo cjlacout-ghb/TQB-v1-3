@@ -3,7 +3,33 @@ import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber } from '@/lib/t
 import { generateMatchups, calculateRankings } from '@/lib/calculations';
 import { loadState, saveState, clearState } from '@/lib/storage';
 
-export function useTQBState() {
+export interface TQBStateReturn {
+    state: {
+        currentScreen: ScreenNumber;
+        teams: Team[];
+        games: GameData[];
+        rankings: TeamStats[];
+        tieBreakMethod: TieBreakMethod;
+        needsERTQB: boolean;
+        hasUnresolvedTies: boolean;
+        totalSteps: number;
+    };
+    actions: {
+        setCurrentScreen: (screen: ScreenNumber | ((prev: ScreenNumber) => ScreenNumber)) => void;
+        setTeams: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
+        setGames: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
+        handleCSVImport: (importedTeams: Team[], importedGames: GameData[]) => void;
+        handleContinueToGames: () => void;
+        handleCalculateTQB: () => void;
+        handleCalculateERTQB: () => void;
+        handleStartNew: () => void;
+        handleBack: () => void;
+        setNeedsERTQB: (needs: boolean | ((prev: boolean) => boolean)) => void;
+        setHasUnresolvedTies: (has: boolean | ((prev: boolean) => boolean)) => void;
+    };
+}
+
+export function useTQBState(): TQBStateReturn {
     const [currentScreen, setCurrentScreen] = useState<ScreenNumber>(0);
     const [teams, setTeams] = useState<Team[]>([
         { id: 'team-1', name: '' },
@@ -33,7 +59,10 @@ export function useTQBState() {
 
     // Auto-save state
     useEffect(() => {
-        if (currentScreen !== 0) {
+        const hasTeamNames = teams.some(t => t.name.trim().length > 0);
+        const hasGames = games.length > 0;
+
+        if (currentScreen !== 0 && (hasTeamNames || hasGames)) {
             saveState({
                 currentScreen,
                 teams,
@@ -45,6 +74,7 @@ export function useTQBState() {
             });
         }
     }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB, hasUnresolvedTies]);
+
 
     const totalSteps = useMemo(() => (needsERTQB ? 5 : 3), [needsERTQB]);
 

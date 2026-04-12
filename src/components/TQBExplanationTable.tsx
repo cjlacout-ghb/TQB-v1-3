@@ -31,29 +31,29 @@ export default function TQBExplanationTable({ rankings, isERTQB = false }: TQBEx
             </div>
 
             <div className="overflow-x-auto rounded-xl border border-dark-600 bg-dark-800/50">
-                <table className="w-full text-sm text-left border-collapse">
-                    <thead className="bg-dark-700 text-gray-400 uppercase text-[10px] tracking-wider font-bold">
+                <table className="w-full text-[15px] text-left border-collapse">
+                    <thead className="bg-dark-700 text-gray-400 uppercase text-xs tracking-wider font-bold">
                         <tr>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center w-20">{t.rankings.rank}</th>
-                            <th className="px-4 py-4 border-b border-dark-600 min-w-[150px]">{t.rankings.team}</th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center">
+                            <th className="px-2 py-3 border-b border-dark-600 text-center w-12">{t.rankings.rank}</th>
+                            <th className="px-2 py-3 border-b border-dark-600 min-w-[120px]">{t.rankings.team}</th>
+                            <th className="px-2 py-3 border-b border-dark-600 text-center">
                                 {isERTQB
                                     ? (t.earnedRuns?.inputLabel || 'Earned Runs')
                                     : t.gameEntry.runsScored
                                 }
                             </th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center">{t.gameEntry.inningsBatting}</th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center text-gray-500">
+                            <th className="px-2 py-3 border-b border-dark-600 text-center">{t.gameEntry.inningsBatting}</th>
+                            <th className="px-2 py-3 border-b border-dark-600 text-center text-gray-500 whitespace-nowrap">
                                 {t.rankings.summary.offensiveRatio}
                             </th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center">
+                            <th className="px-2 py-3 border-b border-dark-600 text-center">
                                 {isERTQB ? t.rankings.summary.erAllowed : t.rankings.summary.runsAllowed}
                             </th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center">{t.gameEntry.inningsDefense}</th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-center text-gray-500">
+                            <th className="px-2 py-3 border-b border-dark-600 text-center">{t.gameEntry.inningsDefense}</th>
+                            <th className="px-2 py-3 border-b border-dark-600 text-center text-gray-500 whitespace-nowrap">
                                 {t.rankings.summary.defensiveRatio}
                             </th>
-                            <th className="px-4 py-4 border-b border-dark-600 text-right">
+                            <th className="px-2 py-3 border-b border-dark-600 text-right">
                                 {t.rankings.summary.finalValue.replace('{method}', method)}
                             </th>
                         </tr>
@@ -72,15 +72,15 @@ export default function TQBExplanationTable({ rankings, isERTQB = false }: TQBEx
 
                             return (
                                 <tr key={team.id} className="hover:bg-dark-700/30 transition-colors">
-                                    <td className="px-4 py-4 text-center font-mono text-gray-400">#{rank}</td>
-                                    <td className="px-4 py-4 font-bold text-white whitespace-nowrap">{team.name}</td>
-                                    <td className="px-4 py-4 text-center font-mono">{runsS}</td>
-                                    <td className="px-4 py-4 text-center font-mono">{outsToInnings(team.inningsAtBatOuts).toFixed(1)}</td>
-                                    <td className="px-4 py-4 text-center font-mono text-gray-500">→ {ratioS.toFixed(4)}</td>
-                                    <td className="px-4 py-4 text-center font-mono">{runsA}</td>
-                                    <td className="px-4 py-4 text-center font-mono">{outsToInnings(team.inningsOnDefenseOuts).toFixed(1)}</td>
-                                    <td className="px-4 py-4 text-center font-mono text-gray-500">→ {ratioA.toFixed(4)}</td>
-                                    <td className={`px-4 py-4 text-right font-mono font-bold ${finalVal >= 0 ? 'text-success-400' : 'text-error-400'}`}>
+                                    <td className="px-2 py-3 text-center font-mono text-gray-400">#{rank}</td>
+                                    <td className="px-2 py-3 font-medium text-white whitespace-nowrap">{team.name}</td>
+                                    <td className="px-2 py-3 text-center font-mono">{runsS}</td>
+                                    <td className="px-2 py-3 text-center font-mono">{outsToInnings(team.inningsAtBatOuts).toFixed(1)}</td>
+                                    <td className="px-2 py-3 text-center font-mono text-gray-500 whitespace-nowrap">→ {ratioS.toFixed(4)}</td>
+                                    <td className="px-2 py-3 text-center font-mono">{runsA}</td>
+                                    <td className="px-2 py-3 text-center font-mono">{outsToInnings(team.inningsOnDefenseOuts).toFixed(1)}</td>
+                                    <td className="px-2 py-3 text-center font-mono text-gray-500 whitespace-nowrap">→ {ratioA.toFixed(4)}</td>
+                                    <td className={`px-2 py-3 text-right font-mono ${finalVal >= 0 ? 'text-success-400' : 'text-error-400'}`}>
                                         {formatTQBValue(finalVal)}
                                     </td>
                                 </tr>

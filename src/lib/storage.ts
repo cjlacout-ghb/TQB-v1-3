@@ -35,5 +35,19 @@ export const clearState = (): void => {
 
 export const hasSavedState = (): boolean => {
     if (typeof window === 'undefined') return false;
-    return localStorage.getItem(STORAGE_KEY) !== null;
+    const item = localStorage.getItem(STORAGE_KEY);
+    if (!item) return false;
+    
+    try {
+        const state = JSON.parse(item) as AppState;
+        // Consider a state "continuable" only if it's past the landing screen
+        // AND has either team names filled or games entered
+        const hasTeamNames = state.teams && state.teams.some(t => t.name.trim().length > 0);
+        const hasGames = state.games && state.games.length > 0;
+        
+        return state.currentScreen > 0 && (hasTeamNames || hasGames);
+    } catch (error) {
+        return false;
+    }
 };
+

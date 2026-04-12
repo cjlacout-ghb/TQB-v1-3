@@ -97,13 +97,13 @@ const TQBRankings = memo(function TQBRankings({
 
                     {/* Rankings Table */}
                     <div className="overflow-x-auto">
-                        <table className="table-dark w-full">
+                        <table className="table-dark w-full text-[15px]">
                             <thead>
                                 <tr>
-                                    <th className="w-20 text-center">{t.rankings.rank}</th>
-                                    <th>{t.rankings.team}</th>
-                                    <th className="text-center w-24">{t.rankings.wl}</th>
-                                    <th className="text-right w-32">{t.rankings.tqb}</th>
+                                    <th className="w-20 text-center text-[15px]">{t.rankings.rank}</th>
+                                    <th className="text-[15px]">{t.rankings.team}</th>
+                                    <th className="text-center w-24 text-[15px]">{t.rankings.wl}</th>
+                                    <th className="text-right w-32 text-[15px]">{t.rankings.tqb}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -117,7 +117,7 @@ const TQBRankings = memo(function TQBRankings({
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className="font-semibold text-white">{team.name}</span>
+                                                <span className="font-medium text-white">{team.name}</span>
                                             </td>
                                             <td className="text-center">
                                                 <span className="font-mono">
@@ -127,7 +127,7 @@ const TQBRankings = memo(function TQBRankings({
                                                 </span>
                                             </td>
                                             <td className="text-right">
-                                                <span className={`font-mono font-bold ${team.tqb >= 0 ? 'text-success-400' : 'text-error-400'
+                                                <span className={`font-mono ${team.tqb >= 0 ? 'text-success-400' : 'text-error-400'
                                                     }`}>
                                                     {formatTQBValue(team.tqb)}
                                                 </span>
@@ -177,16 +177,16 @@ const TQBRankings = memo(function TQBRankings({
 
                                     <span className="text-right font-medium text-white truncate">{game.teamAName}</span>
 
-                                    <div className={`text-center font-mono font-bold text-lg rounded-lg py-1 ${(game.runsA ?? 0) > (game.runsB ?? 0) ? 'bg-success-500/20 text-success-400' :
-                                        (game.runsA ?? 0) < (game.runsB ?? 0) ? 'bg-dark-600 text-gray-500' : 'bg-warning-500/20 text-warning-400'
+                                    <div className={`text-center font-mono text-lg rounded-lg py-1 text-white ${(game.runsA ?? 0) > (game.runsB ?? 0) ? 'bg-success-500/20' :
+                                        (game.runsA ?? 0) < (game.runsB ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
                                         }`}>
                                         {game.runsA}
                                     </div>
 
                                     <span className="text-gray-600 text-center font-bold">:</span>
 
-                                    <div className={`text-center font-mono font-bold text-lg rounded-lg py-1 ${(game.runsB ?? 0) > (game.runsA ?? 0) ? 'bg-success-500/20 text-success-400' :
-                                        (game.runsB ?? 0) < (game.runsA ?? 0) ? 'bg-dark-600 text-gray-500' : 'bg-warning-500/20 text-warning-400'
+                                    <div className={`text-center font-mono text-lg rounded-lg py-1 text-white ${(game.runsB ?? 0) > (game.runsA ?? 0) ? 'bg-success-500/20' :
+                                        (game.runsB ?? 0) < (game.runsA ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
                                         }`}>
                                         {game.runsB}
                                     </div>

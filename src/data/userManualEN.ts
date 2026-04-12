@@ -131,6 +131,7 @@ To ensure data integrity, the calculator enforces several softball regulatory co
 **2. Synchronized Innings**
 - When you enter **Innings at Bat** for Team A, the **Innings on Defense** for Team B is automatically updated to the same value.
 - This ensures consistency across the game record.
+- **Logical Validation**: The application prevents entering at-bat innings that do not match the game's timeline (e.g., a team cannot have more at-bat innings than the total defensive innings played by the opponent).
 
 **3. Home Team Inning Constraints**
 - **Home Team Wins**: If the Home team is winning, they must have **fewer** innings at bat than the Visitor (since the bottom of the last inning is not completed).
@@ -192,7 +193,7 @@ If ER-TQB doesn't resolve ties, compare batting averages among tied teams.
 
 **5. Coin Toss**
 As a last resort, ties are broken by coin toss.
-*Note: This requires manual execution*
+*Note: The system will indicate if this critical point has been reached.*
     `,
     },
     {
@@ -344,7 +345,7 @@ All ties shall be settled in the following sequential order:
 ### The Waterfall Rule (Linear Waterfall)
 Tie-breaking criteria are applied in strict sequential order. Once a tie advances to a subsequent step (Criterion 1 → 2, or 2 → 3), **the rule prohibits going back**.
 
-**Original Group Integrity Principle:** If TQB partially separates the group (e.g., Team A places 1st, but B and C remain tied), the ER-TQB for B and C is calculated using the games of the **entire original group** (A vs B, A vs C, B vs C), NOT just the B vs C game. This ensures a continuous linear resolution, without "restarting" the tie as if it were only a two-team affair.
+**Original Group Integrity Principle:** If TQB partially separates the group (e.g., Team A places 1st, but B and C remain tied), the ER-TQB for B and C is calculated using the games of the **entire original group** (A vs B, A vs C, B vs C). **IMPORTANT**: Per the rules, the head-to-head result between B and C is not revisited even if they are the only two remaining tied teams; resolution must continue down the sequential criteria of Rule C11 (Waterfall Effect).
 
 ### About WBSC Rule C11
 This calculator implements the official procedures from the **WBSC (World Baseball Softball Confederation)** Tournament Regulations.

@@ -213,9 +213,9 @@ const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, er
 
                 <div className="px-4 py-2 bg-dark-600/50 border border-dark-500 rounded-lg text-sm font-mono text-white flex items-center gap-2">
                     <span className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t.common.final}:</span>
-                    <span className="text-success-400">{game.runsA}</span>
+                    <span className="text-white">{game.runsA}</span>
                     <span className="text-gray-600">-</span>
-                    <span className="text-success-400">{game.runsB}</span>
+                    <span className="text-white">{game.runsB}</span>
                 </div>
             </div>
 

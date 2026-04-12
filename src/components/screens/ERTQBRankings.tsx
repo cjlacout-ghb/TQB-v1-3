@@ -101,13 +101,13 @@ const ERTQBRankings = memo(function ERTQBRankings({
 
                     {/* Rankings Table */}
                     <div className="overflow-x-auto">
-                        <table className="table-dark w-full">
+                        <table className="table-dark w-full text-[15px]">
                             <thead>
                                 <tr>
-                                    <th className="w-20 text-center">{t.rankings.rank}</th>
-                                    <th>{t.rankings.team}</th>
-                                    <th className="text-center w-24">{t.rankings.wl}</th>
-                                    <th className="text-right w-32">{t.rankings.ertqb}</th>
+                                    <th className="w-20 text-center text-[15px]">{t.rankings.rank}</th>
+                                    <th className="text-[15px]">{t.rankings.team}</th>
+                                    <th className="text-center w-24 text-[15px]">{t.rankings.wl}</th>
+                                    <th className="text-right w-32 text-[15px]">{t.rankings.ertqb}</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -121,7 +121,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                                 </div>
                                             </td>
                                             <td>
-                                                <span className="font-semibold text-white">{team.name}</span>
+                                                <span className="font-medium text-white">{team.name}</span>
                                             </td>
                                             <td className="text-center">
                                                 <span className="font-mono">
@@ -131,7 +131,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                                 </span>
                                             </td>
                                             <td className="text-right">
-                                                <span className={`font-mono font-bold ${team.erTqb >= 0 ? 'text-success-400' : 'text-error-400'
+                                                <span className={`font-mono ${team.erTqb >= 0 ? 'text-success-400' : 'text-error-400'
                                                     }`}>
                                                     {formatTQBValue(team.erTqb)}
                                                 </span>
@@ -175,13 +175,13 @@ const ERTQBRankings = memo(function ERTQBRankings({
                             {t.rankings.compare.title}
                         </summary>
                         <div className="mt-3 overflow-x-auto rounded-xl border border-dark-600 bg-dark-800/50">
-                            <table className="table-dark w-full border-collapse">
-                                <thead className="bg-dark-700 text-gray-400 uppercase text-[10px] tracking-wider font-bold">
+                            <table className="table-dark w-full border-collapse text-[15px]">
+                                <thead className="bg-dark-700 text-gray-400 uppercase text-xs tracking-wider font-bold">
                                     <tr>
-                                        <th className="px-4 py-3 border-b border-dark-600">{t.rankings.team}</th>
-                                        <th className="px-4 py-3 border-b border-dark-600 text-right">{t.rankings.tqb}</th>
-                                        <th className="px-4 py-3 border-b border-dark-600 text-right">{t.rankings.ertqb}</th>
-                                        <th className="px-4 py-3 border-b border-dark-600 text-right">{t.rankings.compare.diff}</th>
+                                        <th className="px-2 py-2 border-b border-dark-600 text-[15px]">{t.rankings.team}</th>
+                                        <th className="px-2 py-2 border-b border-dark-600 text-right text-[15px]">{t.rankings.tqb}</th>
+                                        <th className="px-2 py-2 border-b border-dark-600 text-right text-[15px]">{t.rankings.ertqb}</th>
+                                        <th className="px-2 py-2 border-b border-dark-600 text-right text-[15px]">{t.rankings.compare.diff}</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-dark-600">
@@ -189,14 +189,14 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                         const diff = team.erTqb - team.tqb;
                                         return (
                                             <tr key={team.id} className="hover:bg-dark-700/30">
-                                                <td className="px-4 py-3 font-bold text-white">{team.name}</td>
-                                                <td className="px-4 py-3 text-right font-mono text-gray-400">
+                                                <td className="px-2 py-3 font-medium text-white">{team.name}</td>
+                                                <td className="px-2 py-3 text-right font-mono text-gray-400">
                                                     {formatTQBValue(team.tqb)}
                                                 </td>
-                                                <td className="px-4 py-3 text-right font-mono text-primary-400">
+                                                <td className="px-2 py-3 text-right font-mono text-primary-400">
                                                     {formatTQBValue(team.erTqb)}
                                                 </td>
-                                                <td className={`px-4 py-3 text-right font-mono ${diff >= 0 ? 'text-success-400' : 'text-error-400'
+                                                <td className={`px-2 py-3 text-right font-mono ${diff >= 0 ? 'text-success-400' : 'text-error-400'
                                                     }`}>
                                                     {formatTQBValue(diff)}
                                                 </td>
@@ -222,8 +222,8 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                     <span className="text-right font-medium text-white truncate">{game.teamAName}</span>
 
                                     <div className="flex flex-col items-center">
-                                        <div className={`w-full text-center font-mono font-bold text-lg rounded-t-lg py-0.5 ${(game.runsA ?? 0) > (game.runsB ?? 0) ? 'bg-success-500/20 text-success-400' :
-                                            (game.runsA ?? 0) < (game.runsB ?? 0) ? 'bg-dark-600 text-gray-500' : 'bg-warning-500/20 text-warning-400'
+                                        <div className={`w-full text-center font-mono text-lg rounded-t-lg py-0.5 text-white ${(game.runsA ?? 0) > (game.runsB ?? 0) ? 'bg-success-500/20' :
+                                            (game.runsA ?? 0) < (game.runsB ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
                                             }`}>
                                             {game.runsA}
                                         </div>
@@ -235,8 +235,8 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                     <span className="text-gray-600 text-center font-bold">:</span>
 
                                     <div className="flex flex-col items-center">
-                                        <div className={`w-full text-center font-mono font-bold text-lg rounded-t-lg py-0.5 ${(game.runsB ?? 0) > (game.runsA ?? 0) ? 'bg-success-500/20 text-success-400' :
-                                            (game.runsB ?? 0) < (game.runsA ?? 0) ? 'bg-dark-600 text-gray-500' : 'bg-warning-500/20 text-warning-400'
+                                        <div className={`w-full text-center font-mono text-lg rounded-t-lg py-0.5 text-white ${(game.runsB ?? 0) > (game.runsA ?? 0) ? 'bg-success-500/20' :
+                                            (game.runsB ?? 0) < (game.runsA ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
                                             }`}>
                                             {game.runsB}
                                         </div>

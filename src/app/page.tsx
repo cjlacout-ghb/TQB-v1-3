@@ -3,8 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber } from '@/lib/types';
-import { generateMatchups, calculateRankings } from '@/lib/calculations';
+
 import Header from '@/components/Header';
 import TeamEntry from '@/components/screens/TeamEntry';
 import GameEntry from '@/components/screens/GameEntry';
@@ -22,7 +21,7 @@ const FeedbackModal = dynamic(() => import('@/components/modals/FeedbackModal'),
 });
 import LandingScreen from '@/components/screens/LandingScreen';
 import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
-import { loadState, saveState, clearState, hasSavedState } from '@/lib/storage';
+import { loadState, hasSavedState } from '@/lib/storage';
 
 import { useTQBState } from '@/hooks/useTQBState';
 

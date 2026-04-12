@@ -18,7 +18,7 @@ Esta aplicación ayuda a oficiales de torneos y entrenadores a determinar con pr
     `,
     },
     {
-        id: 'persistencia-datos',
+        id: 'data-persistence',
         title: 'Persistencia de Datos y Privacidad',
         content: `
 ### ¿Dónde se guardan los datos?
@@ -131,6 +131,7 @@ Para garantizar la integridad de los datos, la calculadora aplica varias restric
 **2. Entradas Sincronizadas**
 - Cuando ingresa las **Entradas al Bate** para el Equipo A, las **Entradas en Defensa** para el Equipo B se actualizan automáticamente al mismo valor.
 - Esto asegura la consistencia en el registro del partido.
+- **Validación Lógica**: La aplicación impedirá ingresar entradas al bate que no coincidan con la línea de tiempo del partido (ej. un equipo no puede tener más entradas de bateo que el total de entradas que el otro equipo defendió).
 
 **3. Restricciones del Equipo Local**
 - **Equipo Local Gana**: Si el equipo local está ganando, debe tener **menos** entradas al bate que el Visitante (ya que no se completa la parte baja de la última entrada).
@@ -192,7 +193,7 @@ Si el ER-TQB no resuelve los empates, se comparan los promedios de bateo entre e
 
 **5. Lanzamiento de Moneda**
 Como último recurso, los empates se resuelven por lanzamiento de moneda.
-*Nota: Esto requiere ejecución manual*
+*Nota: El sistema indicará si se ha llegado a este punto crítico.*
     `,
     },
     {
@@ -344,7 +345,7 @@ Todos los empates se resolverán en el siguiente orden secuencial:
 ### La Regla de Cascada (Efecto Waterfall)
 Los criterios de desempate se aplican en orden secuencial. Una vez que un empate avanza a un nivel superior (del Criterio 1 al Criterio 2, o del 2 al 3), **la regla prohíbe volver atrás**.
 
-**Principio de Integridad del Grupo Original:** Si el TQB separa parcialmente el grupo (ej. Equipo A queda 1ro, pero B y C siguen empatados), el ER-TQB para B y C se calcula usando los juegos de **todo el grupo original** (A vs B, A vs C, B vs C), NO solo el juego B vs C. Esto asegura una resolución lineal continua, sin "reiniciar" el empate como si fuera solo de dos equipos.
+**Principio de Integridad del Grupo Original:** Si el TQB separa parcialmente el grupo (ej. Equipo A queda 1ro, pero B y C siguen empatados), el ER-TQB para B y C se calcula usando los juegos de **todo el grupo original** (A vs B, A vs C, B vs C). **IMPORTANTE**: Según la regla, no se vuelve a mirar el enfrentamiento directo (Head-to-Head) entre B y C aunque ahora solo queden ellos dos; se debe seguir bajando en la lista de criterios de la Regla C11 (Waterfall Effect).
 
 ### Acerca de la Regla C11 de WBSC
 Esta calculadora implementa los procedimientos oficiales de la **WBSC (Confederación Mundial de Béisbol y Softbol)**.
