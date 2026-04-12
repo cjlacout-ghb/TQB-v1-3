@@ -98,6 +98,11 @@ export function generatePDF(data: PDFExportData): void {
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
 
     // ===== TIE-BREAKING METHOD =====
+    if (yPos > 240) {
+        doc.addPage();
+        yPos = 20;
+    }
+
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(...primaryColor);
@@ -204,9 +209,12 @@ export function generatePDF(data: PDFExportData): void {
         margin: { left: 14, right: 14, bottom: 25 },
     });
 
+    // Update yPos after the table
+    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+
     // ===== GAME RESULTS SUMMARY =====
-    // Ensure the entire section starts on a new page if space is limited (less than 80mm)
-    if (yPos > 200) {
+    // Ensure the entire section starts on a new page if space is limited (less than 60mm)
+    if (yPos > 220) {
         doc.addPage();
         yPos = 20;
     }
@@ -242,9 +250,9 @@ export function generatePDF(data: PDFExportData): void {
         },
         columnStyles: {
             0: { halign: 'left' },
-            1: { halign: 'center', cellWidth: 20, font: 'courier' },
+            1: { halign: 'center', cellWidth: 20 },
             2: { halign: 'center', cellWidth: 15 },
-            3: { halign: 'center', cellWidth: 20, font: 'courier' },
+            3: { halign: 'center', cellWidth: 20 },
             4: { halign: 'right' },
         },
         alternateRowStyles: {
@@ -256,7 +264,36 @@ export function generatePDF(data: PDFExportData): void {
 
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
 
+    // ===== FORMULA REFERENCE =====
+    // Always start this on a new page or if space is very tight
+    if (yPos > 180) {
+        doc.addPage();
+        yPos = 20;
+    } else {
+        yPos += 5;
+    }
 
+    doc.setFontSize(14);
+    doc.setFont('helvetica', 'bold');
+    doc.setTextColor(...primaryColor);
+    doc.text(data.useERTQB ? t.rankings.formula.erTitle : t.rankings.formula.title, 14, yPos);
+    yPos += 8;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(50, 50, 50);
+
+    const formulaRef = data.useERTQB ? t.rankings.formula.erText : t.rankings.formula.text;
+    const formulaLines = doc.splitTextToSize(formulaRef, pageWidth - 28);
+    doc.text(formulaLines, 14, yPos);
+    yPos += formulaLines.length * 5 + 10;
+
+    // Optional: add a note about ER-TQB if used
+    if (data.useERTQB) {
+        const erNote = "Nota: Se están utilizando Carreras Limpias (ER) para este cálculo.";
+        doc.setFont('helvetica', 'italic');
+        doc.text(erNote, 14, yPos);
+    }
 
     // ===== FOOTER & PAGE NUMBERS =====
     const totalPages = doc.getNumberOfPages();
