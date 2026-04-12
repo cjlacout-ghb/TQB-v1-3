@@ -16,8 +16,7 @@ export default function TQBExplanationTable({ rankings, isERTQB = false }: TQBEx
     const method = isERTQB ? 'ER-TQB' : 'TQB';
 
     const title = t.rankings.summary.title
-        .replace('{method}', method)
-        .replace('{count}', tiedCount.toString());
+        .replace('{method}', method);
 
     const displayRanks = calculateDisplayRanks(rankings, isERTQB);
 

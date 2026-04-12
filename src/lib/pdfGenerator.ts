@@ -125,8 +125,7 @@ export function generatePDF(data: PDFExportData): void {
 
     const method = data.useERTQB ? 'ER-TQB' : 'TQB';
     const summaryTitle = t.rankings.summary.title
-        .replace('{method}', method)
-        .replace('{count}', data.rankings.length.toString());
+        .replace('{method}', method);
 
     doc.setTextColor(0, 0, 0);
     doc.setFontSize(14);
@@ -176,7 +175,7 @@ export function generatePDF(data: PDFExportData): void {
         t.pdf.inningsDefenseShort,
         t.pdf.ratioScoredShort,
         t.pdf.ratioAllowedShort,
-        t.common.final
+        `${method}\n${t.common.final}`
     ];
 
     autoTable(doc, {
@@ -189,20 +188,25 @@ export function generatePDF(data: PDFExportData): void {
             textColor: textLight,
             fontStyle: 'bold',
             halign: 'center',
-            fontSize: 7.5,
+            fontSize: 7, // Reduced slightly to ensure it fits 2 lines comfortably
+            lineColor: [80, 80, 100],
+            lineWidth: 0.1,
         },
         columnStyles: {
-            0: { halign: 'center', cellWidth: 12 },
-            1: { halign: 'left', minCellWidth: 35 },
-            2: { halign: 'center', cellWidth: 12 },
-            3: { halign: 'center', cellWidth: 12 },
-            4: { halign: 'center', cellWidth: 12 },
-            5: { halign: 'center', cellWidth: 12 },
-            6: { halign: 'center', font: 'courier', cellWidth: 22 },
-            7: { halign: 'center', font: 'courier', cellWidth: 22 },
-            8: { halign: 'right', font: 'courier', fontStyle: 'normal' },
+            0: { halign: 'center', cellWidth: 10 }, // Rank
+            1: { halign: 'left', minCellWidth: 32 }, // Team
+            2: { halign: 'center', cellWidth: 17 }, // Runs Scored
+            3: { halign: 'center', cellWidth: 17 }, // Innings Batting
+            4: { halign: 'center', cellWidth: 17 }, // Runs Allowed
+            5: { halign: 'center', cellWidth: 17 }, // Innings Defense
+            6: { halign: 'center', font: 'courier', cellWidth: 22 }, // Ratio Scored
+            7: { halign: 'center', font: 'courier', cellWidth: 22 }, // Ratio Allowed
+            8: { halign: 'right', font: 'courier', fontStyle: 'bold', cellWidth: 20 }, // Final TQB
         },
-        styles: { fontSize: 8 },
+        styles: { 
+            fontSize: 8,
+            cellPadding: 1.5,
+        },
         alternateRowStyles: {
             fillColor: [245, 245, 250],
         },
@@ -263,37 +267,6 @@ export function generatePDF(data: PDFExportData): void {
     });
 
     yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
-
-    // ===== FORMULA REFERENCE =====
-    // Always start this on a new page or if space is very tight
-    if (yPos > 180) {
-        doc.addPage();
-        yPos = 20;
-    } else {
-        yPos += 5;
-    }
-
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(...primaryColor);
-    doc.text(data.useERTQB ? t.rankings.formula.erTitle : t.rankings.formula.title, 14, yPos);
-    yPos += 8;
-
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.setTextColor(50, 50, 50);
-
-    const formulaRef = data.useERTQB ? t.rankings.formula.erText : t.rankings.formula.text;
-    const formulaLines = doc.splitTextToSize(formulaRef, pageWidth - 28);
-    doc.text(formulaLines, 14, yPos);
-    yPos += formulaLines.length * 5 + 10;
-
-    // Optional: add a note about ER-TQB if used
-    if (data.useERTQB) {
-        const erNote = "Nota: Se están utilizando Carreras Limpias (ER) para este cálculo.";
-        doc.setFont('helvetica', 'italic');
-        doc.text(erNote, 14, yPos);
-    }
 
     // ===== FOOTER & PAGE NUMBERS =====
     const totalPages = doc.getNumberOfPages();
