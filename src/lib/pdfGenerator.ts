@@ -95,7 +95,26 @@ export function generatePDF(data: PDFExportData): void {
     });
 
     // Get Y position after table
-    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 12;
+    yPos = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 8;
+
+    // ===== FORMULA REFERENCE =====
+    // Add formula if TQB or ER-TQB was used to resolve ties
+    if (data.tieBreakMethod === 'TQB' || data.tieBreakMethod === 'ER_TQB' || data.tieBreakMethod === 'UNRESOLVED' || data.useERTQB) {
+        doc.setFontSize(8.5);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100);
+        
+        const isER = data.tieBreakMethod === 'ER_TQB' || data.tieBreakMethod === 'UNRESOLVED' || data.useERTQB;
+        const formulaTitle = isER ? t.rankings.formula.erTitle : t.rankings.formula.title;
+        const formulaText = isER ? t.rankings.formula.erText : t.rankings.formula.text;
+        
+        const formulaLine = `${formulaTitle}: ${formulaText}`;
+        const splitFormula = doc.splitTextToSize(formulaLine, pageWidth - 28);
+        doc.text(splitFormula, 14, yPos);
+        yPos += (splitFormula.length * 4) + 8;
+    } else {
+        yPos += 10;
+    }
 
     // ===== TIE-BREAKING METHOD =====
     if (yPos > 240) {
