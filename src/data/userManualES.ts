@@ -12,9 +12,10 @@ Esta aplicación ayuda a oficiales de torneos y entrenadores a determinar con pr
 
 ### Funcionalidades
 - Calcula y muestra las clasificaciones del torneo según la oficial Regla C11 de la WBSC.
+- **Modo Multi-Grupo**: Rastrea y clasifica dos divisiones separadas (Grupo A y Grupo B) simultáneamente en el mismo archivo.
 - **Guardado Automático**: Los datos se guardan en su dispositivo. Puede cerrar el navegador en cualquier momento y retomar exactamente donde quedó.
-- Genera informes profesionales en PDF.
-- Soporta formatos de torneo round-robin (hasta 8 equipos).
+- Genera informes profesionales en PDF con tablas separadas para cada grupo.
+- Soporta formatos de torneo round-robin (hasta 8 equipos por grupo).
     `,
     },
     {
@@ -44,9 +45,10 @@ Sus datos se borrarán permanentemente en los siguientes casos:
 
 ### Paso 1: Ingresar Nombres de Equipos
 1. Ingrese los nombres de todos los equipos involucrados.
-2. Haga clic en **"Agregar Equipo"** para añadir más (mínimo 3, máximo 8).
-3. Use el **icono de papelera** para eliminar un equipo.
-4. Una vez que avance a la siguiente pantalla, los nombres no podrán ser editados.
+2. Haga clic en **"Agregar Equipo"** para añadir más (mínimo 3, máximo 8 por grupo).
+3. **Torneos Multi-Grupo**: Haga clic en **"+ Grupo B"** para habilitar el seguimiento multi-grupo. Ahora puede usar las pestañas para cambiar entre el Grupo A y el Grupo B libremente, tratando a cada uno de forma independiente.
+4. Use el **icono de papelera** para eliminar un equipo.
+5. Una vez que avance a la siguiente pantalla, los nombres no podrán ser editados.
 
 ### Consejos
 - Use nombres oficiales de equipos para un registro preciso

@@ -12,9 +12,10 @@ This application helps tournament officials and coaches accurately determine tea
 
 ### Features
 - Calculate and display tournament standings based on official WBSC Rule C11.
+- **Multi-Group Mode**: Track and rank two separate divisions (Group A & Group B) simultaneously within the same file.
 - **Auto-Save**: Data is automatically saved to your device. Close the browser at any time and resume exactly where you left off.
-- Generate professional PDF reports.
-- Support round-robin tournament formats (up to 8 teams).
+- Generate professional PDF reports with separate tables for each group.
+- Support round-robin tournament formats (up to 8 teams per group).
     `,
     },
     {
@@ -44,9 +45,10 @@ Your data will be permanently cleared in the following cases:
 
 ### Step 1: Enter Team Names
 1. Enter the names of all teams in your tournament.
-2. Click **"Add Team"** to add more teams (minimum 3, maximum 8).
-3. Click the **trash icon** to remove a team.
-4. Once you proceed to the next screen, team names cannot be edited.
+2. Click **"Add Team"** to add more teams (minimum 3, maximum 8 per group).
+3. **Multi-Group Torunaments**: Click on **"+ Group B"** to toggle multi-group tracking. You can now use the tabs to switch between Group A and Group B freely, treating each independently.
+4. Click the **trash icon** to remove a team.
+5. Once you proceed to the next screen, team names cannot be edited.
 
 ### Tips
 - Use official team names for accurate record-keeping

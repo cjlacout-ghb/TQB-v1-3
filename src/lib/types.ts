@@ -1,15 +1,18 @@
 // Type definitions for TQB Calculator
 
 export type TeamID = string;
+export type GroupID = 'A' | 'B';
 export type GameID = string;
 
 export interface Team {
     id: TeamID;
     name: string;
+    groupId: GroupID; // Assigned by active UI tab at moment of entry; not in any file format
 }
 
 export interface GameData {
     id: GameID;
+    groupId: GroupID; // Derived from the group of the participating teams
     teamAId: TeamID;
     teamBId: TeamID;
     teamAName: string;
@@ -38,6 +41,7 @@ export interface TeamStats {
     earnedRunsAllowed: number;
     tqb: number;
     erTqb: number;
+    groupId?: GroupID; // Tagged when computed in multi-group mode; absent in single-group
 }
 
 export interface RankingResult {
@@ -64,6 +68,9 @@ export interface AppState {
     tieBreakMethod: TieBreakMethod;
     needsERTQB: boolean;
     hasUnresolvedTies: boolean;
+    isMultiGroup: boolean; // Persisted — defines tournament structure
+    groupTieBreakMethod?: Partial<Record<GroupID, TieBreakMethod>>; // Per-group tie-break metadata
+    // NOTE: activeGroupId is local UI state only — it is never persisted
 }
 
 export interface CSVRow {
@@ -87,6 +94,10 @@ export interface PDFExportData {
     tieBreakMethod: TieBreakMethod;
     useERTQB: boolean;
     language: Language;
+    /** Multi-group mode: when true the generator renders two labeled sections */
+    isMultiGroup?: boolean;
+    /** Per-group tie-break methods captured at calculation time */
+    groupTieBreakMethod?: Partial<Record<GroupID, TieBreakMethod>>;
 }
 
 export type Language = 'en' | 'es';

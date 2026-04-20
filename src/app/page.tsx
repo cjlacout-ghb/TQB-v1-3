@@ -24,6 +24,7 @@ import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
 import { loadState, hasSavedState } from '@/lib/storage';
 
 import { useTQBState } from '@/hooks/useTQBState';
+import type { Team, GameData, GroupID } from '@/lib/types';
 
 export default function Home() {
     const { state, actions } = useTQBState();
@@ -35,7 +36,9 @@ export default function Home() {
         tieBreakMethod,
         needsERTQB,
         hasUnresolvedTies,
-        totalSteps
+        totalSteps,
+        isMultiGroup,
+        groupTieBreakMethod,
     } = state;
 
     const {
@@ -47,7 +50,8 @@ export default function Home() {
         handleCalculateTQB,
         handleCalculateERTQB,
         handleStartNew,
-        handleBack: baseHandleBack
+        handleBack: baseHandleBack,
+        setIsMultiGroup,
     } = actions;
 
     // Modal states
@@ -98,6 +102,19 @@ export default function Home() {
         setCurrentScreen(4);
     }, [setCurrentScreen]);
 
+    // Multi-group import: merges CSV/paste results into one group, preserving the other group's state.
+    // Does NOT navigate — the user must click Continue when both groups are ready.
+    const handleGroupImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => {
+        setTeams(prev => [
+            ...prev.filter(t => t.groupId !== groupId),
+            ...importedTeams.map(t => ({ ...t, groupId })),
+        ]);
+        setGames(prev => [
+            ...prev.filter(g => g.groupId !== groupId),
+            ...importedGames.map(g => ({ ...g, groupId })),
+        ]);
+    }, [setTeams, setGames]);
+
     // Render current screen — useMemo prevents re-mounting inputs on every keystroke
     const renderedScreen = useMemo(() => {
         switch (currentScreen) {
@@ -117,7 +134,10 @@ export default function Home() {
                         onTeamsChange={setTeams}
                         onContinue={handleContinueToGames}
                         onCSVImport={handleCSVImport}
+                        onMultiGroupImport={handleGroupImport}
                         onBack={handleBack}
+                        isMultiGroup={isMultiGroup}
+                        onSetMultiGroup={setIsMultiGroup}
                     />
                 );
 
@@ -130,6 +150,7 @@ export default function Home() {
                         onCalculate={handleCalculateTQB}
                         onBack={handleBack}
                         totalSteps={totalSteps}
+                        isMultiGroup={isMultiGroup}
                     />
                 );
 
@@ -146,6 +167,8 @@ export default function Home() {
                         totalSteps={totalSteps}
                         games={games}
                         onOpenManual={handleOpenManual}
+                        isMultiGroup={isMultiGroup}
+                        groupTieBreakMethod={groupTieBreakMethod}
                     />
                 );
 
@@ -156,6 +179,7 @@ export default function Home() {
                         onGamesChange={setGames}
                         onCalculate={handleCalculateERTQB}
                         onBack={handleBack}
+                        isMultiGroup={isMultiGroup}
                     />
                 );
 
@@ -170,6 +194,8 @@ export default function Home() {
                         onBack={handleBack}
                         games={games}
                         onOpenManual={handleOpenManual}
+                        isMultiGroup={isMultiGroup}
+                        groupTieBreakMethod={groupTieBreakMethod}
                     />
                 );
 
@@ -178,7 +204,8 @@ export default function Home() {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB,
-        hasUnresolvedTies, totalSteps, setTeams, setGames, handleCSVImport,
+        hasUnresolvedTies, totalSteps, isMultiGroup, groupTieBreakMethod,
+        setTeams, setGames, handleCSVImport,
         handleContinueToGames, handleCalculateTQB, handleCalculateERTQB,
         handleProceedToERTQB, handleStartNewConfirm, handleContinueTournament,
         handleBack, handleOpenManual]);
@@ -232,6 +259,8 @@ export default function Home() {
                     tieBreakMethod,
                     useERTQB: currentScreen === 5,
                     language,
+                    isMultiGroup,
+                    groupTieBreakMethod,
                 }}
             />
 

@@ -1,12 +1,12 @@
 'use client';
 
 import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, CheckCircle, ArrowLeft } from 'lucide-react';
-import { TeamStats, TieBreakMethod, GameData } from '@/lib/types';
+import { TeamStats, TieBreakMethod, GameData, GroupID } from '@/lib/types';
 import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 
 interface ERTQBRankingsProps {
     rankings: TeamStats[];
@@ -17,6 +17,8 @@ interface ERTQBRankingsProps {
     onBack?: () => void;
     games: GameData[];
     onOpenManual?: (section?: string) => void;
+    isMultiGroup: boolean;
+    groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
 }
 
 const ERTQBRankings = memo(function ERTQBRankings({
@@ -28,9 +30,23 @@ const ERTQBRankings = memo(function ERTQBRankings({
     onBack,
     games,
     onOpenManual,
+    isMultiGroup,
+    groupTieBreakMethod,
 }: ERTQBRankingsProps) {
     const { t, language } = useLanguage();
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
+    const activeTieBreakMethod: TieBreakMethod =
+        (isMultiGroup && groupTieBreakMethod[activeGroupId])
+            ? groupTieBreakMethod[activeGroupId]!
+            : tieBreakMethod;
+
+    const displayRankings = isMultiGroup
+        ? rankings.filter(r => r.groupId === activeGroupId)
+        : rankings;
+    const displayGames = isMultiGroup
+        ? games.filter(g => g.groupId === activeGroupId)
+        : games;
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -65,6 +81,24 @@ const ERTQBRankings = memo(function ERTQBRankings({
                     </div>
                 </div>
 
+                {/* Group A / B tab strip — only in multi-group mode */}
+                {isMultiGroup && (
+                    <div className="px-6 pt-2">
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            {(['A', 'B'] as GroupID[]).map(gId => (
+                                <button
+                                    key={gId}
+                                    onClick={() => setActiveGroupId(gId)}
+                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all
+                                        ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {t.common.groupTab.replace('{gId}', gId)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="card-body space-y-6">
                     {/* Tie-Break Method Indicator */}
                     <div className={`p-4 rounded-xl border flex items-start gap-3 ${hasUnresolvedTies
@@ -79,7 +113,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                         <div className="flex-1">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <p className={`text-sm font-medium ${hasUnresolvedTies ? 'text-warning-400' : 'text-success-400'}`}>
-                                    {getTieBreakMethodText(tieBreakMethod, language)}
+                                    {getTieBreakMethodText(activeTieBreakMethod, language)}
                                 </p>
                                 {hasUnresolvedTies && onOpenManual && (
                                     <button
@@ -112,8 +146,8 @@ const ERTQBRankings = memo(function ERTQBRankings({
                             </thead>
                             <tbody>
                                 {(() => {
-                                    const displayRanks = calculateDisplayRanks(rankings, true);
-                                    return rankings.map((team, index) => (
+                                    const displayRanks = calculateDisplayRanks(displayRankings, true);
+                                    return displayRankings.map((team, index) => (
                                         <tr key={team.id} className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
                                             <td className="text-center">
                                                 <div className="flex justify-center">
@@ -144,7 +178,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                     </div>
 
                     {/* ER-TQB Explanation Summary */}
-                    <TQBExplanationTable rankings={rankings} isERTQB={true} />
+                    <TQBExplanationTable rankings={displayRankings} isERTQB={true} />
 
                     {/* ER-TQB Formula */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-dark-700/50 rounded-xl border border-dark-500">
@@ -185,7 +219,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-dark-600">
-                                    {rankings.map((team) => {
+                                    {displayRankings.map((team) => {
                                         const diff = team.erTqb - team.tqb;
                                         return (
                                             <tr key={team.id} className="hover:bg-dark-700/30">
@@ -215,7 +249,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                             {t.rankings.viewGameResults}
                         </summary>
                         <div className="mt-3 p-4 bg-dark-700/30 rounded-xl divide-y divide-dark-600">
-                            {games.map((game, index) => (
+                            {displayGames.map((game, index) => (
                                 <div key={game.id} className="grid grid-cols-[80px_1fr_60px_20px_60px_1fr] items-center gap-2 py-3 first:pt-0 last:pb-0">
                                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{t.rankings.game} {index + 1}</span>
 

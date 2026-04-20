@@ -23,7 +23,10 @@ export const translations = {
             final: "Final",
             step: "Step",
             of: "of",
-            feedback: "💡 Leave me your feedback"
+            feedback: "💡 Leave me your feedback",
+            groupTab: "Group {gId}",
+            addGroupB: "+ Group B",
+            onlyGroupA: "Only Group A"
         },
         landing: {
             title: "Tournament Calculator / Softball",
@@ -238,7 +241,10 @@ export const translations = {
             final: "Final",
             step: "Paso",
             of: "de",
-            feedback: "💡 Dejame tu comentario"
+            feedback: "💡 Dejame tu comentario",
+            groupTab: "Grupo {gId}",
+            addGroupB: "+ Grupo B",
+            onlyGroupA: "Solo Grupo A"
         },
         landing: {
             title: "Calculadora de Torneo / Softbol",

@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo, memo } from 'react';
 import { Calculator, AlertCircle, HelpCircle, ArrowLeftRight, ArrowLeft } from 'lucide-react';
-import { Team, GameData } from '@/lib/types';
+import { Team, GameData, GroupID } from '@/lib/types';
 import { validateInningsFormat, inningsToOuts } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -14,6 +14,7 @@ interface GameEntryProps {
     onCalculate: () => void;
     onBack?: () => void;
     totalSteps: number;
+    isMultiGroup: boolean;
 }
 
 const GameEntry = memo(function GameEntry({
@@ -22,11 +23,13 @@ const GameEntry = memo(function GameEntry({
     onGamesChange,
     onCalculate,
     onBack,
-    totalSteps
+    totalSteps,
+    isMultiGroup,
 }: GameEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
     const [showInningsHelp, setShowInningsHelp] = useState(false);
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only — never persisted
 
     const updateGame = useCallback((
         gameId: string,
@@ -142,6 +145,7 @@ const GameEntry = memo(function GameEntry({
         }
     }, [validateGames, onCalculate]);
 
+    // Calculate is enabled only when ALL games (both groups) are complete
     const allFieldsFilled = useMemo(() => {
         return games.every(game =>
             game.runsA !== null && game.runsA !== undefined &&
@@ -153,8 +157,26 @@ const GameEntry = memo(function GameEntry({
         );
     }, [games]);
 
-    const gamesCount = games.length;
-    const teamsCount = teams.length;
+    // Tab-filtered display subset — update ops still target the full games array by ID
+    const displayGames = useMemo(() =>
+        isMultiGroup ? games.filter(g => g.groupId === activeGroupId) : games,
+        [games, isMultiGroup, activeGroupId]);
+
+    const gamesCount = isMultiGroup ? displayGames.length : games.length;
+    const teamsCount = isMultiGroup
+        ? teams.filter(t => t.groupId === activeGroupId).length
+        : teams.length;
+
+    // Per-group readiness: green dot when every game in that group is fully filled
+    const isGroupFilled = useCallback((gId: GroupID): boolean =>
+        games.filter(g => g.groupId === gId).every(game =>
+            game.runsA !== null && game.runsA !== undefined &&
+            game.runsB !== null && game.runsB !== undefined &&
+            game.inningsABatting && validateInningsFormat(game.inningsABatting) &&
+            game.inningsADefense && validateInningsFormat(game.inningsADefense) &&
+            game.inningsBBatting && validateInningsFormat(game.inningsBBatting) &&
+            game.inningsBDefense && validateInningsFormat(game.inningsBDefense)
+        ), [games]);
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -191,6 +213,35 @@ const GameEntry = memo(function GameEntry({
                     </button>
                 </div>
 
+                {/* Group A / B tab strip — only in multi-group mode.
+                    Inner GameCard rows and all update/swap handlers are NOT modified. */}
+                {isMultiGroup && (
+                    <div className="px-6 pt-2">
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            {(['A', 'B'] as GroupID[]).map(gId => {
+                                const ready = isGroupFilled(gId);
+                                const isActive = activeGroupId === gId;
+                                return (
+                                    <button
+                                        key={gId}
+                                        onClick={() => { setActiveGroupId(gId); setErrors({}); }}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                            ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        {t.common.groupTab.replace('{gId}', gId)}
+                                        <span
+                                            title={ready ? 'Completo' : 'Pendiente'}
+                                            className={`w-2 h-2 rounded-full transition-colors ${
+                                                ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                            }`}
+                                        />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 <div className="card-body space-y-6">
                     {/* Innings Help Panel */}
                     {showInningsHelp && (
@@ -213,7 +264,7 @@ const GameEntry = memo(function GameEntry({
 
                     {/* Games List */}
                     <div className="space-y-4">
-                        {games.map((game, index) => (
+                        {displayGames.map((game, index) => (
                             <GameCard
                                 key={game.id}
                                 game={game}

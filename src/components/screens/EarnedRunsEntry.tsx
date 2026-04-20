@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from 'react';
 import { Calculator, AlertCircle, Info, ArrowLeft } from 'lucide-react';
-import { GameData } from '@/lib/types';
+import { GameData, GroupID } from '@/lib/types';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -11,16 +11,19 @@ interface EarnedRunsEntryProps {
     onGamesChange: (games: GameData[]) => void;
     onCalculate: () => void;
     onBack?: () => void;
+    isMultiGroup: boolean;
 }
 
 const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
     games,
     onGamesChange,
     onCalculate,
-    onBack
+    onBack,
+    isMultiGroup,
 }: EarnedRunsEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
     const updateGame = useCallback((
         gameId: string,
@@ -89,6 +92,18 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
         );
     }, [games]);
 
+    // Tab-filtered display subset — updateGame still targets the full array by ID
+    const displayGames = useMemo(() =>
+        isMultiGroup ? games.filter(g => g.groupId === activeGroupId) : games,
+        [games, isMultiGroup, activeGroupId]);
+
+    // Per-group readiness for tab completion dots
+    const isGroupFilled = useCallback((gId: GroupID): boolean =>
+        games.filter(g => g.groupId === gId).every(game =>
+            game.earnedRunsA !== null && game.earnedRunsA !== undefined &&
+            game.earnedRunsB !== null && game.earnedRunsB !== undefined
+        ), [games]);
+
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
             <StepIndicator currentStep={4} totalSteps={5} />
@@ -112,6 +127,34 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
                     </div>
                 </div>
 
+                {/* Group A / B tab strip — only in multi-group mode */}
+                {isMultiGroup && (
+                    <div className="px-6 pt-2">
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            {(['A', 'B'] as GroupID[]).map(gId => {
+                                const ready = isGroupFilled(gId);
+                                const isActive = activeGroupId === gId;
+                                return (
+                                    <button
+                                        key={gId}
+                                        onClick={() => { setActiveGroupId(gId); setErrors({}); }}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                            ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        {t.common.groupTab.replace('{gId}', gId)}
+                                        <span
+                                            title={ready ? 'Completo' : 'Pendiente'}
+                                            className={`w-2 h-2 rounded-full transition-colors ${
+                                                ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                            }`}
+                                        />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 <div className="card-body space-y-6">
                     {/* Info Panel */}
                     <div className="p-4 bg-primary-500/10 border border-primary-500/30 rounded-xl flex items-start gap-3">
@@ -128,7 +171,7 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
 
                     {/* Games List */}
                     <div className="space-y-4">
-                        {games.map((game, index) => (
+                        {displayGames.map((game, index) => (
                             <EarnedRunsCard
                                 key={game.id}
                                 game={game}

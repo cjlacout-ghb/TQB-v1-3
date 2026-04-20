@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef, useCallback, memo } from 'react';
-import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft, FileText, ClipboardList } from 'lucide-react';
-import { Team, GameData } from '@/lib/types';
+import { useState, useRef, useCallback, memo, useMemo } from 'react';
+import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft, FileText, ClipboardList, Users } from 'lucide-react';
+import { Team, GameData, GroupID } from '@/lib/types';
 import { parseCSV, getSampleCSV } from '@/lib/csvParser';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -12,7 +12,10 @@ interface TeamEntryProps {
     onTeamsChange: (teams: Team[]) => void;
     onContinue: () => void;
     onCSVImport: (teams: Team[], games: GameData[]) => void;
+    onMultiGroupImport: (teams: Team[], games: GameData[], groupId: GroupID) => void;
     onBack?: () => void;
+    isMultiGroup: boolean;
+    onSetMultiGroup: (value: boolean | ((prev: boolean) => boolean)) => void;
 }
 
 const MAX_TEAMS = 8;
@@ -23,7 +26,10 @@ const TeamEntry = memo(function TeamEntry({
     onTeamsChange,
     onContinue,
     onCSVImport,
-    onBack
+    onMultiGroupImport,
+    onBack,
+    isMultiGroup,
+    onSetMultiGroup,
 }: TeamEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -33,20 +39,24 @@ const TeamEntry = memo(function TeamEntry({
     const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
     const [pastedText, setPastedText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only — never persisted
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const addTeam = useCallback(() => {
-        if (teams.length >= MAX_TEAMS) return;
+        const groupTeams = teams.filter(t => t.groupId === activeGroupId);
+        if (groupTeams.length >= MAX_TEAMS) return;
 
         const newTeam: Team = {
             id: `team-${Date.now()}`,
             name: '',
+            groupId: activeGroupId,
         };
         onTeamsChange([...teams, newTeam]);
-    }, [teams, onTeamsChange]);
+    }, [teams, onTeamsChange, activeGroupId]);
 
     const removeTeam = useCallback((teamId: string) => {
-        if (teams.length <= MIN_TEAMS) return;
+        const groupTeams = teams.filter(t => t.groupId === activeGroupId);
+        if (groupTeams.length <= MIN_TEAMS) return;
         onTeamsChange(teams.filter(t => t.id !== teamId));
 
         // Clear error for removed team
@@ -55,7 +65,7 @@ const TeamEntry = memo(function TeamEntry({
             delete next[teamId];
             return next;
         });
-    }, [teams, onTeamsChange]);
+    }, [teams, onTeamsChange, activeGroupId]);
 
     const updateTeamName = useCallback((teamId: string, name: string) => {
         onTeamsChange(
@@ -74,23 +84,31 @@ const TeamEntry = memo(function TeamEntry({
 
     const validateTeams = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
-        const names = new Set<string>();
 
-        for (const team of teams) {
-            const trimmedName = team.name.trim();
-
-            if (!trimmedName) {
-                newErrors[team.id] = t.teamEntry.errors.required;
-            } else if (names.has(trimmedName.toLowerCase())) {
-                newErrors[team.id] = t.teamEntry.errors.duplicate;
-            } else {
-                names.add(trimmedName.toLowerCase());
+        const validateGroup = (groupTeams: Team[]) => {
+            const names = new Set<string>();
+            for (const team of groupTeams) {
+                const trimmedName = team.name.trim();
+                if (!trimmedName) {
+                    newErrors[team.id] = t.teamEntry.errors.required;
+                } else if (names.has(trimmedName.toLowerCase())) {
+                    newErrors[team.id] = t.teamEntry.errors.duplicate;
+                } else {
+                    names.add(trimmedName.toLowerCase());
+                }
             }
+        };
+
+        if (isMultiGroup) {
+            validateGroup(teams.filter(t => t.groupId === 'A'));
+            validateGroup(teams.filter(t => t.groupId === 'B'));
+        } else {
+            validateGroup(teams);
         }
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
-    }, [teams, t]);
+    }, [teams, t, isMultiGroup]);
 
     const handleContinue = useCallback(() => {
         if (validateTeams()) {
@@ -118,11 +136,14 @@ const TeamEntry = memo(function TeamEntry({
                 return;
             }
 
-            // Successfully parsed CSV
-            onCSVImport(result.teams, result.games);
+            if (isMultiGroup) {
+                onMultiGroupImport(result.teams, result.games, activeGroupId);
+            } else {
+                onCSVImport(result.teams, result.games);
+            }
         };
         reader.readAsText(file);
-    }, [onCSVImport, t]);
+    }, [onCSVImport, onMultiGroupImport, isMultiGroup, activeGroupId, t]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -157,13 +178,37 @@ const TeamEntry = memo(function TeamEntry({
                 setCSVError(result.errors);
                 return;
             }
-            
-            onCSVImport(result.teams, result.games);
-        }, 300);
-    }, [pastedText, t, onCSVImport]);
 
-    const hasValidTeams = teams.length >= MIN_TEAMS &&
-        teams.every(t => t.name.trim().length > 0);
+            if (isMultiGroup) {
+                onMultiGroupImport(result.teams, result.games, activeGroupId);
+            } else {
+                onCSVImport(result.teams, result.games);
+            }
+        }, 300);
+    }, [pastedText, t, onCSVImport, onMultiGroupImport, isMultiGroup, activeGroupId]);
+
+    // Continue button is enabled only when ALL active groups have ≥3 named teams
+    const hasValidTeams = useMemo(() => {
+        const groupATeams = teams.filter(t => t.groupId === 'A');
+        const groupAReady = groupATeams.length >= MIN_TEAMS && groupATeams.every(t => t.name.trim().length > 0);
+        if (!isMultiGroup) return groupAReady;
+        const groupBTeams = teams.filter(t => t.groupId === 'B');
+        const groupBReady = groupBTeams.length >= MIN_TEAMS && groupBTeams.every(t => t.name.trim().length > 0);
+        return groupAReady && groupBReady;
+    }, [teams, isMultiGroup]);
+
+    // Teams visible in the current tab
+    const displayTeams = teams.filter(t => t.groupId === activeGroupId);
+
+    // Per-group readiness for the tab status indicators
+    const groupAReady = useMemo(() => {
+        const g = teams.filter(t => t.groupId === 'A');
+        return g.length >= MIN_TEAMS && g.every(t => t.name.trim().length > 0);
+    }, [teams]);
+    const groupBReady = useMemo(() => {
+        const g = teams.filter(t => t.groupId === 'B');
+        return g.length >= MIN_TEAMS && g.every(t => t.name.trim().length > 0);
+    }, [teams]);
 
     return (
         <div className="max-w-2xl mx-auto animate-fade-in">
@@ -171,31 +216,92 @@ const TeamEntry = memo(function TeamEntry({
 
             <div className="card">
                 <div className="card-header">
-                    <div className="flex items-center gap-4">
-                        {onBack && (
+                    <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                            {onBack && (
+                                <button
+                                    onClick={onBack}
+                                    className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
+                                    title={t.common.reset}
+                                    aria-label={t.common.reset}
+                                >
+                                    <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                </button>
+                            )}
+                            <h2 className="text-2xl font-bold text-white">{t.teamEntry.title}</h2>
+                        </div>
+
+                        {/* Multi-group toggle */}
+                        {!isMultiGroup ? (
                             <button
-                                onClick={onBack}
-                                className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
-                                title={t.common.reset}
-                                aria-label={t.common.reset}
+                                onClick={() => {
+                                    onSetMultiGroup(true);
+                                    const ts = Date.now();
+                                    const bTeams: Team[] = [
+                                        { id: `team-b-1-${ts}`,     name: '', groupId: 'B' },
+                                        { id: `team-b-2-${ts + 1}`, name: '', groupId: 'B' },
+                                        { id: `team-b-3-${ts + 2}`, name: '', groupId: 'B' },
+                                    ];
+                                    onTeamsChange([...teams, ...bTeams]);
+                                    setActiveGroupId('B');
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                    bg-primary-500/10 text-primary-400 border border-primary-500/30
+                                    hover:bg-primary-500/20 transition-all duration-200 text-sm font-medium whitespace-nowrap"
                             >
-                                <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                <Users size={14} />
+                                {t.common.addGroupB}
+                            </button>
+                        ) : (
+                            <button
+                                onClick={() => {
+                                    onSetMultiGroup(false);
+                                    onTeamsChange(teams.filter(t => t.groupId !== 'B'));
+                                    setActiveGroupId('A');
+                                }}
+                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                    bg-dark-600 text-gray-400 border border-dark-500
+                                    hover:border-error-500/50 hover:text-error-400
+                                    transition-all duration-200 text-sm font-medium whitespace-nowrap"
+                            >
+                                {t.common.onlyGroupA}
                             </button>
                         )}
-                        <div>
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-2xl font-bold text-white">{t.teamEntry.title}</h2>
-
-                            </div>
-
-                        </div>
                     </div>
                 </div>
 
+                {/* Group A / B tab strip — only when multi-group is active */}
+                {isMultiGroup && (
+                    <div className="px-6 pt-2">
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            {(['A', 'B'] as GroupID[]).map(gId => {
+                                const ready = gId === 'A' ? groupAReady : groupBReady;
+                                const isActive = activeGroupId === gId;
+                                return (
+                                    <button
+                                        key={gId}
+                                        onClick={() => { setActiveGroupId(gId); setErrors({}); setCSVError([]); }}
+                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                            ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        {t.common.groupTab.replace('{gId}', gId)}
+                                        <span
+                                            title={ready ? 'Listo' : 'Incompleto'}
+                                            className={`w-2 h-2 rounded-full transition-colors ${
+                                                ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                            }`}
+                                        />
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
                 <div className="card-body space-y-6">
-                    {/* Team List */}
+                    {/* Team List — filtered to the active group's tab */}
                     <div className="space-y-3">
-                        {teams.map((team, index) => (
+                        {displayTeams.map((team, index) => (
                             <div key={team.id} className="flex items-start gap-3 animate-slide-up">
                                 <div className="w-8 h-10 flex items-center justify-center text-gray-500 font-mono text-sm">
                                     {index + 1}.
@@ -219,7 +325,7 @@ const TeamEntry = memo(function TeamEntry({
                                 </div>
                                 <button
                                     onClick={() => removeTeam(team.id)}
-                                    disabled={teams.length <= MIN_TEAMS}
+                                    disabled={displayTeams.length <= MIN_TEAMS}
                                     className="h-10 px-3 text-gray-400 hover:text-error-400 hover:bg-error-500/10 
                     rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
                                     aria-label={t.teamEntry.removeTeam}
@@ -233,14 +339,14 @@ const TeamEntry = memo(function TeamEntry({
                     {/* Add Team Button */}
                     <button
                         onClick={addTeam}
-                        disabled={teams.length >= MAX_TEAMS}
+                        disabled={displayTeams.length >= MAX_TEAMS}
                         className="w-full py-3 border-2 border-dashed border-dark-500 rounded-xl
               text-gray-400 hover:text-primary-400 hover:border-primary-500/50
               transition-all duration-200 flex items-center justify-center gap-2
               disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:border-dark-500"
                     >
                         <Plus size={18} />
-                        {t.teamEntry.addTeam} ({teams.length}/{MAX_TEAMS})
+                        {t.teamEntry.addTeam} ({displayTeams.length}/{MAX_TEAMS})
                     </button>
 
                     {/* Divider */}

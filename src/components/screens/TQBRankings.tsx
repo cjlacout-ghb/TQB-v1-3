@@ -1,12 +1,12 @@
 'use client';
 
 import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, ArrowLeft } from 'lucide-react';
-import { TeamStats, TieBreakMethod, GameData } from '@/lib/types';
+import { TeamStats, TieBreakMethod, GameData, GroupID } from '@/lib/types';
 import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo } from 'react';
+import React, { memo, useState } from 'react';
 
 interface TQBRankingsProps {
     rankings: TeamStats[];
@@ -19,6 +19,8 @@ interface TQBRankingsProps {
     totalSteps: number;
     games: GameData[];
     onOpenManual?: (section?: string) => void;
+    isMultiGroup: boolean;
+    groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
 }
 
 const TQBRankings = memo(function TQBRankings({
@@ -32,9 +34,25 @@ const TQBRankings = memo(function TQBRankings({
     totalSteps,
     games,
     onOpenManual,
+    isMultiGroup,
+    groupTieBreakMethod,
 }: TQBRankingsProps) {
     const { t, language } = useLanguage();
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
+    // Active group's tie-break method for the status banner
+    const activeTieBreakMethod: TieBreakMethod =
+        (isMultiGroup && groupTieBreakMethod[activeGroupId])
+            ? groupTieBreakMethod[activeGroupId]!
+            : tieBreakMethod;
+
+    // Filter rankings and games to the active group tab
+    const displayRankings = isMultiGroup
+        ? rankings.filter(r => r.groupId === activeGroupId)
+        : rankings;
+    const displayGames = isMultiGroup
+        ? games.filter(g => g.groupId === activeGroupId)
+        : games;
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -69,6 +87,24 @@ const TQBRankings = memo(function TQBRankings({
                     </div>
                 </div>
 
+                {/* Group A / B tab strip — only in multi-group mode */}
+                {isMultiGroup && (
+                    <div className="px-6 pt-2">
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            {(['A', 'B'] as GroupID[]).map(gId => (
+                                <button
+                                    key={gId}
+                                    onClick={() => setActiveGroupId(gId)}
+                                    className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-all
+                                        ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    {t.common.groupTab.replace('{gId}', gId)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 <div className="card-body space-y-6">
                     {/* Tie-Break Method Indicator */}
                     <div className={`p-4 rounded-xl border flex items-start gap-3 ${needsERTQB
@@ -84,7 +120,7 @@ const TQBRankings = memo(function TQBRankings({
                             <p className={`text-sm font-medium ${needsERTQB ? 'text-warning-400' : 'text-success-400'}`}>
                                 {needsERTQB
                                     ? t.rankings.needsERTQB
-                                    : getTieBreakMethodText(tieBreakMethod, language)
+                                    : getTieBreakMethodText(activeTieBreakMethod, language)
                                 }
                             </p>
                             {!needsERTQB && (
@@ -108,8 +144,8 @@ const TQBRankings = memo(function TQBRankings({
                             </thead>
                             <tbody>
                                 {(() => {
-                                    const displayRanks = calculateDisplayRanks(rankings, false);
-                                    return rankings.map((team, index) => (
+                                    const displayRanks = calculateDisplayRanks(displayRankings, false);
+                                    return displayRankings.map((team, index) => (
                                         <tr key={team.id} className="animate-slide-up" style={{ animationDelay: `${index * 50}ms` }}>
                                             <td className="text-center">
                                                 <div className="flex justify-center">
@@ -140,7 +176,7 @@ const TQBRankings = memo(function TQBRankings({
                     </div>
 
                     {/* TQB Explanation Summary */}
-                    <TQBExplanationTable rankings={rankings} />
+                    <TQBExplanationTable rankings={displayRankings} />
 
                     {/* TQB Formula */}
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-dark-700/50 rounded-xl border border-dark-500">
@@ -171,7 +207,7 @@ const TQBRankings = memo(function TQBRankings({
                             {t.rankings.viewGameResults}
                         </summary>
                         <div className="mt-3 p-4 bg-dark-700/30 rounded-xl divide-y divide-dark-600">
-                            {games.map((game, index) => (
+                            {displayGames.map((game, index) => (
                                 <div key={game.id} className="grid grid-cols-[80px_1fr_40px_20px_40px_1fr] items-center gap-2 py-3 first:pt-0 last:pb-0">
                                     <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{t.rankings.game} {index + 1}</span>
 
