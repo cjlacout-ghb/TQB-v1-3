@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useCallback, memo } from 'react';
-import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft, FileText, ClipboardList } from 'lucide-react';
 import { Team, GameData } from '@/lib/types';
 import { parseCSV, getSampleCSV } from '@/lib/csvParser';
 import StepIndicator from '../StepIndicator';
@@ -30,6 +30,9 @@ const TeamEntry = memo(function TeamEntry({
     const [csvError, setCSVError] = useState<string[]>([]);
     const [showCSVHelp, setShowCSVHelp] = useState(false);
     const [isDragging, setIsDragging] = useState(false);
+    const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
+    const [pastedText, setPastedText] = useState('');
+    const [isProcessing, setIsProcessing] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const addTeam = useCallback(() => {
@@ -138,6 +141,26 @@ const TeamEntry = memo(function TeamEntry({
         e.preventDefault();
         setIsDragging(false);
     }, []);
+    
+    const handlePasteProcess = useCallback(() => {
+        if (!pastedText.trim()) return;
+        
+        setCSVError([]);
+        setIsProcessing(true);
+        
+        // Small delay to show feedback if needed, although parsing is synchronous
+        setTimeout(() => {
+            const result = parseCSV(pastedText, t);
+            setIsProcessing(false);
+            
+            if (!result.success) {
+                setCSVError(result.errors);
+                return;
+            }
+            
+            onCSVImport(result.teams, result.games);
+        }, 300);
+    }, [pastedText, t, onCSVImport]);
 
     const hasValidTeams = teams.length >= MIN_TEAMS &&
         teams.every(t => t.name.trim().length > 0);
@@ -232,52 +255,108 @@ const TeamEntry = memo(function TeamEntry({
                         </div>
                     </div>
 
-                    {/* CSV Upload */}
-                    <div
-                        onDrop={handleDrop}
-                        onDragOver={handleDragOver}
-                        onDragLeave={handleDragLeave}
-                        className={`
-              relative p-10 border-2 border-dashed rounded-2xl text-center
-              transition-all duration-200 cursor-pointer
-              ${isDragging
-                                ? 'border-primary-500 bg-primary-500/10 scale-[1.01]'
-                                : 'border-dark-500 hover:border-primary-500/50 hover:bg-dark-700/30'
-                            }
-            `}
-                        onClick={() => fileInputRef.current?.click()}
-                    >
-                        <input
-                            ref={fileInputRef}
-                            type="file"
-                            accept=".csv,.txt"
-                            onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
-                            className="hidden"
-                            aria-label={t.teamEntry.dropFile}
-                        />
+                    {/* CSV/Paste Upload Section */}
+                    <div className="space-y-4">
+                        {/* Tabs */}
+                        <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
+                            <button
+                                onClick={() => { setImportMethod('file'); setCSVError([]); }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                    ${importMethod === 'file' 
+                                        ? 'bg-primary-500 text-white shadow-lg' 
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <FileText size={16} />
+                                {t.teamEntry.importFile}
+                            </button>
+                            <button
+                                onClick={() => { setImportMethod('paste'); setCSVError([]); }}
+                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                    ${importMethod === 'paste' 
+                                        ? 'bg-primary-500 text-white shadow-lg' 
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                            >
+                                <ClipboardList size={16} />
+                                {t.teamEntry.importPaste}
+                            </button>
+                        </div>
 
-                        <Upload
-                            size={40}
-                            className={`mx-auto mb-4 ${isDragging ? 'text-primary-400' : 'text-gray-500'}`}
-                        />
-                        <p className="text-gray-200 font-bold text-lg">
-                            {isDragging ? t.teamEntry.dropFileActive : t.teamEntry.dropFile}
-                        </p>
-                        <p className="text-base text-gray-400 mt-2">
-                            {t.teamEntry.preFill}
-                        </p>
+                        {importMethod === 'file' ? (
+                            <div
+                                onDrop={handleDrop}
+                                onDragOver={handleDragOver}
+                                onDragLeave={handleDragLeave}
+                                className={`
+                                    relative p-10 border-2 border-dashed rounded-2xl text-center
+                                    transition-all duration-200 cursor-pointer
+                                    ${isDragging
+                                        ? 'border-primary-500 bg-primary-500/10 scale-[1.01]'
+                                        : 'border-dark-500 hover:border-primary-500/50 hover:bg-dark-700/30'
+                                    }
+                                `}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                <input
+                                    ref={fileInputRef}
+                                    type="file"
+                                    accept=".csv,.txt"
+                                    onChange={(e) => e.target.files?.[0] && handleFileUpload(e.target.files[0])}
+                                    className="hidden"
+                                    aria-label={t.teamEntry.dropFile}
+                                />
 
-                        {/* CSV Help Button */}
-                        <button
-                            onClick={(e) => {
-                                e.stopPropagation();
-                                setShowCSVHelp(!showCSVHelp);
-                            }}
-                            className="mt-3 inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300"
-                        >
-                            <HelpCircle size={14} />
-                            {t.teamEntry.viewFormat}
-                        </button>
+                                <Upload
+                                    size={40}
+                                    className={`mx-auto mb-4 ${isDragging ? 'text-primary-400' : 'text-gray-500'}`}
+                                />
+                                <p className="text-gray-200 font-bold text-lg">
+                                    {isDragging ? t.teamEntry.dropFileActive : t.teamEntry.dropFile}
+                                </p>
+                                <p className="text-base text-gray-400 mt-2">
+                                    {t.teamEntry.preFill}
+                                </p>
+                            </div>
+                        ) : (
+                            <div className="space-y-4 animate-fade-in">
+                                <textarea
+                                    value={pastedText}
+                                    onChange={(e) => setPastedText(e.target.value)}
+                                    placeholder={t.teamEntry.pastePlaceholder}
+                                    className="w-full h-40 input font-mono text-sm resize-none"
+                                    aria-label={t.teamEntry.importPaste}
+                                />
+                                <button
+                                    onClick={handlePasteProcess}
+                                    disabled={!pastedText.trim() || isProcessing}
+                                    className="w-full py-3 bg-dark-700 hover:bg-dark-600 border border-dark-500 
+                                             text-primary-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2
+                                             disabled:opacity-30 disabled:cursor-not-allowed group"
+                                >
+                                    {isProcessing ? (
+                                        <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <>
+                                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                            {t.teamEntry.processButton}
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Common Format Help Toggle */}
+                        <div className="flex justify-center">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    setShowCSVHelp(!showCSVHelp);
+                                }}
+                                className="inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                            >
+                                <HelpCircle size={14} />
+                                {t.teamEntry.viewFormat}
+                            </button>
+                        </div>
                     </div>
 
                     {/* CSV Help Panel */}
@@ -292,9 +371,9 @@ const TeamEntry = memo(function TeamEntry({
                         </div>
                     )}
 
-                    {/* CSV Errors */}
+                    {/* CSV/Paste Errors */}
                     {csvError.length > 0 && (
-                        <div className="p-4 bg-error-500/10 border border-error-500/30 rounded-xl">
+                        <div className="p-4 bg-error-500/10 border border-error-500/30 rounded-xl animate-shake">
                             <h4 className="text-sm font-semibold text-error-400 mb-2 flex items-center gap-2">
                                 <AlertCircle size={16} />
                                 {t.teamEntry.fileError}

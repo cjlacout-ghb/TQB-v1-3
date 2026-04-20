@@ -105,9 +105,9 @@ Upload a CSV file with the following columns:
 
 ```csv
 Team_A,Team_B,Runs_A,Runs_B,Earned_Runs_A,Earned_Runs_B,Innings_A_Batting,Innings_A_Defense,Innings_B_Batting,Innings_B_Defense
-Tigers,Eagles,5,3,4,2,7,6.2,6.2,7
-Eagles,Sharks,2,8,1,6,7,7,7,7
-Tigers,Sharks,4,4,3,3,7,7,7,7
+Tigers,Eagles,5,3,4,2,7,7,7,7
+Eagles,Sharks,2,8,1,6,7,6.2,6.2,7
+Tigers,Sharks,4,5,3,4,7,6.2,6.2,7
 ```
 
 ### Innings Format

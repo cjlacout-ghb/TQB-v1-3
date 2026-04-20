@@ -51,16 +51,16 @@ Sus datos se borrarán permanentemente en los siguientes casos:
 ### Consejos
 - Use nombres oficiales de equipos para un registro preciso
 - Verifique la ortografía antes de continuar
-- También puede cargar un archivo (CSV o TXT) con todos los datos prellenados
+- También puede cargar un archivo (CSV o TXT) o **pegar el contenido directamente** para pre-llenar todos los datos
     `,
     },
     {
         id: 'csv-upload',
-        title: 'Guía de Carga de Archivos',
+        title: 'Guía de Importación (Archivo o Texto)',
         content: `
-### Formato de Archivo (CSV/TXT)
+### Formato de Archivo o Pegado de Texto (CSV/TXT)
 
-Cargue un archivo CSV o TXT para llenar automáticamente todos los datos de equipos y partidos. El archivo debe tener las siguientes columnas:
+Cargue un archivo CSV/TXT o **pegue el contenido** para llenar automáticamente todos los datos de equipos y partidos. El archivo debe tener las siguientes columnas:
 
 | Columna | Descripción |
 |---------|-------------|
@@ -75,7 +75,7 @@ Cargue un archivo CSV o TXT para llenar automáticamente todos los datos de equi
 | Innings_B_Batting | Entradas del Equipo B al bate |
 | Innings_B_Defense | Entradas del Equipo B en defensa |
 
-### Contenido de Ejemplo del Archivo
+### Contenido de Ejemplo
 
 \`\`\`
 Team_A,Team_B,Runs_A,Runs_B,Earned_Runs_A,Earned_Runs_B,Innings_A_Batting,Innings_A_Defense,Innings_B_Batting,Innings_B_Defense
@@ -83,11 +83,21 @@ Tigres,Aguilas,5,3,4,2,7,6.2,6.2,7
 Aguilas,Tiburones,2,8,1,6,7,7,7,7
 \`\`\`
 
-### Cómo Cargar
-1. **Cargar Archivo**: (Paso 1) Arrastre y suelte su archivo CSV o TXT en el área de carga.
-2. **Verificar Datos**: (Paso 2) La aplicación se mueve automáticamente al Paso 2. Todos los datos de los partidos importados se pre-llenan.
-3. **Editar (Opcional)**: Si es necesario, puede corregir cualquier valor (carreras, entradas) directamente en esta pantalla.
-4. **Calcular**: Haga clic en **"Calcular Clasificaciones"** en la parte inferior de la pantalla para ver los resultados.
+### Cómo Importar Datos
+
+#### Opción A: Cargar Archivo
+1. **Seleccionar Pestaña**: Asegúrese de estar en la pestaña **"Archivo"**.
+2. **Cargar**: (Paso 1) Arrastre y suelte su archivo CSV o TXT en el área de carga.
+
+#### Opción B: Pegar Texto (Novedad v1.3)
+1. **Seleccionar Pestaña**: Cambie a la pestaña **"Pegar Texto"**.
+2. **Pegar**: Pegue el contenido de su archivo TXT o Excel en el área de texto. Asegúrese de incluir la fila de encabezado.
+3. **Procesar**: Haga clic en **"Procesar Texto"**.
+
+### Siguientes Pasos
+1. **Verificar Datos**: (Paso 2) La aplicación se mueve automáticamente al Paso 2. Todos los datos de los partidos importados se pre-llenan.
+2. **Editar (Opcional)**: Si es necesario, puede corregir cualquier valor directamente en esta pantalla.
+3. **Calcular**: Haga clic en **"Calcular Clasificaciones"** en la parte inferior para ver los resultados.
     `,
     },
     {

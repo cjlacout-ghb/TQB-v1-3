@@ -51,16 +51,16 @@ Your data will be permanently cleared in the following cases:
 ### Tips
 - Use official team names for accurate record-keeping
 - Double-check spelling before proceeding
-- You can also upload a file (CSV or TXT) with all data pre-filled
+- You can also upload a file (CSV or TXT) or **paste content directly** to pre-fill all data
     `,
     },
     {
         id: 'csv-upload',
-        title: 'File Upload Guide',
+        title: 'Import Guide (File or Paste)',
         content: `
-### File Format (CSV/TXT)
+### File Format or Text Pasting (CSV/TXT)
 
-Upload a CSV or TXT file to automatically fill in all team and game data. The file must have the following columns:
+Upload a CSV/TXT file or **paste the content** to automatically fill in all team and game data. The file must have the following columns:
 
 | Column | Description |
 |--------|-------------|
@@ -75,7 +75,7 @@ Upload a CSV or TXT file to automatically fill in all team and game data. The fi
 | Innings_B_Batting | Innings Team B was at bat |
 | Innings_B_Defense | Innings Team B was on defense |
 
-### Sample File Content
+### Sample Content
 
 \`\`\`
 Team_A,Team_B,Runs_A,Runs_B,Earned_Runs_A,Earned_Runs_B,Innings_A_Batting,Innings_A_Defense,Innings_B_Batting,Innings_B_Defense
@@ -83,11 +83,21 @@ Tigers,Eagles,5,3,4,2,7,6.2,6.2,7
 Eagles,Sharks,2,8,1,6,7,7,7,7
 \`\`\`
 
-### How to Upload
-1. **Upload File**: (Step 1) Drop your CSV or TXT file into the upload area.
-2. **Verify Data**: (Step 2) The app automatically moves to Step 2. All imported game data is pre-filled.
-3. **Edit (Optional)**: If needed, you can correct any values (runs, innings) directly on this screen.
-4. **Calculate**: Click **"Calculate Rankings"** at the bottom of the screen to see the results.
+### How to Import Data
+
+#### Option A: File Upload
+1. **Select Tab**: Ensure you are on the **"File"** tab.
+2. **Upload**: (Step 1) Drop your CSV or TXT file into the upload area.
+
+#### Option B: Paste Text (New in v1.3)
+1. **Select Tab**: Switch to the **"Paste Text"** tab.
+2. **Paste**: Paste the content of your TXT file or Excel sheet into the text area. Make sure to include the header row.
+3. **Process**: Click **"Process Text"**.
+
+### Next Steps
+1. **Verify Data**: (Step 2) The app automatically moves to Step 2. All imported game data is pre-filled.
+2. **Edit (Optional)**: If needed, you can correct any values directly on this screen.
+3. **Calculate**: Click **"Calculate Rankings"** at the bottom of the screen to see the results.
     `,
     },
     {
