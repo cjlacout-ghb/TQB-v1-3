@@ -35,16 +35,19 @@ function runTest() {
     // All are 1-1, and 5-5 runs. TQB should be 0.
     const games: GameData[] = [
         {
+            groupId: 'A',
             id: 'g1', teamAId: 'T1', teamBId: 'T2', teamAName: 'T1', teamBName: 'T2',
             runsA: 5, runsB: 2, inningsABatting: '7', inningsADefense: '7',
             inningsBBatting: '7', inningsBDefense: '7', earnedRunsA: 0, earnedRunsB: 0
         },
         {
+            groupId: 'A',
             id: 'g2', teamAId: 'T2', teamBId: 'T3', teamAName: 'T2', teamBName: 'T3',
             runsA: 5, runsB: 2, inningsABatting: '7', inningsADefense: '7',
             inningsBBatting: '7', inningsBDefense: '7', earnedRunsA: 0, earnedRunsB: 0
         },
         {
+            groupId: 'A',
             id: 'g3', teamAId: 'T3', teamBId: 'T1', teamAName: 'T3', teamBName: 'T1',
             runsA: 5, runsB: 2, inningsABatting: '7', inningsADefense: '7',
             inningsBBatting: '7', inningsBDefense: '7', earnedRunsA: 0, earnedRunsB: 0

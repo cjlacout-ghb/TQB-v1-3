@@ -125,10 +125,10 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
 
             // Add teams to map
             if (!teams.has(teamAName)) {
-                teams.set(teamAName, { id: `team-${teams.size + 1}`, name: teamAName });
+                teams.set(teamAName, { id: `team-${teams.size + 1}`, name: teamAName, groupId: 'A' });
             }
             if (!teams.has(teamBName)) {
-                teams.set(teamBName, { id: `team-${teams.size + 1}`, name: teamBName });
+                teams.set(teamBName, { id: `team-${teams.size + 1}`, name: teamBName, groupId: 'A' });
             }
 
             const teamA = teams.get(teamAName)!;
@@ -137,6 +137,7 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
             // Create game data
             games.push({
                 id: `game-${games.length + 1}`,
+                groupId: 'A',
                 teamAId: teamA.id,
                 teamBId: teamB.id,
                 teamAName: teamA.name,

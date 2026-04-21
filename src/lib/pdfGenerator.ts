@@ -29,7 +29,7 @@ function renderGroupContent(
     games: GameData[],
     tieBreakMethod: TieBreakMethod,
     useERTQB: boolean,
-    lang: string,
+    lang: 'en' | 'es',
     t: TranslationSet,
     pageWidth: number,
     startY: number,

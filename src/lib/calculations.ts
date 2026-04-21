@@ -334,7 +334,7 @@ export function validateInningsFormat(value: string): boolean {
  * Generate all round-robin matchups
  */
 export function generateMatchups(
-    teams: { id: string; name: string }[]
+    teams: { id: string; name: string; groupId?: string }[]
 ): Omit<GameData, 'runsA' | 'runsB' | 'inningsABatting' | 'inningsADefense' | 'inningsBBatting' | 'inningsBDefense' | 'earnedRunsA' | 'earnedRunsB'>[] {
     const matchups: Omit<GameData, 'runsA' | 'runsB' | 'inningsABatting' | 'inningsADefense' | 'inningsBBatting' | 'inningsBDefense' | 'earnedRunsA' | 'earnedRunsB'>[] = [];
 
@@ -346,6 +346,7 @@ export function generateMatchups(
                 teamBId: teams[j].id,
                 teamAName: teams[i].name,
                 teamBName: teams[j].name,
+                groupId: (teams[i].groupId as 'A' | 'B') || 'A',
             });
         }
     }

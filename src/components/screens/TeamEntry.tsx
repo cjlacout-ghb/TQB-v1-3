@@ -162,18 +162,18 @@ const TeamEntry = memo(function TeamEntry({
         e.preventDefault();
         setIsDragging(false);
     }, []);
-    
+
     const handlePasteProcess = useCallback(() => {
         if (!pastedText.trim()) return;
-        
+
         setCSVError([]);
         setIsProcessing(true);
-        
+
         // Small delay to show feedback if needed, although parsing is synchronous
         setTimeout(() => {
             const result = parseCSV(pastedText, t);
             setIsProcessing(false);
-            
+
             if (!result.success) {
                 setCSVError(result.errors);
                 return;
@@ -238,7 +238,7 @@ const TeamEntry = memo(function TeamEntry({
                                     onSetMultiGroup(true);
                                     const ts = Date.now();
                                     const bTeams: Team[] = [
-                                        { id: `team-b-1-${ts}`,     name: '', groupId: 'B' },
+                                        { id: `team-b-1-${ts}`, name: '', groupId: 'B' },
                                         { id: `team-b-2-${ts + 1}`, name: '', groupId: 'B' },
                                         { id: `team-b-3-${ts + 2}`, name: '', groupId: 'B' },
                                     ];
@@ -287,9 +287,8 @@ const TeamEntry = memo(function TeamEntry({
                                         {t.common.groupTab.replace('{gId}', gId)}
                                         <span
                                             title={ready ? 'Listo' : 'Incompleto'}
-                                            className={`w-2 h-2 rounded-full transition-colors ${
-                                                ready ? 'bg-green-400' : 'bg-yellow-500/70'
-                                            }`}
+                                            className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                                }`}
                                         />
                                     </button>
                                 );
@@ -368,8 +367,8 @@ const TeamEntry = memo(function TeamEntry({
                             <button
                                 onClick={() => { setImportMethod('file'); setCSVError([]); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                    ${importMethod === 'file' 
-                                        ? 'bg-primary-500 text-white shadow-lg' 
+                                    ${importMethod === 'file'
+                                        ? 'bg-primary-500 text-white shadow-lg'
                                         : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                             >
                                 <FileText size={16} />
@@ -378,8 +377,8 @@ const TeamEntry = memo(function TeamEntry({
                             <button
                                 onClick={() => { setImportMethod('paste'); setCSVError([]); }}
                                 className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                    ${importMethod === 'paste' 
-                                        ? 'bg-primary-500 text-white shadow-lg' 
+                                    ${importMethod === 'paste'
+                                        ? 'bg-primary-500 text-white shadow-lg'
                                         : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                             >
                                 <ClipboardList size={16} />
