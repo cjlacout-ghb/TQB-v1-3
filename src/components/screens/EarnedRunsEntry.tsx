@@ -8,7 +8,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface EarnedRunsEntryProps {
     games: GameData[];
-    onGamesChange: (games: GameData[]) => void;
+    onGamesChange: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
     onCalculate: () => void;
     onBack?: () => void;
     isMultiGroup: boolean;
@@ -30,21 +30,24 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
         field: 'earnedRunsA' | 'earnedRunsB',
         value: number | null
     ) => {
-        onGamesChange(
-            games.map(g => g.id === gameId ? { ...g, [field]: value } : g)
+        onGamesChange(prevGames => 
+            prevGames.map(g => g.id === gameId ? { ...g, [field]: value } : g)
         );
 
         // Clear specific field error when user types
-        if (errors[gameId]?.[field]) {
-            setErrors(prev => ({
-                ...prev,
-                [gameId]: {
-                    ...prev[gameId],
-                    [field]: '',
-                },
-            }));
-        }
-    }, [games, onGamesChange, errors]);
+        setErrors(prevErrors => {
+            if (prevErrors[gameId]?.[field]) {
+                return {
+                    ...prevErrors,
+                    [gameId]: {
+                        ...prevErrors[gameId],
+                        [field]: '',
+                    },
+                };
+            }
+            return prevErrors;
+        });
+    }, [onGamesChange]);
 
     const validateGames = useCallback((): boolean => {
         const newErrors: Record<string, Record<string, string>> = {};

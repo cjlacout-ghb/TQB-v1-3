@@ -11,8 +11,6 @@ interface TQBExplanationTableProps {
 
 export default function TQBExplanationTable({ rankings, isERTQB = false }: TQBExplanationTableProps) {
     const { t } = useLanguage();
-    // Determine if it's a multi-way tie for the title
-    const tiedCount = rankings.length;
     const method = isERTQB ? 'ER-TQB' : 'TQB';
 
     const title = t.rankings.summary.title

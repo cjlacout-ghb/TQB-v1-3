@@ -46,7 +46,7 @@ export const hasSavedState = (): boolean => {
         const hasGames = state.games && state.games.length > 0;
         
         return state.currentScreen > 0 && (hasTeamNames || hasGames);
-    } catch (error) {
+    } catch {
         return false;
     }
 };

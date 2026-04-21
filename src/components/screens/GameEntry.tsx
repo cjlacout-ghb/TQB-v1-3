@@ -10,7 +10,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 interface GameEntryProps {
     teams: Team[];
     games: GameData[];
-    onGamesChange: (games: GameData[]) => void;
+    onGamesChange: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
     onCalculate: () => void;
     onBack?: () => void;
     totalSteps: number;
@@ -35,49 +35,55 @@ const GameEntry = memo(function GameEntry({
         gameId: string,
         updates: Partial<GameData>
     ) => {
-        onGamesChange(
-            games.map(g => g.id === gameId ? { ...g, ...updates } : g)
+        onGamesChange(prevGames => 
+            prevGames.map(g => g.id === gameId ? { ...g, ...updates } : g)
         );
 
         // Clear errors for updated fields
-        if (errors[gameId]) {
-            const nextErrors = { ...errors[gameId] };
+        setErrors(prevErrors => {
+            if (!prevErrors[gameId]) return prevErrors;
+            
+            const nextGameErrors = { ...prevErrors[gameId] };
             let changed = false;
             Object.keys(updates).forEach(key => {
-                if (nextErrors[key]) {
-                    nextErrors[key] = '';
+                if (nextGameErrors[key]) {
+                    nextGameErrors[key] = '';
                     changed = true;
                 }
             });
 
             if (changed) {
-                setErrors(prev => ({
-                    ...prev,
-                    [gameId]: nextErrors,
-                }));
+                return {
+                    ...prevErrors,
+                    [gameId]: nextGameErrors,
+                };
             }
-        }
-    }, [games, onGamesChange, errors]);
+            return prevErrors;
+        });
+    }, [onGamesChange]);
 
     const swapTeams = useCallback((gameId: string) => {
-        const game = games.find(g => g.id === gameId);
-        if (!game) return;
-
-        updateGame(gameId, {
-            teamAId: game.teamBId,
-            teamBId: game.teamAId,
-            teamAName: game.teamBName,
-            teamBName: game.teamAName,
-            runsA: game.runsB,
-            runsB: game.runsA,
-            inningsABatting: game.inningsBBatting,
-            inningsADefense: game.inningsBDefense,
-            inningsBBatting: game.inningsABatting,
-            inningsBDefense: game.inningsADefense,
-            earnedRunsA: game.earnedRunsB,
-            earnedRunsB: game.earnedRunsA,
-        });
-    }, [games, updateGame]);
+        onGamesChange(prevGames => prevGames.map(game => {
+            if (game.id === gameId) {
+                return {
+                    ...game,
+                    teamAId: game.teamBId,
+                    teamBId: game.teamAId,
+                    teamAName: game.teamBName,
+                    teamBName: game.teamAName,
+                    runsA: game.runsB,
+                    runsB: game.runsA,
+                    inningsABatting: game.inningsBBatting,
+                    inningsADefense: game.inningsBDefense,
+                    inningsBBatting: game.inningsABatting,
+                    inningsBDefense: game.inningsADefense,
+                    earnedRunsA: game.earnedRunsB,
+                    earnedRunsB: game.earnedRunsA,
+                };
+            }
+            return game;
+        }));
+    }, [onGamesChange]);
 
     const validateGames = useCallback((): boolean => {
         const newErrors: Record<string, Record<string, string>> = {};

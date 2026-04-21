@@ -9,7 +9,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface TeamEntryProps {
     teams: Team[];
-    onTeamsChange: (teams: Team[]) => void;
+    onTeamsChange: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
     onContinue: () => void;
     onCSVImport: (teams: Team[], games: GameData[]) => void;
     onMultiGroupImport: (teams: Team[], games: GameData[], groupId: GroupID) => void;
@@ -43,44 +43,50 @@ const TeamEntry = memo(function TeamEntry({
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const addTeam = useCallback(() => {
-        const groupTeams = teams.filter(t => t.groupId === activeGroupId);
-        if (groupTeams.length >= MAX_TEAMS) return;
+        onTeamsChange(prevTeams => {
+            const groupTeams = prevTeams.filter(t => t.groupId === activeGroupId);
+            if (groupTeams.length >= MAX_TEAMS) return prevTeams;
 
-        const newTeam: Team = {
-            id: `team-${Date.now()}`,
-            name: '',
-            groupId: activeGroupId,
-        };
-        onTeamsChange([...teams, newTeam]);
-    }, [teams, onTeamsChange, activeGroupId]);
+            const newTeam: Team = {
+                id: `team-${Date.now()}`,
+                name: '',
+                groupId: activeGroupId,
+            };
+            return [...prevTeams, newTeam];
+        });
+    }, [onTeamsChange, activeGroupId]);
 
     const removeTeam = useCallback((teamId: string) => {
-        const groupTeams = teams.filter(t => t.groupId === activeGroupId);
-        if (groupTeams.length <= MIN_TEAMS) return;
-        onTeamsChange(teams.filter(t => t.id !== teamId));
+        onTeamsChange(prevTeams => {
+            const groupTeams = prevTeams.filter(t => t.groupId === activeGroupId);
+            if (groupTeams.length <= MIN_TEAMS) return prevTeams;
+            return prevTeams.filter(t => t.id !== teamId);
+        });
 
         // Clear error for removed team
         setErrors(prev => {
+            if (!prev[teamId]) return prev;
             const next = { ...prev };
             delete next[teamId];
             return next;
         });
-    }, [teams, onTeamsChange, activeGroupId]);
+    }, [onTeamsChange, activeGroupId]);
 
     const updateTeamName = useCallback((teamId: string, name: string) => {
-        onTeamsChange(
-            teams.map(t => t.id === teamId ? { ...t, name } : t)
+        onTeamsChange(prevTeams =>
+            prevTeams.map(t => t.id === teamId ? { ...t, name } : t)
         );
 
         // Clear error when user starts typing
-        if (errors[teamId]) {
-            setErrors(prev => {
+        setErrors(prev => {
+            if (prev[teamId]) {
                 const next = { ...prev };
                 delete next[teamId];
                 return next;
-            });
-        }
-    }, [teams, onTeamsChange, errors]);
+            }
+            return prev;
+        });
+    }, [onTeamsChange]);
 
     const validateTeams = useCallback((): boolean => {
         const newErrors: Record<string, string> = {};
