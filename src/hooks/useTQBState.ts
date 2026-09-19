@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber, GroupID } from '@/lib/types';
-import { generateMatchups, calculateRankings } from '@/lib/calculations';
+import { generateMatchups, calculateRankings, reorderGame, isGameCompleteAndValid } from '@/lib/calculations';
 import { loadState, saveState, clearState } from '@/lib/storage';
 
 export interface TQBStateReturn {
@@ -21,6 +21,8 @@ export interface TQBStateReturn {
         setCurrentScreen: (screen: ScreenNumber | ((prev: ScreenNumber) => ScreenNumber)) => void;
         setTeams: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
         setGames: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
+        handleToggleLockGame: (gameId: string) => void;
+        handleReorderGame: (gameId: string, direction: 'up' | 'down') => void;
         handleCSVImport: (importedTeams: Team[], importedGames: GameData[], groupId?: GroupID) => void;
         handleGroupImport: (importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => void;
         handleGoToLanding: () => void;
@@ -44,7 +46,7 @@ export function useTQBState(): TQBStateReturn {
         { id: 'team-2', name: '', groupId: 'A' },
         { id: 'team-3', name: '', groupId: 'A' },
     ]);
-    const [games, setGames] = useState<GameData[]>([]);
+    const [games, setGamesBase] = useState<GameData[]>([]);
     const [rankings, setRankings] = useState<TeamStats[]>([]);
     // Global tieBreakMethod: In single-group mode, stores the tie-break method for the tournament.
     // In multi-group mode, stores the common method if both groups match, or 'UNRESOLVED' if they differ.
@@ -55,6 +57,63 @@ export function useTQBState(): TQBStateReturn {
     const [isMultiGroup, setIsMultiGroup] = useState(false);
     const [groupTieBreakMethod, setGroupTieBreakMethod] = useState<Partial<Record<GroupID, TieBreakMethod>>>({}); // Per-group tie-break metadata
     const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Global UI state for active group identification
+
+    const setGames = useCallback((action: GameData[] | ((prev: GameData[]) => GameData[])) => {
+        setGamesBase(prevGames => {
+            const nextGames = typeof action === 'function' ? action(prevGames) : action;
+            const prevGamesMap = new Map(prevGames.map(g => [g.id, g]));
+
+            return nextGames.map(nextGame => {
+                const prevGame = prevGamesMap.get(nextGame.id);
+                if (!prevGame) return nextGame;
+
+                // Lock enforcement: if prevGame was locked
+                if (prevGame.isLocked) {
+                    // If nextGame stays locked (or didn't explicitly request isLocked: false)
+                    if (nextGame.isLocked !== false) {
+                        return {
+                            ...nextGame,
+                            isLocked: true,
+                            runsA: prevGame.runsA,
+                            runsB: prevGame.runsB,
+                            inningsABatting: prevGame.inningsABatting,
+                            inningsADefense: prevGame.inningsADefense,
+                            inningsBBatting: prevGame.inningsBBatting,
+                            inningsBDefense: prevGame.inningsBDefense,
+                            earnedRunsA: prevGame.earnedRunsA,
+                            earnedRunsB: prevGame.earnedRunsB,
+                            teamAId: prevGame.teamAId,
+                            teamBId: prevGame.teamBId,
+                            teamAName: prevGame.teamAName,
+                            teamBName: prevGame.teamBName,
+                        };
+                    }
+                } else {
+                    // If prevGame was NOT locked, but nextGame attempts to set isLocked: true
+                    if (nextGame.isLocked) {
+                        if (!isGameCompleteAndValid(nextGame)) {
+                            return { ...nextGame, isLocked: false };
+                        }
+                    }
+                }
+                return nextGame;
+            });
+        });
+    }, []);
+
+    const handleToggleLockGame = useCallback((gameId: string) => {
+        setGamesBase(prevGames => prevGames.map(g => {
+            if (g.id !== gameId) return g;
+            if (g.isLocked) {
+                return { ...g, isLocked: false };
+            } else {
+                if (isGameCompleteAndValid(g)) {
+                    return { ...g, isLocked: true };
+                }
+                return g;
+            }
+        }));
+    }, []);
 
     // Load state on mount
     useEffect(() => {
@@ -71,7 +130,7 @@ export function useTQBState(): TQBStateReturn {
                 groupId: g.groupId ?? 'A',
             }));
             setTeams(migratedTeams);
-            setGames(migratedGames);
+            setGamesBase(migratedGames);
             setRankings(saved.rankings);
             setTieBreakMethod(saved.tieBreakMethod);
             setNeedsERTQB(saved.needsERTQB);
@@ -108,12 +167,12 @@ export function useTQBState(): TQBStateReturn {
     // Does NOT navigate — the user must click Continue when both groups are ready.
     const handleGroupImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => {
         const taggedTeams = importedTeams.map(t => ({ ...t, groupId }));
-        const taggedGames = importedGames.map(g => ({ ...g, groupId }));
+        const taggedGames = importedGames.map(g => ({ ...g, groupId, isLocked: false }));
         setTeams(prev => [
             ...prev.filter(t => t.groupId !== groupId),
             ...taggedTeams,
         ]);
-        setGames(prev => [
+        setGamesBase(prev => [
             ...prev.filter(g => g.groupId !== groupId),
             ...taggedGames,
         ]);
@@ -127,9 +186,9 @@ export function useTQBState(): TQBStateReturn {
             handleGroupImport(importedTeams, importedGames, groupId);
         } else {
             const taggedTeams = importedTeams.map(t => ({ ...t, groupId }));
-            const taggedGames = importedGames.map(g => ({ ...g, groupId }));
+            const taggedGames = importedGames.map(g => ({ ...g, groupId, isLocked: false }));
             setTeams(taggedTeams);
-            setGames(taggedGames);
+            setGamesBase(taggedGames);
             setCurrentScreen(2);
         }
     }, [isMultiGroup, handleGroupImport]);
@@ -150,6 +209,7 @@ export function useTQBState(): TQBStateReturn {
                 inningsBDefense: '',
                 earnedRunsA: null,
                 earnedRunsB: null,
+                isLocked: false,
             }));
         };
 
@@ -164,7 +224,7 @@ export function useTQBState(): TQBStateReturn {
             allInitialGames = makeGames(teams, 'A');
         }
 
-        setGames(allInitialGames);
+        setGamesBase(allInitialGames);
         setCurrentScreen(2);
     }, [teams, isMultiGroup]);
 
@@ -237,7 +297,7 @@ export function useTQBState(): TQBStateReturn {
             { id: 'team-2', name: '', groupId: 'A' },
             { id: 'team-3', name: '', groupId: 'A' },
         ]);
-        setGames([]);
+        setGamesBase([]);
         setRankings([]);
         setTieBreakMethod('WIN_LOSS');
         setNeedsERTQB(false);
@@ -275,6 +335,10 @@ export function useTQBState(): TQBStateReturn {
         }
     }, [currentScreen]);
 
+    const handleReorderGame = useCallback((gameId: string, direction: 'up' | 'down') => {
+        setGamesBase(prev => reorderGame(prev, gameId, direction));
+    }, []);
+
     return {
         state: {
             currentScreen,
@@ -293,6 +357,8 @@ export function useTQBState(): TQBStateReturn {
             setCurrentScreen,
             setTeams,
             setGames,
+            handleToggleLockGame,
+            handleReorderGame,
             handleCSVImport,
             handleGroupImport,
             handleGoToLanding,
@@ -309,3 +375,4 @@ export function useTQBState(): TQBStateReturn {
         }
     };
 }
+

@@ -10,6 +10,8 @@ A web application that calculates softball tournament standings using the **WBSC
 
 - **Multi-screen workflow**: Team entry → Game results → TQB Rankings → (optional) ER-TQB
 - **Round-robin matchup generation**: Automatically creates all pairings for up to 8 teams
+- **Game schedule reordering**: Reorder matches (move up/down) to match real-world playing order
+- **Game result locking & fast recalculation**: Lock completed matches (read-only) and quickly simulate/recalculate standings while editing only the game in play
 - **Complete tie-breaking hierarchy**:
   1. Win-Loss Record
   2. Head-to-Head Results

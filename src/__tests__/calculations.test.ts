@@ -8,6 +8,7 @@ import {
     generateMatchups,
     formatTQBValue,
     calculateDisplayRanks,
+    reorderGame,
 } from '@/lib/calculations';
 import { GameData, TeamStats } from '@/lib/types';
 
@@ -390,4 +391,98 @@ describe('Unit Tests: calculations.ts Engine', () => {
             }
         });
     });
+
+    // -------------------------------------------------------------
+    // 8. FASE 5: Reordenar partidos (reorderGame logic & ranking invariance)
+    // -------------------------------------------------------------
+    describe('8. FASE 5: Reordenar partidos (reorderGame logic & ranking invariance)', () => {
+        const sampleGames: GameData[] = [
+            {
+                id: 'g1', groupId: 'A', teamAId: 't1', teamBId: 't2', teamAName: 'Team 1', teamBName: 'Team 2',
+                runsA: 5, runsB: 2, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                earnedRunsA: 4, earnedRunsB: 1,
+            },
+            {
+                id: 'g2', groupId: 'A', teamAId: 't2', teamBId: 't3', teamAName: 'Team 2', teamBName: 'Team 3',
+                runsA: 3, runsB: 1, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                earnedRunsA: 2, earnedRunsB: 0,
+            },
+            {
+                id: 'g3', groupId: 'A', teamAId: 't3', teamBId: 't1', teamAName: 'Team 3', teamBName: 'Team 1',
+                runsA: 4, runsB: 6, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                earnedRunsA: 3, earnedRunsB: 5,
+            },
+        ];
+
+        it('sube y baja un partido intermedio correctamente', () => {
+            // Move g2 UP (swaps with g1)
+            const movedUp = reorderGame(sampleGames, 'g2', 'up');
+            expect(movedUp.map(g => g.id)).toEqual(['g2', 'g1', 'g3']);
+
+            // Move g2 DOWN (swaps back with g1)
+            const movedDown = reorderGame(movedUp, 'g2', 'down');
+            expect(movedDown.map(g => g.id)).toEqual(['g1', 'g2', 'g3']);
+        });
+
+        it('no realiza cambios en los extremos (primero no sube, último no baja)', () => {
+            // Try moving first game UP
+            const firstUp = reorderGame(sampleGames, 'g1', 'up');
+            expect(firstUp).toEqual(sampleGames);
+
+            // Try moving last game DOWN
+            const lastDown = reorderGame(sampleGames, 'g3', 'down');
+            expect(lastDown).toEqual(sampleGames);
+        });
+
+        it('preserva todos los datos del partido intactos cuando este se reordena', () => {
+            const moved = reorderGame(sampleGames, 'g2', 'up');
+            const targetGame = moved.find(g => g.id === 'g2')!;
+            expect(targetGame).toEqual(sampleGames[1]);
+            expect(targetGame.runsA).toBe(3);
+            expect(targetGame.runsB).toBe(1);
+            expect(targetGame.earnedRunsA).toBe(2);
+            expect(targetGame.earnedRunsB).toBe(0);
+        });
+
+        it('garantiza el aislamiento entre grupos al reordenar', () => {
+            const multiGroupGames: GameData[] = [
+                { ...sampleGames[0], id: 'ga1', groupId: 'A' },
+                { id: 'gb1', groupId: 'B', teamAId: 'tb1', teamBId: 'tb2', teamAName: 'Team B1', teamBName: 'Team B2', runsA: 1, runsB: 0, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7', earnedRunsA: 1, earnedRunsB: 0 },
+                { ...sampleGames[1], id: 'ga2', groupId: 'A' },
+                { id: 'gb2', groupId: 'B', teamAId: 'tb2', teamBId: 'tb3', teamAName: 'Team B2', teamBName: 'Team B3', runsA: 2, runsB: 0, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7', earnedRunsA: 2, earnedRunsB: 0 },
+            ];
+
+            // Reorder ga2 UP in Group A (should swap with ga1)
+            const result = reorderGame(multiGroupGames, 'ga2', 'up');
+            
+            // Check Group A order: ga2, ga1
+            const groupAGames = result.filter(g => g.groupId === 'A');
+            expect(groupAGames.map(g => g.id)).toEqual(['ga2', 'ga1']);
+
+            // Check Group B order: gb1, gb2 (unchanged)
+            const groupBGames = result.filter(g => g.groupId === 'B');
+            expect(groupBGames.map(g => g.id)).toEqual(['gb1', 'gb2']);
+        });
+
+        it('produce posiciones finales, TQB y ER-TQB idénticos antes y después de reordenar partidos', () => {
+            const teams = [
+                { id: 't1', name: 'Team 1' },
+                { id: 't2', name: 'Team 2' },
+                { id: 't3', name: 'Team 3' },
+            ];
+
+            const initialRankings = calculateRankings(teams, sampleGames, false);
+            const initialERRankings = calculateRankings(teams, sampleGames, true);
+
+            // Reorder games list
+            const reorderedGames = reorderGame(sampleGames, 'g2', 'up');
+
+            const reorderedRankings = calculateRankings(teams, reorderedGames, false);
+            const reorderedERRankings = calculateRankings(teams, reorderedGames, true);
+
+            expect(reorderedRankings).toEqual(initialRankings);
+            expect(reorderedERRankings).toEqual(initialERRankings);
+        });
+    });
 });
+

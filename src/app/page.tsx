@@ -45,6 +45,8 @@ export default function Home() {
         setCurrentScreen,
         setTeams,
         setGames,
+        handleToggleLockGame,
+        handleReorderGame,
         handleCSVImport,
         handleGroupImport,
         handleGoToLanding,
@@ -136,6 +138,8 @@ export default function Home() {
                         teams={teams}
                         games={games}
                         onGamesChange={setGames}
+                        onToggleLockGame={handleToggleLockGame}
+                        onReorderGame={handleReorderGame}
                         onCalculate={handleCalculateTQB}
                         onBack={handleBack}
                         totalSteps={totalSteps}
@@ -202,7 +206,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB,
         hasUnresolvedTies, totalSteps, isMultiGroup, groupTieBreakMethod,
-        activeGroupId, setTeams, setGames, handleCSVImport, handleGroupImport,
+        activeGroupId, setTeams, setGames, handleToggleLockGame, handleReorderGame, handleCSVImport, handleGroupImport,
         handleContinueToGames, handleCalculateTQB, handleCalculateERTQB,
         handleProceedToERTQB, handleStartNewConfirm, handleContinueTournament,
         handleBack, handleOpenManual, setIsMultiGroup, setActiveGroupId]);

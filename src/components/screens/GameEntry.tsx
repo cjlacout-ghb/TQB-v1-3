@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useState, useCallback, useMemo, memo } from 'react';
-import { Calculator, AlertCircle, HelpCircle, ArrowLeftRight, ArrowLeft } from 'lucide-react';
+import { Calculator, AlertCircle, HelpCircle, ArrowLeftRight, ArrowLeft, ChevronUp, ChevronDown, Lock, Unlock } from 'lucide-react';
 import { Team, GameData, GroupID } from '@/lib/types';
-import { validateInningsFormat, inningsToOuts } from '@/lib/calculations';
+import { validateInningsFormat, inningsToOuts, isGameCompleteAndValid } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
 
@@ -11,6 +11,8 @@ interface GameEntryProps {
     teams: Team[];
     games: GameData[];
     onGamesChange: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
+    onToggleLockGame: (gameId: string) => void;
+    onReorderGame: (gameId: string, direction: 'up' | 'down') => void;
     onCalculate: () => void;
     onBack?: () => void;
     totalSteps: number;
@@ -23,6 +25,8 @@ const GameEntry = memo(function GameEntry({
     teams,
     games,
     onGamesChange,
+    onToggleLockGame,
+    onReorderGame,
     onCalculate,
     onBack,
     totalSteps,
@@ -278,9 +282,14 @@ const GameEntry = memo(function GameEntry({
                                 key={game.id}
                                 game={game}
                                 gameNumber={index + 1}
+                                isFirst={index === 0}
+                                isLast={index === displayGames.length - 1}
                                 errors={errors[game.id] || {}}
                                 onUpdate={updateGame}
                                 onSwap={swapTeams}
+                                onToggleLock={onToggleLockGame}
+                                onMoveUp={() => onReorderGame(game.id, 'up')}
+                                onMoveDown={() => onReorderGame(game.id, 'down')}
                             />
                         ))}
                     </div>
@@ -323,15 +332,22 @@ export default GameEntry;
 interface GameCardProps {
     game: GameData;
     gameNumber: number;
+    isFirst: boolean;
+    isLast: boolean;
     errors: Record<string, string>;
     onUpdate: (gameId: string, updates: Partial<GameData>) => void;
     onSwap: (gameId: string) => void;
+    onToggleLock: (gameId: string) => void;
+    onMoveUp: () => void;
+    onMoveDown: () => void;
 }
 
-const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, onSwap }: GameCardProps) {
+const GameCard = memo(function GameCard({ game, gameNumber, isFirst, isLast, errors, onUpdate, onSwap, onToggleLock, onMoveUp, onMoveDown }: GameCardProps) {
     const { t } = useLanguage();
+    const canLock = isGameCompleteAndValid(game);
 
     const handleRunsChange = (field: 'runsA' | 'runsB', value: string) => {
+        if (game.isLocked) return;
         const num = value === '' ? null : parseInt(value, 10);
         if (value === '' || (!isNaN(num!) && num! >= 0)) {
             onUpdate(game.id, { [field]: num });
@@ -339,6 +355,7 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
     };
 
     const handleInningsChange = (field: keyof GameData, value: string) => {
+        if (game.isLocked) return;
         // Allow empty, digits, and single decimal point
         if (value === '' || /^\d*\.?[012]?$/.test(value)) {
             const updates: Partial<GameData> = { [field]: value };
@@ -354,13 +371,55 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
     };
 
     return (
-        <div className="game-card animate-slide-up">
+        <div className={`game-card animate-slide-up transition-all ${game.isLocked ? 'border-primary-500/40 bg-dark-800/90 shadow-md shadow-primary-500/5' : ''}`}>
             {/* Game Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-dark-600">
-                <div className="flex items-center gap-4">
-                    <span className="flex items-center justify-center w-12 h-12 bg-dark-700/50 rounded-xl text-sm font-mono text-primary-400 border border-dark-500 shadow-inner">
+                <div className="flex items-center gap-3">
+                    {/* Controls: Reorder + Lock */}
+                    <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <div className="flex flex-col gap-1">
+                            <button
+                                type="button"
+                                onClick={onMoveUp}
+                                disabled={isFirst}
+                                aria-label={t.gameEntry.moveUp}
+                                className="flex items-center justify-center w-7 h-5 rounded bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white disabled:opacity-25 disabled:hover:bg-dark-700 disabled:hover:text-gray-300 disabled:cursor-not-allowed border border-dark-500 transition-colors"
+                            >
+                                <ChevronUp size={14} />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={onMoveDown}
+                                disabled={isLast}
+                                aria-label={t.gameEntry.moveDown}
+                                className="flex items-center justify-center w-7 h-5 rounded bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white disabled:opacity-25 disabled:hover:bg-dark-700 disabled:hover:text-gray-300 disabled:cursor-not-allowed border border-dark-500 transition-colors"
+                            >
+                                <ChevronDown size={14} />
+                            </button>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => onToggleLock(game.id)}
+                            disabled={!game.isLocked && !canLock}
+                            aria-label={game.isLocked ? t.gameEntry.unlockGame : (canLock ? t.gameEntry.lockGame : t.gameEntry.lockDisabledTooltip)}
+                            title={game.isLocked ? t.gameEntry.unlockGame : (canLock ? t.gameEntry.lockGame : t.gameEntry.lockDisabledTooltip)}
+                            className={`flex items-center justify-center w-8 h-11 rounded-lg border transition-all ${
+                                game.isLocked
+                                    ? 'bg-primary-500/20 text-primary-400 border-primary-500/40 hover:bg-primary-500/30 shadow-sm'
+                                    : canLock
+                                        ? 'bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white border-dark-500'
+                                        : 'bg-dark-700/50 text-gray-600 border-dark-600 cursor-not-allowed opacity-40'
+                            }`}
+                        >
+                            {game.isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                        </button>
+                    </div>
+
+                    <span className="flex items-center justify-center w-12 h-12 bg-dark-700/50 rounded-xl text-sm font-mono text-primary-400 border border-dark-500 shadow-inner flex-shrink-0">
                         #{gameNumber}
                     </span>
+
                     <div>
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl font-bold text-white tracking-tight">
@@ -368,14 +427,20 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                                 <span className="mx-2 text-gray-600 font-light">vs</span>
                                 {game.teamBName}
                             </h3>
+                            {game.isLocked && (
+                                <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">
+                                    {t.gameEntry.locked}
+                                </span>
+                            )}
                         </div>
-
                     </div>
                 </div>
 
                 <button
+                    type="button"
                     onClick={() => onSwap(game.id)}
-                    className="flex items-center gap-2 px-4 py-2 bg-dark-600/50 hover:bg-primary-500/10 text-gray-400 hover:text-primary-400 border border-dark-500 hover:border-primary-500/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider"
+                    disabled={game.isLocked}
+                    className="flex items-center gap-2 px-4 py-2 bg-dark-600/50 hover:bg-primary-500/10 text-gray-400 hover:text-primary-400 border border-dark-500 hover:border-primary-500/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-dark-600/50 disabled:hover:text-gray-400"
                 >
                     <ArrowLeftRight size={14} />
                     {t.gameEntry.swapSides}
@@ -403,7 +468,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                             min="0"
                             value={game.runsA ?? ''}
                             onChange={(e) => handleRunsChange('runsA', e.target.value)}
-                            className={`input font-mono ${errors.runsA ? 'input-error' : ''}`}
+                            disabled={game.isLocked}
+                            className={`input font-mono ${errors.runsA ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                             placeholder="0"
                         />
                         {errors.runsA && (
@@ -418,7 +484,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                                 type="text"
                                 value={game.inningsABatting}
                                 onChange={(e) => handleInningsChange('inningsABatting', e.target.value)}
-                                className={`input font-mono ${errors.inningsABatting ? 'input-error' : ''}`}
+                                disabled={game.isLocked}
+                                className={`input font-mono ${errors.inningsABatting ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                                 placeholder="0"
                             />
                             {errors.inningsABatting && (
@@ -431,7 +498,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                                 type="text"
                                 value={game.inningsADefense}
                                 onChange={(e) => handleInningsChange('inningsADefense', e.target.value)}
-                                className={`input font-mono ${errors.inningsADefense ? 'input-error' : ''}`}
+                                disabled={game.isLocked}
+                                className={`input font-mono ${errors.inningsADefense ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                                 placeholder="0"
                             />
                             {errors.inningsADefense && (
@@ -460,7 +528,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                             min="0"
                             value={game.runsB ?? ''}
                             onChange={(e) => handleRunsChange('runsB', e.target.value)}
-                            className={`input font-mono ${errors.runsB ? 'input-error' : ''}`}
+                            disabled={game.isLocked}
+                            className={`input font-mono ${errors.runsB ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                             placeholder="0"
                         />
                         {errors.runsB && (
@@ -475,7 +544,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                                 type="text"
                                 value={game.inningsBBatting}
                                 onChange={(e) => handleInningsChange('inningsBBatting', e.target.value)}
-                                className={`input font-mono ${errors.inningsBBatting ? 'input-error' : ''}`}
+                                disabled={game.isLocked}
+                                className={`input font-mono ${errors.inningsBBatting ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                                 placeholder="0"
                             />
                             {errors.inningsBBatting && (
@@ -488,7 +558,8 @@ const GameCard = memo(function GameCard({ game, gameNumber, errors, onUpdate, on
                                 type="text"
                                 value={game.inningsBDefense}
                                 onChange={(e) => handleInningsChange('inningsBDefense', e.target.value)}
-                                className={`input font-mono ${errors.inningsBDefense ? 'input-error' : ''}`}
+                                disabled={game.isLocked}
+                                className={`input font-mono ${errors.inningsBDefense ? 'input-error' : ''} ${game.isLocked ? 'opacity-60 cursor-not-allowed bg-dark-800' : ''}`}
                                 placeholder="0"
                             />
                             {errors.inningsBDefense && (

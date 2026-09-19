@@ -331,6 +331,32 @@ export function validateInningsFormat(value: string): boolean {
 }
 
 /**
+ * Check if a game has complete and valid data according to all game rules
+ */
+export function isGameCompleteAndValid(game: GameData): boolean {
+    if (game.runsA === null || game.runsA === undefined || game.runsA < 0) return false;
+    if (game.runsB === null || game.runsB === undefined || game.runsB < 0) return false;
+
+    if (!game.inningsABatting || !validateInningsFormat(game.inningsABatting)) return false;
+    if (!game.inningsADefense || !validateInningsFormat(game.inningsADefense)) return false;
+    if (!game.inningsBBatting || !validateInningsFormat(game.inningsBBatting)) return false;
+    if (!game.inningsBDefense || !validateInningsFormat(game.inningsBDefense)) return false;
+
+    const visitorOuts = inningsToOuts(game.inningsABatting);
+    const homeOuts = inningsToOuts(game.inningsBBatting);
+    const visitorRuns = game.runsA;
+    const homeRuns = game.runsB;
+
+    if (homeRuns > visitorRuns) {
+        if (homeOuts >= visitorOuts) return false;
+    } else if (homeRuns < visitorRuns) {
+        if (homeOuts !== visitorOuts) return false;
+    }
+
+    return true;
+}
+
+/**
  * Generate all round-robin matchups
  */
 export function generateMatchups(
@@ -407,6 +433,50 @@ export function calculateDisplayRanks(rankings: TeamStats[], isERTQB: boolean = 
     }
     return ranks;
 }
+
+/**
+ * Reorder a game within its group in the games array by swapping it with its adjacent neighbor in that group.
+ */
+export function reorderGame(
+    games: GameData[],
+    gameId: string,
+    direction: 'up' | 'down'
+): GameData[] {
+    const targetGame = games.find(g => g.id === gameId);
+    if (!targetGame) return games;
+
+    const groupId = targetGame.groupId ?? 'A';
+
+    // Find all indices of games belonging to the same group
+    const groupIndices: number[] = [];
+    games.forEach((g, idx) => {
+        if ((g.groupId ?? 'A') === groupId) {
+            groupIndices.push(idx);
+        }
+    });
+
+    const posInGroup = groupIndices.findIndex(idx => games[idx].id === gameId);
+    if (posInGroup === -1) return games;
+
+    if (direction === 'up') {
+        if (posInGroup === 0) return games; // Already top of group, no-op
+        const idx1 = groupIndices[posInGroup];
+        const idx2 = groupIndices[posInGroup - 1];
+        const nextGames = [...games];
+        nextGames[idx1] = games[idx2];
+        nextGames[idx2] = games[idx1];
+        return nextGames;
+    } else {
+        if (posInGroup === groupIndices.length - 1) return games; // Already bottom of group, no-op
+        const idx1 = groupIndices[posInGroup];
+        const idx2 = groupIndices[posInGroup + 1];
+        const nextGames = [...games];
+        nextGames[idx1] = games[idx2];
+        nextGames[idx2] = games[idx1];
+        return nextGames;
+    }
+}
+
 
 
 

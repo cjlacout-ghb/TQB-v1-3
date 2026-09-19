@@ -25,6 +25,7 @@ export interface GameData {
     inningsBDefense: string;
     earnedRunsA: number | null;
     earnedRunsB: number | null;
+    isLocked?: boolean;
 }
 
 export interface TeamStats {

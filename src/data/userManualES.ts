@@ -121,6 +121,15 @@ El sistema genera automáticamente todos los emparejamientos posibles en formato
 - 7 equipos = 21 partidos
 - 8 equipos = 28 partidos
 
+### Reordenar Partidos del Cronograma (Subir / Bajar)
+En el encabezado de cada partido (junto al número #N), dispone de botones para **Subir** (▲) o **Bajar** (▼) el partido. Esto permite ajustar la lista para reflejar el orden real en que se juegan los partidos en el torneo. La numeración #N se actualiza automáticamente y el orden personalizado se refleja en todos los listados y en los reportes exportados en PDF.
+
+### Fijar Resultados de Partidos (Candado de Bloqueo)
+Cada partido cuenta con un botón de **candado** en su encabezado para fijar sus resultados una vez disputado:
+- **Solo lectura**: Al fijar un partido completo, sus carreras y entradas quedan deshabilitadas para evitar modificaciones accidentales.
+- **Recálculo rápido**: Permite simular distintos escenarios modificando solo el partido en curso sin reingresar ni alterar los partidos ya confirmados.
+- **Desbloqueo**: Hacer clic en el candado desbloquea el partido de forma inmediata.
+
 ### Para Cada Partido, Ingrese:
 
 **Carreras Anotadas**

@@ -121,6 +121,15 @@ The system automatically generates all possible matchups in a round-robin format
 - 7 teams = 21 games
 - 8 teams = 28 games
 
+### Reordering Game Schedule (Move Up / Move Down)
+In the header of each game card (next to the #N number), use the **Move Up** (▲) and **Move Down** (▼) buttons to adjust the position of any match. This allows you to match the actual real-world playing schedule of your tournament. Match numbering #N updates dynamically, and your custom order is preserved across browser sessions and PDF exports.
+
+### Locking Completed Game Results
+Each game features a **lock** button in its header to lock results once completed:
+- **Read-only**: Locking a complete game disables its runs and innings fields to prevent accidental edits.
+- **Fast Recalculation**: Allows editing only the ongoing game in play to simulate scenarios and obtain updated standings instantly without altering locked games.
+- **Unlocking**: Click the lock icon on a locked game to immediately unlock it for editing.
+
 ### For Each Game, Enter:
 
 **Runs Scored**
