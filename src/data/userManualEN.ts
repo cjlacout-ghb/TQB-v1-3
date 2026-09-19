@@ -100,6 +100,12 @@ Eagles,Sharks,2,8,1,6,7,7,7,7
 1. **Verify Data**: (Step 2) The app automatically moves to Step 2. All imported game data is pre-filled.
 2. **Edit (Optional)**: If needed, you can correct any values directly on this screen.
 3. **Calculate**: Click **"Calculate Rankings"** at the bottom of the screen to see the results.
+
+### Constraints
+- **Minimum 3 teams** per group required.
+- **Maximum 8 teams** per group allowed (same limit as manual entry).
+- In multi-group mode, import each group's CSV file separately using the **Group A / Group B** tabs.
+- If the destination group already contains team names or game results, a confirmation dialog will ask for approval before replacing existing data.
     `,
     },
     {

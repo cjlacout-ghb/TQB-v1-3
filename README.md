@@ -25,14 +25,14 @@ A web application that calculates softball tournament standings using the **WBSC
 
 ### Prerequisites
 
-- Node.js 18.0 or higher
+- Node.js 18.18.0 or higher
 - npm or yarn
 
 ### Installation
 
 1. Clone or navigate to the project directory:
    ```bash
-   cd TQB_v1-1-0
+   cd TQB-v1-3
    ```
 
 2. Install dependencies:
@@ -47,9 +47,19 @@ A web application that calculates softball tournament standings using the **WBSC
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### Build for Production
+### Build and Test
 
 ```bash
+# Run unit tests (Vitest)
+npm run test
+
+# Run TypeScript type check
+npm run typecheck
+
+# Run full validation suite (typecheck + lint + test)
+npm run check
+
+# Build for production
 npm run build
 npm start
 ```
@@ -116,6 +126,12 @@ Tigers,Sharks,4,5,3,4,7,6.2,6.2,7
 - Innings + 1 out: `7.1` (7⅓ innings)
 - Innings + 2 outs: `7.2` (7⅔ innings)
 
+### Constraints
+
+- **Minimum 3 teams** per group required.
+- **Maximum 8 teams** per group allowed (same limit as manual entry).
+- In multi-group mode, import each group's CSV separately via its group tab.
+
 ## Tie-Breaking Logic (WBSC Rule C11)
 
 ### TQB Formula
@@ -181,4 +197,4 @@ This project is for educational and tournament management purposes.
 
 ---
 
-**TQB Calculator v1.1.0** • Built with Next.js, TypeScript, and Tailwind CSS
+**TQB Calculator v1.3.0** • Built with Next.js, TypeScript, and Tailwind CSS

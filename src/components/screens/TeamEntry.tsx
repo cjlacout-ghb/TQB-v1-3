@@ -3,12 +3,15 @@
 import { useState, useRef, useCallback, memo, useMemo } from 'react';
 import { Plus, Trash2, Upload, HelpCircle, ArrowRight, AlertCircle, ArrowLeft, FileText, ClipboardList, Users } from 'lucide-react';
 import { Team, GameData, GroupID } from '@/lib/types';
-import { parseCSV, getSampleCSV } from '@/lib/csvParser';
+import { parseCSV, getSampleCSV, shouldConfirmImport } from '@/lib/csvParser';
+import { MIN_TEAMS, MAX_TEAMS } from '@/lib/constants';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import ConfirmImportModal from '../modals/ConfirmImportModal';
 
 interface TeamEntryProps {
     teams: Team[];
+    games?: GameData[];
     onTeamsChange: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
     onContinue: () => void;
     onCSVImport: (teams: Team[], games: GameData[]) => void;
@@ -16,13 +19,13 @@ interface TeamEntryProps {
     onBack?: () => void;
     isMultiGroup: boolean;
     onSetMultiGroup: (value: boolean | ((prev: boolean) => boolean)) => void;
+    activeGroupId: GroupID;
+    onSetActiveGroupId: (id: GroupID) => void;
 }
-
-const MAX_TEAMS = 8;
-const MIN_TEAMS = 3;
 
 const TeamEntry = memo(function TeamEntry({
     teams,
+    games = [],
     onTeamsChange,
     onContinue,
     onCSVImport,
@@ -30,6 +33,8 @@ const TeamEntry = memo(function TeamEntry({
     onBack,
     isMultiGroup,
     onSetMultiGroup,
+    activeGroupId,
+    onSetActiveGroupId,
 }: TeamEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -39,7 +44,8 @@ const TeamEntry = memo(function TeamEntry({
     const [importMethod, setImportMethod] = useState<'file' | 'paste'>('file');
     const [pastedText, setPastedText] = useState('');
     const [isProcessing, setIsProcessing] = useState(false);
-    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only — never persisted
+    const [pendingImportPayload, setPendingImportPayload] = useState<{ teams: Team[]; games: GameData[] } | null>(null);
+    const [confirmImportInfo, setConfirmImportInfo] = useState<{ teamCount: number; hasGameResults: boolean } | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const addTeam = useCallback(() => {
@@ -124,6 +130,39 @@ const TeamEntry = memo(function TeamEntry({
         }
     }, [validateTeams, teams, onTeamsChange, onContinue]);
 
+    const executeImport = useCallback((importedTeams: Team[], importedGames: GameData[]) => {
+        if (isMultiGroup) {
+            onMultiGroupImport(importedTeams, importedGames, activeGroupId);
+        } else {
+            onCSVImport(importedTeams, importedGames);
+        }
+    }, [isMultiGroup, onMultiGroupImport, onCSVImport, activeGroupId]);
+
+    const handleImportParsedResult = useCallback((parsedTeams: Team[], parsedGames: GameData[]) => {
+        const info = shouldConfirmImport(teams, games, activeGroupId, isMultiGroup);
+        if (info.needsConfirmation) {
+            setPendingImportPayload({ teams: parsedTeams, games: parsedGames });
+            setConfirmImportInfo({ teamCount: info.teamCount, hasGameResults: info.hasGameResults });
+        } else {
+            executeImport(parsedTeams, parsedGames);
+        }
+    }, [teams, games, activeGroupId, isMultiGroup, executeImport]);
+
+    const handleConfirmImport = useCallback(() => {
+        if (pendingImportPayload) {
+            executeImport(pendingImportPayload.teams, pendingImportPayload.games);
+            setPendingImportPayload(null);
+            setConfirmImportInfo(null);
+            if (fileInputRef.current) fileInputRef.current.value = '';
+        }
+    }, [pendingImportPayload, executeImport]);
+
+    const handleCancelImport = useCallback(() => {
+        setPendingImportPayload(null);
+        setConfirmImportInfo(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
+    }, []);
+
     const handleFileUpload = useCallback((file: File) => {
         setCSVError([]);
 
@@ -142,14 +181,10 @@ const TeamEntry = memo(function TeamEntry({
                 return;
             }
 
-            if (isMultiGroup) {
-                onMultiGroupImport(result.teams, result.games, activeGroupId);
-            } else {
-                onCSVImport(result.teams, result.games);
-            }
+            handleImportParsedResult(result.teams, result.games);
         };
         reader.readAsText(file);
-    }, [onCSVImport, onMultiGroupImport, isMultiGroup, activeGroupId, t]);
+    }, [t, handleImportParsedResult]);
 
     const handleDrop = useCallback((e: React.DragEvent) => {
         e.preventDefault();
@@ -175,7 +210,6 @@ const TeamEntry = memo(function TeamEntry({
         setCSVError([]);
         setIsProcessing(true);
 
-        // Small delay to show feedback if needed, although parsing is synchronous
         setTimeout(() => {
             const result = parseCSV(pastedText, t);
             setIsProcessing(false);
@@ -185,13 +219,9 @@ const TeamEntry = memo(function TeamEntry({
                 return;
             }
 
-            if (isMultiGroup) {
-                onMultiGroupImport(result.teams, result.games, activeGroupId);
-            } else {
-                onCSVImport(result.teams, result.games);
-            }
+            handleImportParsedResult(result.teams, result.games);
         }, 300);
-    }, [pastedText, t, onCSVImport, onMultiGroupImport, isMultiGroup, activeGroupId]);
+    }, [pastedText, t, handleImportParsedResult]);
 
     // Continue button is enabled only when ALL active groups have ≥3 named teams
     const hasValidTeams = useMemo(() => {
@@ -248,8 +278,8 @@ const TeamEntry = memo(function TeamEntry({
                                         { id: `team-b-2-${ts + 1}`, name: '', groupId: 'B' },
                                         { id: `team-b-3-${ts + 2}`, name: '', groupId: 'B' },
                                     ];
-                                    onTeamsChange([...teams, ...bTeams]);
-                                    setActiveGroupId('B');
+                                     onTeamsChange([...teams, ...bTeams]);
+                                    onSetActiveGroupId('B');
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
                                     bg-primary-500/10 text-primary-400 border border-primary-500/30
@@ -263,7 +293,7 @@ const TeamEntry = memo(function TeamEntry({
                                 onClick={() => {
                                     onSetMultiGroup(false);
                                     onTeamsChange(teams.filter(t => t.groupId !== 'B'));
-                                    setActiveGroupId('A');
+                                    onSetActiveGroupId('A');
                                 }}
                                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
                                     bg-dark-600 text-gray-400 border border-dark-500
@@ -286,7 +316,7 @@ const TeamEntry = memo(function TeamEntry({
                                 return (
                                     <button
                                         key={gId}
-                                        onClick={() => { setActiveGroupId(gId); setErrors({}); setCSVError([]); }}
+                                        onClick={() => { onSetActiveGroupId(gId); setErrors({}); setCSVError([]); }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
                                             ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                     >
@@ -508,6 +538,17 @@ const TeamEntry = memo(function TeamEntry({
                     </button>
                 </div>
             </div>
+
+            {/* Confirm Replacement Modal */}
+            <ConfirmImportModal
+                isOpen={pendingImportPayload !== null}
+                onClose={handleCancelImport}
+                onConfirm={handleConfirmImport}
+                teamCount={confirmImportInfo?.teamCount || 0}
+                hasGameResults={confirmImportInfo?.hasGameResults || false}
+                isMultiGroup={isMultiGroup}
+                activeGroupId={activeGroupId}
+            />
         </div>
     );
 });

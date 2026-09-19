@@ -12,6 +12,8 @@ interface EarnedRunsEntryProps {
     onCalculate: () => void;
     onBack?: () => void;
     isMultiGroup: boolean;
+    activeGroupId: GroupID;
+    onSetActiveGroupId: (id: GroupID) => void;
 }
 
 const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
@@ -20,10 +22,11 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
     onCalculate,
     onBack,
     isMultiGroup,
+    activeGroupId,
+    onSetActiveGroupId,
 }: EarnedRunsEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
-    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
     const updateGame = useCallback((
         gameId: string,
@@ -140,7 +143,7 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
                                 return (
                                     <button
                                         key={gId}
-                                        onClick={() => { setActiveGroupId(gId); setErrors({}); }}
+                                        onClick={() => { onSetActiveGroupId(gId); setErrors({}); }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
                                             ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                     >

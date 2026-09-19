@@ -15,20 +15,25 @@ export interface TQBStateReturn {
         totalSteps: number;
         isMultiGroup: boolean;
         groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
+        activeGroupId: GroupID;
     };
     actions: {
         setCurrentScreen: (screen: ScreenNumber | ((prev: ScreenNumber) => ScreenNumber)) => void;
         setTeams: (teams: Team[] | ((prev: Team[]) => Team[])) => void;
         setGames: (games: GameData[] | ((prev: GameData[]) => GameData[])) => void;
         handleCSVImport: (importedTeams: Team[], importedGames: GameData[], groupId?: GroupID) => void;
+        handleGroupImport: (importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => void;
+        handleGoToLanding: () => void;
         handleContinueToGames: () => void;
         handleCalculateTQB: () => void;
         handleCalculateERTQB: () => void;
         handleStartNew: () => void;
+        handleContinueTournament: () => void;
         handleBack: () => void;
         setNeedsERTQB: (needs: boolean | ((prev: boolean) => boolean)) => void;
         setHasUnresolvedTies: (has: boolean | ((prev: boolean) => boolean)) => void;
         setIsMultiGroup: (value: boolean | ((prev: boolean) => boolean)) => void;
+        setActiveGroupId: (id: GroupID) => void;
     };
 }
 
@@ -41,11 +46,15 @@ export function useTQBState(): TQBStateReturn {
     ]);
     const [games, setGames] = useState<GameData[]>([]);
     const [rankings, setRankings] = useState<TeamStats[]>([]);
+    // Global tieBreakMethod: In single-group mode, stores the tie-break method for the tournament.
+    // In multi-group mode, stores the common method if both groups match, or 'UNRESOLVED' if they differ.
+    // Per-group tie-break methods are tracked in groupTieBreakMethod.
     const [tieBreakMethod, setTieBreakMethod] = useState<TieBreakMethod>('WIN_LOSS');
     const [needsERTQB, setNeedsERTQB] = useState(false);
     const [hasUnresolvedTies, setHasUnresolvedTies] = useState(false);
     const [isMultiGroup, setIsMultiGroup] = useState(false);
     const [groupTieBreakMethod, setGroupTieBreakMethod] = useState<Partial<Record<GroupID, TieBreakMethod>>>({}); // Per-group tie-break metadata
+    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Global UI state for active group identification
 
     // Load state on mount
     useEffect(() => {
@@ -95,14 +104,35 @@ export function useTQBState(): TQBStateReturn {
 
     const totalSteps = useMemo(() => (needsERTQB ? 5 : 3), [needsERTQB]);
 
-    const handleCSVImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID = 'A') => {
-        // Inject the active group from the UI tab — the CSV format itself is group-agnostic
+    // Multi-group import: replaces only the target group's teams and games, preserving the other group.
+    // Does NOT navigate — the user must click Continue when both groups are ready.
+    const handleGroupImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => {
         const taggedTeams = importedTeams.map(t => ({ ...t, groupId }));
         const taggedGames = importedGames.map(g => ({ ...g, groupId }));
-        setTeams(taggedTeams);
-        setGames(taggedGames);
-        setCurrentScreen(2);
+        setTeams(prev => [
+            ...prev.filter(t => t.groupId !== groupId),
+            ...taggedTeams,
+        ]);
+        setGames(prev => [
+            ...prev.filter(g => g.groupId !== groupId),
+            ...taggedGames,
+        ]);
     }, []);
+
+    const handleCSVImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID = 'A') => {
+        // Inject the active group from the UI tab — the CSV format itself is group-agnostic.
+        // In multi-group mode, delegate to handleGroupImport to preserve the other group's data.
+        // In single-group mode, replace all state and advance to the game-entry screen.
+        if (isMultiGroup) {
+            handleGroupImport(importedTeams, importedGames, groupId);
+        } else {
+            const taggedTeams = importedTeams.map(t => ({ ...t, groupId }));
+            const taggedGames = importedGames.map(g => ({ ...g, groupId }));
+            setTeams(taggedTeams);
+            setGames(taggedGames);
+            setCurrentScreen(2);
+        }
+    }, [isMultiGroup, handleGroupImport]);
 
     const handleContinueToGames = useCallback(() => {
         let allInitialGames: GameData[] = [];
@@ -138,6 +168,16 @@ export function useTQBState(): TQBStateReturn {
         setCurrentScreen(2);
     }, [teams, isMultiGroup]);
 
+    const handleSetIsMultiGroup = useCallback((value: boolean | ((prev: boolean) => boolean)) => {
+        setIsMultiGroup(prev => {
+            const next = typeof value === 'function' ? value(prev) : value;
+            if (!next) {
+                setActiveGroupId('A');
+            }
+            return next;
+        });
+    }, []);
+
     const handleCalculateTQB = useCallback(() => {
         if (isMultiGroup) {
             const gATeams = teams.filter(t => t.groupId === 'A');
@@ -150,13 +190,15 @@ export function useTQBState(): TQBStateReturn {
                 ...resultA.rankings.map(r => ({ ...r, groupId: 'A' as GroupID })),
                 ...resultB.rankings.map(r => ({ ...r, groupId: 'B' as GroupID })),
             ]);
-            setTieBreakMethod(resultA.tieBreakMethod);
+            const globalMethod = resultA.tieBreakMethod === resultB.tieBreakMethod ? resultA.tieBreakMethod : 'UNRESOLVED';
+            setTieBreakMethod(globalMethod);
             setGroupTieBreakMethod({ A: resultA.tieBreakMethod, B: resultB.tieBreakMethod });
             setNeedsERTQB(resultA.needsERTQB || resultB.needsERTQB);
         } else {
             const result = calculateRankings(teams, games, false);
             setRankings(result.rankings);
             setTieBreakMethod(result.tieBreakMethod);
+            setGroupTieBreakMethod({ A: result.tieBreakMethod });
             setNeedsERTQB(result.needsERTQB);
         }
         setCurrentScreen(3);
@@ -174,13 +216,15 @@ export function useTQBState(): TQBStateReturn {
                 ...resultA.rankings.map(r => ({ ...r, groupId: 'A' as GroupID })),
                 ...resultB.rankings.map(r => ({ ...r, groupId: 'B' as GroupID })),
             ]);
-            setTieBreakMethod(resultA.tieBreakMethod);
+            const globalMethod = resultA.tieBreakMethod === resultB.tieBreakMethod ? resultA.tieBreakMethod : 'UNRESOLVED';
+            setTieBreakMethod(globalMethod);
             setGroupTieBreakMethod({ A: resultA.tieBreakMethod, B: resultB.tieBreakMethod });
             setHasUnresolvedTies(resultA.hasTies || resultB.hasTies);
         } else {
             const result = calculateRankings(teams, games, true);
             setRankings(result.rankings);
             setTieBreakMethod(result.tieBreakMethod);
+            setGroupTieBreakMethod({ A: result.tieBreakMethod });
             setHasUnresolvedTies(result.hasTies);
         }
         setCurrentScreen(5);
@@ -199,8 +243,24 @@ export function useTQBState(): TQBStateReturn {
         setNeedsERTQB(false);
         setHasUnresolvedTies(false);
         setIsMultiGroup(false);
+        setActiveGroupId('A');
         setGroupTieBreakMethod({});
         setCurrentScreen(1);
+    }, []);
+
+    const handleContinueTournament = useCallback(() => {
+        const saved = loadState();
+        setActiveGroupId('A');
+        if (saved) {
+            setCurrentScreen(saved.currentScreen || 1);
+        } else {
+            setCurrentScreen(1);
+        }
+    }, []);
+
+    const handleGoToLanding = useCallback(() => {
+        setActiveGroupId('A');
+        setCurrentScreen(0);
     }, []);
 
     const handleBack = useCallback(() => {
@@ -227,20 +287,25 @@ export function useTQBState(): TQBStateReturn {
             totalSteps,
             isMultiGroup,
             groupTieBreakMethod,
+            activeGroupId,
         },
         actions: {
             setCurrentScreen,
             setTeams,
             setGames,
             handleCSVImport,
+            handleGroupImport,
+            handleGoToLanding,
             handleContinueToGames,
             handleCalculateTQB,
             handleCalculateERTQB,
             handleStartNew,
+            handleContinueTournament,
             handleBack,
             setNeedsERTQB,
             setHasUnresolvedTies,
-            setIsMultiGroup,
+            setIsMultiGroup: handleSetIsMultiGroup,
+            setActiveGroupId,
         }
     };
 }

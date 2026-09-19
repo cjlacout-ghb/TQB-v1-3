@@ -2,11 +2,11 @@
 
 import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, ArrowLeft } from 'lucide-react';
 import { TeamStats, TieBreakMethod, GameData, GroupID } from '@/lib/types';
-import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/lib/calculations';
+import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks, calculateRankings } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo, useState } from 'react';
+import React, { memo, useMemo } from 'react';
 
 interface TQBRankingsProps {
     rankings: TeamStats[];
@@ -21,6 +21,8 @@ interface TQBRankingsProps {
     onOpenManual?: (section?: string) => void;
     isMultiGroup: boolean;
     groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
+    activeGroupId: GroupID;
+    onSetActiveGroupId: (id: GroupID) => void;
 }
 
 const TQBRankings = memo(function TQBRankings({
@@ -36,9 +38,10 @@ const TQBRankings = memo(function TQBRankings({
     onOpenManual,
     isMultiGroup,
     groupTieBreakMethod,
+    activeGroupId,
+    onSetActiveGroupId,
 }: TQBRankingsProps) {
     const { t, language } = useLanguage();
-    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
     // Active group's tie-break method for the status banner
     const activeTieBreakMethod: TieBreakMethod =
@@ -53,6 +56,13 @@ const TQBRankings = memo(function TQBRankings({
     const displayGames = isMultiGroup
         ? games.filter(g => g.groupId === activeGroupId)
         : games;
+
+    // Active group's ER-TQB requirement status for the banner warning
+    const activeGroupNeedsERTQB = useMemo(() => {
+        if (!isMultiGroup) return needsERTQB;
+        const groupTeams = displayRankings.map(r => ({ id: r.id, name: r.name }));
+        return calculateRankings(groupTeams, displayGames, false).needsERTQB;
+    }, [isMultiGroup, needsERTQB, displayRankings, displayGames]);
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -94,7 +104,7 @@ const TQBRankings = memo(function TQBRankings({
                             {(['A', 'B'] as GroupID[]).map(gId => (
                                 <button
                                     key={gId}
-                                    onClick={() => setActiveGroupId(gId)}
+                                    onClick={() => onSetActiveGroupId(gId)}
                                     className={`flex-1 flex items-center justify-center py-2 text-sm font-medium rounded-lg transition-all
                                         ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                 >
@@ -107,23 +117,23 @@ const TQBRankings = memo(function TQBRankings({
 
                 <div className="card-body space-y-6">
                     {/* Tie-Break Method Indicator */}
-                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${needsERTQB
+                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${activeGroupNeedsERTQB
                         ? 'bg-warning-500/10 border-warning-500/30'
                         : 'bg-success-500/10 border-success-500/30'
                         }`}>
-                        {needsERTQB ? (
+                        {activeGroupNeedsERTQB ? (
                             <AlertTriangle size={20} className="text-warning-400 flex-shrink-0 mt-0.5" />
                         ) : (
                             <Info size={20} className="text-success-400 flex-shrink-0 mt-0.5" />
                         )}
                         <div>
-                            <p className={`text-sm font-medium ${needsERTQB ? 'text-warning-400' : 'text-success-400'}`}>
-                                {needsERTQB
+                            <p className={`text-sm font-medium ${activeGroupNeedsERTQB ? 'text-warning-400' : 'text-success-400'}`}>
+                                {activeGroupNeedsERTQB
                                     ? t.rankings.needsERTQB
                                     : getTieBreakMethodText(activeTieBreakMethod, language)
                                 }
                             </p>
-                            {!needsERTQB && (
+                            {!activeGroupNeedsERTQB && (
                                 <p className="text-xs text-gray-400 mt-1">
                                     {t.rankings.tieBreakNote}
                                 </p>

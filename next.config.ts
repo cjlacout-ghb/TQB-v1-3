@@ -6,9 +6,9 @@ const nextConfig: NextConfig = {
     compiler: {
         removeConsole: process.env.NODE_ENV === "production",
     },
-    // This tells Vercel/Next.js to NOT fail the build on ESLint warnings/errors.
+    // ESLint checks are enabled during builds to catch regressions
     eslint: {
-        ignoreDuringBuilds: true,
+        ignoreDuringBuilds: false,
     },
 };
 

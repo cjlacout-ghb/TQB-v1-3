@@ -6,7 +6,7 @@ import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo, useState } from 'react';
+import React, { memo } from 'react';
 
 interface ERTQBRankingsProps {
     rankings: TeamStats[];
@@ -19,6 +19,8 @@ interface ERTQBRankingsProps {
     onOpenManual?: (section?: string) => void;
     isMultiGroup: boolean;
     groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
+    activeGroupId: GroupID;
+    onSetActiveGroupId: (id: GroupID) => void;
 }
 
 const ERTQBRankings = memo(function ERTQBRankings({
@@ -32,14 +34,19 @@ const ERTQBRankings = memo(function ERTQBRankings({
     onOpenManual,
     isMultiGroup,
     groupTieBreakMethod,
+    activeGroupId,
+    onSetActiveGroupId,
 }: ERTQBRankingsProps) {
     const { t, language } = useLanguage();
-    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only
 
     const activeTieBreakMethod: TieBreakMethod =
         (isMultiGroup && groupTieBreakMethod[activeGroupId])
             ? groupTieBreakMethod[activeGroupId]!
             : tieBreakMethod;
+
+    const activeHasUnresolvedTies = isMultiGroup
+        ? (activeTieBreakMethod === 'UNRESOLVED')
+        : hasUnresolvedTies;
 
     const displayRankings = isMultiGroup
         ? rankings.filter(r => r.groupId === activeGroupId)
@@ -88,7 +95,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                             {(['A', 'B'] as GroupID[]).map(gId => (
                                 <button
                                     key={gId}
-                                    onClick={() => setActiveGroupId(gId)}
+                                    onClick={() => onSetActiveGroupId(gId)}
                                     className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all
                                         ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                 >
@@ -101,21 +108,21 @@ const ERTQBRankings = memo(function ERTQBRankings({
 
                 <div className="card-body space-y-6">
                     {/* Tie-Break Method Indicator */}
-                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${hasUnresolvedTies
+                    <div className={`p-4 rounded-xl border flex items-start gap-3 ${activeHasUnresolvedTies
                         ? 'bg-warning-500/10 border-warning-500/30'
                         : 'bg-success-500/10 border-success-500/30'
                         }`}>
-                        {hasUnresolvedTies ? (
+                        {activeHasUnresolvedTies ? (
                             <AlertTriangle size={20} className="text-warning-400 flex-shrink-0 mt-0.5" />
                         ) : (
                             <CheckCircle size={20} className="text-success-400 flex-shrink-0 mt-0.5" />
                         )}
                         <div className="flex-1">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                                <p className={`text-sm font-medium ${hasUnresolvedTies ? 'text-warning-400' : 'text-success-400'}`}>
+                                <p className={`text-sm font-medium ${activeHasUnresolvedTies ? 'text-warning-400' : 'text-success-400'}`}>
                                     {getTieBreakMethodText(activeTieBreakMethod, language)}
                                 </p>
-                                {hasUnresolvedTies && onOpenManual && (
+                                {activeHasUnresolvedTies && onOpenManual && (
                                     <button
                                         onClick={() => onOpenManual('official-rule-c11')}
                                         className="flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-primary-400 bg-primary-500/10 hover:bg-primary-500/20 border border-primary-500/30 rounded-lg transition-all group"
@@ -125,7 +132,7 @@ const ERTQBRankings = memo(function ERTQBRankings({
                                     </button>
                                 )}
                             </div>
-                            {!hasUnresolvedTies && (
+                            {!activeHasUnresolvedTies && (
                                 <p className="text-xs text-gray-400 mt-1">
                                     {t.rankings.tieBreakNote}
                                 </p>

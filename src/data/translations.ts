@@ -98,6 +98,14 @@ export const translations = {
             },
             tooltips: {
                 ruleC11: "This calculator follows the official WBSC Rule C11 tie-breaking procedures, including Win-Loss, Head-to-Head, TQB, and ER-TQB criteria."
+            },
+            confirmImport: {
+                title: "Replace Existing Teams?",
+                descriptionSingle: "This import will replace {count} existing team(s) and their game data.",
+                descriptionGroup: "This import will replace {count} existing team(s) in {group}. {otherGroup} will not be affected.",
+                gameWarning: "Entered game results for {group} will also be discarded.",
+                confirmButton: "Yes, Replace Teams",
+                cancelButton: "Cancel"
             }
         },
         gameEntry: {
@@ -316,6 +324,14 @@ export const translations = {
             },
             tooltips: {
                 ruleC11: "Esta calculadora sigue los procedimientos oficiales de desempate de la Regla WBSC C11, incluyendo Ganados-Perdidos, Entre Sí, TQB y ER-TQB."
+            },
+            confirmImport: {
+                title: "¿Reemplazar Equipos Existentes?",
+                descriptionSingle: "Esta importación reemplazará {count} equipo(s) existente(s) y sus partidos.",
+                descriptionGroup: "Esta importación reemplazará {count} equipo(s) existente(s) en el {group}. El {otherGroup} no se modificará.",
+                gameWarning: "También se descartarán los resultados de partidos ingresados en el {group}.",
+                confirmButton: "Sí, Reemplazar Equipos",
+                cancelButton: "Cancelar"
             }
         },
         gameEntry: {

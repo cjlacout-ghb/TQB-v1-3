@@ -1,5 +1,6 @@
 // CSV parsing utility for TQB Calculator
 import { GameData, Team } from './types';
+import { MIN_TEAMS, MAX_TEAMS } from './constants';
 
 export interface CSVParseResult {
     success: boolean;
@@ -156,13 +157,14 @@ export function parseCSV(content: string, t: Translation): CSVParseResult {
         }
     }
 
-    // Check team count
+    // Check team count — must match domain limits (MIN_TEAMS, MAX_TEAMS).
+    // The CSV is always parsed as a single flat group; the caller injects groupId afterward.
     const teamList = Array.from(teams.values());
-    if (teamList.length < 3) {
+    if (teamList.length < MIN_TEAMS) {
         errors.push(t.teamEntry.errors.csv.minTeams);
     }
-    if (teamList.length > 32) { // Allow more teams if imported
-        // errors.push(t.teamEntry.errors.csv.maxTeams);
+    if (teamList.length > MAX_TEAMS) {
+        errors.push(t.teamEntry.errors.csv.maxTeams);
     }
 
     return {
@@ -181,4 +183,38 @@ export function getSampleCSV(): string {
 Tigers,Eagles,5,3,4,2,7,7,7,7
 Eagles,Sharks,2,8,1,6,7,6.2,6.2,7
 Tigers,Sharks,4,5,3,4,7,6.2,6.2,7`;
+}
+
+export interface ImportConfirmationInfo {
+    needsConfirmation: boolean;
+    teamCount: number;
+    hasGameResults: boolean;
+}
+
+/**
+ * Determine if importing a CSV payload over existing state requires user confirmation
+ */
+export function shouldConfirmImport(
+    existingTeams: Team[],
+    existingGames: GameData[],
+    targetGroupId: string,
+    isMultiGroup: boolean
+): ImportConfirmationInfo {
+    const targetTeams = isMultiGroup
+        ? existingTeams.filter(t => t.groupId === targetGroupId)
+        : existingTeams;
+    const namedTeams = targetTeams.filter(t => t.name.trim().length > 0);
+
+    const targetGames = isMultiGroup
+        ? existingGames.filter(g => g.groupId === targetGroupId)
+        : existingGames;
+    const hasGameResults = targetGames.some(g => g.runsA !== null || g.runsB !== null);
+
+    const needsConfirmation = namedTeams.length > 0 || hasGameResults;
+
+    return {
+        needsConfirmation,
+        teamCount: namedTeams.length,
+        hasGameResults,
+    };
 }

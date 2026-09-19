@@ -21,10 +21,9 @@ const FeedbackModal = dynamic(() => import('@/components/modals/FeedbackModal'),
 });
 import LandingScreen from '@/components/screens/LandingScreen';
 import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
-import { loadState, hasSavedState } from '@/lib/storage';
+import { hasSavedState } from '@/lib/storage';
 
 import { useTQBState } from '@/hooks/useTQBState';
-import type { Team, GameData, GroupID } from '@/lib/types';
 
 export default function Home() {
     const { state, actions } = useTQBState();
@@ -39,6 +38,7 @@ export default function Home() {
         totalSteps,
         isMultiGroup,
         groupTieBreakMethod,
+        activeGroupId,
     } = state;
 
     const {
@@ -46,12 +46,16 @@ export default function Home() {
         setTeams,
         setGames,
         handleCSVImport,
+        handleGroupImport,
+        handleGoToLanding,
         handleContinueToGames,
         handleCalculateTQB,
         handleCalculateERTQB,
         handleStartNew,
+        handleContinueTournament: handleContinueTournamentAction,
         handleBack: baseHandleBack,
         setIsMultiGroup,
+        setActiveGroupId,
     } = actions;
 
     // Modal states
@@ -80,13 +84,8 @@ export default function Home() {
     }, [handleStartNew]);
 
     const handleContinueTournament = useCallback(() => {
-        const saved = loadState();
-        if (saved) {
-            setCurrentScreen(saved.currentScreen || 1);
-        } else {
-            setCurrentScreen(1);
-        }
-    }, [setCurrentScreen]);
+        handleContinueTournamentAction();
+    }, [handleContinueTournamentAction]);
 
     // Handle going back with confirm reset on first screen
     const handleBack = useCallback(() => {
@@ -101,19 +100,6 @@ export default function Home() {
     const handleProceedToERTQB = useCallback(() => {
         setCurrentScreen(4);
     }, [setCurrentScreen]);
-
-    // Multi-group import: merges CSV/paste results into one group, preserving the other group's state.
-    // Does NOT navigate — the user must click Continue when both groups are ready.
-    const handleGroupImport = useCallback((importedTeams: Team[], importedGames: GameData[], groupId: GroupID) => {
-        setTeams(prev => [
-            ...prev.filter(t => t.groupId !== groupId),
-            ...importedTeams.map(t => ({ ...t, groupId })),
-        ]);
-        setGames(prev => [
-            ...prev.filter(g => g.groupId !== groupId),
-            ...importedGames.map(g => ({ ...g, groupId })),
-        ]);
-    }, [setTeams, setGames]);
 
     // Render current screen — useMemo prevents re-mounting inputs on every keystroke
     const renderedScreen = useMemo(() => {
@@ -131,6 +117,7 @@ export default function Home() {
                 return (
                     <TeamEntry
                         teams={teams}
+                        games={games}
                         onTeamsChange={setTeams}
                         onContinue={handleContinueToGames}
                         onCSVImport={handleCSVImport}
@@ -138,6 +125,8 @@ export default function Home() {
                         onBack={handleBack}
                         isMultiGroup={isMultiGroup}
                         onSetMultiGroup={setIsMultiGroup}
+                        activeGroupId={activeGroupId}
+                        onSetActiveGroupId={setActiveGroupId}
                     />
                 );
 
@@ -151,6 +140,8 @@ export default function Home() {
                         onBack={handleBack}
                         totalSteps={totalSteps}
                         isMultiGroup={isMultiGroup}
+                        activeGroupId={activeGroupId}
+                        onSetActiveGroupId={setActiveGroupId}
                     />
                 );
 
@@ -169,6 +160,8 @@ export default function Home() {
                         onOpenManual={handleOpenManual}
                         isMultiGroup={isMultiGroup}
                         groupTieBreakMethod={groupTieBreakMethod}
+                        activeGroupId={activeGroupId}
+                        onSetActiveGroupId={setActiveGroupId}
                     />
                 );
 
@@ -180,6 +173,8 @@ export default function Home() {
                         onCalculate={handleCalculateERTQB}
                         onBack={handleBack}
                         isMultiGroup={isMultiGroup}
+                        activeGroupId={activeGroupId}
+                        onSetActiveGroupId={setActiveGroupId}
                     />
                 );
 
@@ -196,6 +191,8 @@ export default function Home() {
                         onOpenManual={handleOpenManual}
                         isMultiGroup={isMultiGroup}
                         groupTieBreakMethod={groupTieBreakMethod}
+                        activeGroupId={activeGroupId}
+                        onSetActiveGroupId={setActiveGroupId}
                     />
                 );
 
@@ -205,10 +202,10 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB,
         hasUnresolvedTies, totalSteps, isMultiGroup, groupTieBreakMethod,
-        setTeams, setGames, handleCSVImport,
+        activeGroupId, setTeams, setGames, handleCSVImport, handleGroupImport,
         handleContinueToGames, handleCalculateTQB, handleCalculateERTQB,
         handleProceedToERTQB, handleStartNewConfirm, handleContinueTournament,
-        handleBack, handleOpenManual]);
+        handleBack, handleOpenManual, setIsMultiGroup, setActiveGroupId]);
 
     const { language, t } = useLanguage();
 
@@ -216,7 +213,7 @@ export default function Home() {
         <div className="min-h-screen flex flex-col">
             <Header 
                 onOpenManual={() => handleOpenManual()} 
-                onGoHome={() => setCurrentScreen(0)}
+                onGoHome={handleGoToLanding}
             />
 
             <main className="flex-1 px-4 py-8 sm:px-6 lg:px-8">

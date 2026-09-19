@@ -15,6 +15,8 @@ interface GameEntryProps {
     onBack?: () => void;
     totalSteps: number;
     isMultiGroup: boolean;
+    activeGroupId: GroupID;
+    onSetActiveGroupId: (id: GroupID) => void;
 }
 
 const GameEntry = memo(function GameEntry({
@@ -25,11 +27,12 @@ const GameEntry = memo(function GameEntry({
     onBack,
     totalSteps,
     isMultiGroup,
+    activeGroupId,
+    onSetActiveGroupId,
 }: GameEntryProps) {
     const { t } = useLanguage();
     const [errors, setErrors] = useState<Record<string, Record<string, string>>>({});
     const [showInningsHelp, setShowInningsHelp] = useState(false);
-    const [activeGroupId, setActiveGroupId] = useState<GroupID>('A'); // Local UI state only — never persisted
 
     const updateGame = useCallback((
         gameId: string,
@@ -230,7 +233,7 @@ const GameEntry = memo(function GameEntry({
                                 return (
                                     <button
                                         key={gId}
-                                        onClick={() => { setActiveGroupId(gId); setErrors({}); }}
+                                        onClick={() => { onSetActiveGroupId(gId); setErrors({}); }}
                                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
                                             ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
                                     >

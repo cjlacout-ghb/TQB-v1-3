@@ -54,6 +54,7 @@ export default {
             },
             backgroundImage: {
                 "gradient-dark": "linear-gradient(135deg, #0F0F23 0%, #1A1A2E 50%, #2D1B4E 100%)",
+                "gradient-radial": "radial-gradient(ellipse at center, var(--tw-gradient-stops))",
             },
         },
     },

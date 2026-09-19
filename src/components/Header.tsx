@@ -31,6 +31,7 @@ export default function Header({ onOpenManual, onGoHome }: HeaderProps) {
                             alt="TQB Calculator Logo"
                             width={40}
                             height={40}
+                            priority
                             className="rounded-xl object-contain shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform duration-200"
                         />
                         <div>

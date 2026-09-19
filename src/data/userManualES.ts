@@ -100,6 +100,12 @@ Aguilas,Tiburones,2,8,1,6,7,7,7,7
 1. **Verificar Datos**: (Paso 2) La aplicación se mueve automáticamente al Paso 2. Todos los datos de los partidos importados se pre-llenan.
 2. **Editar (Opcional)**: Si es necesario, puede corregir cualquier valor directamente en esta pantalla.
 3. **Calcular**: Haga clic en **"Calcular Clasificaciones"** en la parte inferior para ver los resultados.
+
+### Restricciones
+- Se requiere un **mínimo de 3 equipos** por grupo.
+- Se permite un **máximo de 8 equipos** por grupo (igual límite que la entrada manual).
+- En modo multi-grupo, importe el CSV de cada grupo por separado usando las pestañas **Grupo A / Grupo B**.
+- Si el grupo destino ya contiene equipos con nombre o resultados de partidos, una ventana de confirmación le solicitará su aprobación antes de reemplazar los datos existentes.
     `,
     },
     {
