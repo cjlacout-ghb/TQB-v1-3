@@ -235,6 +235,15 @@ The rankings display shows:
 - **W-L Record**: Wins and losses
 - **TQB/ER-TQB Value**: Calculated balance value (to 4 decimal places)
 
+### "Game in Progress" Live Panel
+When a group has at least 1 locked game and between 1 and 4 unfixed games, a collapsible **"Game in Progress"** panel appears at the top of the TQB Standings screen (Screen 3).
+- **Live Updates**: Edit runs and innings for ongoing games directly inside the panel. Standings update in real time as you type without changing screens.
+- **Lock Protection**: Locking a game protects its core score and innings against accidental edits while allowing earned runs to be entered on the ER-TQB screen if required. Locking a game moves it out of the panel into the completed schedule.
+- **Outdated Calculation Warning**: If a game in progress has incomplete or invalid fields, a warning banner alerts that the display shows the last valid calculation until all fields are completed.
+
+### Provisional Standings Indicator
+A group is classified as **Provisional** when it contains at least 1 locked game AND at least 1 unlocked game (an active tournament with ongoing games). An amber warning banner appears on Screens 3 and 5 to highlight that positions reflect unconfirmed/simulated results and final rankings may change.
+
 ### Understanding the Values
 
 - **Positive TQB**: Team scores more runs per inning than they allow (good!)
@@ -261,14 +270,19 @@ On the final rankings screen, click **"Export to PDF"** to generate a printable 
 **Before exporting:**
 1. Enter a **Tournament Name** (e.g., "2026 Regional Championship")
 2. Optionally adjust the date (defaults to today)
-3. Click **"Generate PDF"**
+3. Check/uncheck **"Mark document as provisional"** (pre-selected automatically when tournament has mixed locked/unlocked games)
+4. Click **"Generate PDF"**
+
+**Export Controls:**
+- **Provisional Document Checkbox**: Pre-selected automatically if any group is provisional. Can be toggled manually for a single export gesture without altering saved data. When enabled, the PDF displays prominent warning banners on all pages and marks unconfirmed games with a symbol (†) and legend.
+- **Outdated Calculation Blocker**: If any game results are incomplete or invalid, PDF export is automatically blocked with a warning message to prevent printing broken or outdated standings.
 
 **The PDF includes:**
 - Tournament name and date
 - WBSC Rule C11 reference
 - Final standings table with all statistics
 - Tie-breaking method used
-- Game results summary
+- Game results summary (with provisional marks when applicable)
 - Formula reference
     `,
     },

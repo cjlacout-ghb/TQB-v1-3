@@ -1,5 +1,5 @@
 // TQB and ER-TQB calculation utilities
-import { GameData, TeamStats, RankingResult, TieBreakMethod, TeamID } from './types';
+import { GameData, TeamStats, RankingResult, TieBreakMethod, TeamID, GroupID } from './types';
 
 const TIE_TOLERANCE = 0.0001;
 
@@ -476,6 +476,291 @@ export function reorderGame(
         return nextGames;
     }
 }
+
+/**
+ * Check if a game has any user-entered data (scores, innings, earned runs) or is locked
+ */
+export function isGameFilledOrLocked(game: GameData): boolean {
+    if (game.isLocked) return true;
+    if (game.runsA !== null && game.runsA !== undefined) return true;
+    if (game.runsB !== null && game.runsB !== undefined) return true;
+    if (game.inningsABatting && game.inningsABatting !== '') return true;
+    if (game.inningsADefense && game.inningsADefense !== '') return true;
+    if (game.inningsBBatting && game.inningsBBatting !== '') return true;
+    if (game.inningsBDefense && game.inningsBDefense !== '') return true;
+    if (game.earnedRunsA !== null && game.earnedRunsA !== undefined) return true;
+    if (game.earnedRunsB !== null && game.earnedRunsB !== undefined) return true;
+    return false;
+}
+
+export interface ContinueToGamesImpact {
+    needsConfirmation: boolean;
+    gamesWithResultsCount: number;
+    lockedCount: number;
+    activeGroups: GroupID[];
+    unchangedGroups: GroupID[];
+    changedGroups: GroupID[];
+    discardedGroups: GroupID[];
+}
+
+/**
+ * Compare current group team sets vs existing game team sets by group
+ */
+export function checkContinueToGamesImpact(
+    teams: { id: string; name: string; groupId?: GroupID }[],
+    games: GameData[],
+    isMultiGroup: boolean
+): ContinueToGamesImpact {
+    const activeGroups: GroupID[] = isMultiGroup ? ['A', 'B'] : ['A'];
+    const existingGroupIds = Array.from(new Set(games.map(g => g.groupId ?? 'A')));
+    const discardedGroups = existingGroupIds.filter(gId => !activeGroups.includes(gId));
+
+    const unchangedGroups: GroupID[] = [];
+    const changedGroups: GroupID[] = [];
+
+    for (const gId of activeGroups) {
+        const currentGroupTeams = teams.filter(t => (t.groupId ?? 'A') === gId);
+        const currentTeamIds = new Set(currentGroupTeams.map(t => t.id));
+        const existingGroupGames = games.filter(g => (g.groupId ?? 'A') === gId);
+
+        if (existingGroupGames.length === 0) {
+            changedGroups.push(gId);
+            continue;
+        }
+
+        const existingTeamIds = new Set<string>();
+        existingGroupGames.forEach(g => {
+            existingTeamIds.add(g.teamAId);
+            existingTeamIds.add(g.teamBId);
+        });
+
+        if (
+            currentTeamIds.size === existingTeamIds.size &&
+            Array.from(currentTeamIds).every(id => existingTeamIds.has(id))
+        ) {
+            unchangedGroups.push(gId);
+        } else {
+            changedGroups.push(gId);
+        }
+    }
+
+    const affectedGames = games.filter(g =>
+        changedGroups.includes(g.groupId ?? 'A') || discardedGroups.includes(g.groupId ?? 'A')
+    );
+
+    let gamesWithResultsCount = 0;
+    let lockedCount = 0;
+
+    for (const g of affectedGames) {
+        if (isGameFilledOrLocked(g)) {
+            gamesWithResultsCount++;
+            if (g.isLocked) {
+                lockedCount++;
+            }
+        }
+    }
+
+    return {
+        needsConfirmation: gamesWithResultsCount > 0,
+        gamesWithResultsCount,
+        lockedCount,
+        activeGroups,
+        unchangedGroups,
+        changedGroups,
+        discardedGroups,
+    };
+}
+
+/**
+ * Execute Continue to Games: preserves unchanged group games (syncing team names),
+ * regenerates changed/new group games, and discards obsolete group games.
+ */
+export function executeContinueToGamesLogic(
+    teams: { id: string; name: string; groupId?: GroupID }[],
+    games: GameData[],
+    isMultiGroup: boolean
+): GameData[] {
+    const impact = checkContinueToGamesImpact(teams, games, isMultiGroup);
+    const teamNameMap = new Map(teams.map(t => [t.id, t.name]));
+
+    const nextGames: GameData[] = [];
+
+    for (const gId of impact.activeGroups) {
+        if (impact.unchangedGroups.includes(gId)) {
+            const existingGroupGames = games.filter(g => (g.groupId ?? 'A') === gId);
+            // Safety net: sync team names with current teams list while preserving results & locks
+            const syncedGames = existingGroupGames.map(g => ({
+                ...g,
+                teamAName: teamNameMap.get(g.teamAId) ?? g.teamAName,
+                teamBName: teamNameMap.get(g.teamBId) ?? g.teamBName,
+            }));
+            nextGames.push(...syncedGames);
+        } else {
+            const groupTeams = teams.filter(t => (t.groupId ?? 'A') === gId);
+            const matchups = generateMatchups(groupTeams);
+            const newGames: GameData[] = matchups.map(match => ({
+                ...match,
+                groupId: gId,
+                runsA: null,
+                runsB: null,
+                inningsABatting: '',
+                inningsADefense: '',
+                inningsBBatting: '',
+                inningsBDefense: '',
+                earnedRunsA: null,
+                earnedRunsB: null,
+                isLocked: false,
+            }));
+            nextGames.push(...newGames);
+        }
+    }
+
+    return nextGames;
+}
+
+export interface LivePanelVisibilityResult {
+    showPanel: boolean;
+    showHelperText: boolean;
+    unfixedGames: GameData[];
+    lockedCount: number;
+    unfixedCount: number;
+}
+
+/**
+ * Determine live panel visibility for the active group on Screen 3
+ */
+export function getLivePanelVisibility(
+    games: GameData[],
+    activeGroupId: GroupID
+): LivePanelVisibilityResult {
+    const activeGroupGames = games.filter(g => (g.groupId ?? 'A') === activeGroupId);
+    const lockedCount = activeGroupGames.filter(g => g.isLocked).length;
+    const unfixedGames = activeGroupGames.filter(g => !g.isLocked);
+    const unfixedCount = unfixedGames.length;
+
+    if (lockedCount >= 1 && unfixedCount >= 1 && unfixedCount <= 4) {
+        return {
+            showPanel: true,
+            showHelperText: false,
+            unfixedGames,
+            lockedCount,
+            unfixedCount,
+        };
+    }
+
+    if (lockedCount >= 1 && unfixedCount > 4) {
+        return {
+            showPanel: false,
+            showHelperText: true,
+            unfixedGames: [],
+            lockedCount,
+            unfixedCount,
+        };
+    }
+
+    return {
+        showPanel: false,
+        showHelperText: false,
+        unfixedGames: [],
+        lockedCount,
+        unfixedCount,
+    };
+}
+
+/**
+ * Check if ALL games across ALL groups are complete and valid according to WBSC/baseball rules
+ */
+export function areAllGamesCompleteAndValid(games: GameData[]): boolean {
+    if (games.length === 0) return false;
+    return games.every(g => isGameCompleteAndValid(g));
+}
+
+// ───────────────────────────────────────────────────────────────
+// FASE 8b: PROVISIONAL STATUS — pure, state-free, testable
+// ───────────────────────────────────────────────────────────────
+
+/**
+ * A group is provisional when it has at least one locked game AND at least one
+ * unlocked game. Groups with zero locked games (lock not used) or all games
+ * locked (complete tournament) are NOT provisional.
+ *
+ * @param groupGames  All games belonging to exactly one group
+ */
+export function isGroupProvisional(groupGames: GameData[]): boolean {
+    if (groupGames.length === 0) return false;
+    const lockedCount   = groupGames.filter(g => g.isLocked).length;
+    const unlockedCount = groupGames.length - lockedCount;
+    return lockedCount >= 1 && unlockedCount >= 1;
+}
+
+/**
+ * Returns true if ANY active group is provisional.
+ * In single-group mode pass all games; in multi-group mode pass all games from
+ * both groups — the function checks each groupId independently.
+ */
+export function isTournamentProvisional(
+    games: GameData[],
+    isMultiGroup: boolean,
+): boolean {
+    const groups: GroupID[] = isMultiGroup ? ['A', 'B'] : ['A'];
+    return groups.some(gId => {
+        const groupGames = games.filter(g => (g.groupId ?? 'A') === gId);
+        return isGroupProvisional(groupGames);
+    });
+}
+
+/**
+ * Returns the unlocked games for a given group.
+ * These are the games that must receive a provisional marker in the PDF.
+ * If `forceAll` is true, all games with scores are returned instead
+ * (used when the user forces a provisional mark on a tournament that has no
+ * locked games — we mark every game that has results).
+ */
+export function getProvisionalGames(
+    games: GameData[],
+    groupId: GroupID,
+    forceAll: boolean = false,
+): GameData[] {
+    const groupGames = games.filter(g => (g.groupId ?? 'A') === groupId);
+    if (forceAll) {
+        return groupGames.filter(g => g.runsA !== null || g.runsB !== null);
+    }
+    return groupGames.filter(g => !g.isLocked);
+}
+
+/**
+ * Determines which game IDs within a group should receive a provisional mark in PDF output.
+ *
+ * @param groupGames Games for a single group
+ * @param isProvisionalDoc Whether the PDF document as a whole is marked provisional
+ */
+export function getProvisionalGameIds(
+    groupGames: GameData[],
+    isProvisionalDoc: boolean
+): Set<string> {
+    if (!isProvisionalDoc || groupGames.length === 0) return new Set();
+
+    const hasLocked = groupGames.some(g => g.isLocked);
+    const markedIds = new Set<string>();
+
+    for (const g of groupGames) {
+        if (hasLocked) {
+            // If group has locked games, mark unlocked ones
+            if (!g.isLocked) {
+                markedIds.add(g.id);
+            }
+        } else {
+            // If no games are locked (e.g. user forced provisional flag), mark all games with results
+            if (g.runsA !== null && g.runsB !== null) {
+                markedIds.add(g.id);
+            }
+        }
+    }
+
+    return markedIds;
+}
+
+
 
 
 

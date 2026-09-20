@@ -1,10 +1,11 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, FileDown } from 'lucide-react';
+import { X, FileDown, AlertTriangle } from 'lucide-react';
 import { PDFExportData } from '@/lib/types';
 import { generatePDF } from '@/lib/pdfGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { isTournamentProvisional, areAllGamesCompleteAndValid } from '@/lib/calculations';
 
 interface PDFExportModalProps {
     isOpen: boolean;
@@ -18,12 +19,21 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
     const [isGenerating, setIsGenerating] = useState(false);
     const [error, setError] = useState('');
 
-    // Reset fields on open
+    // Derive provisional and stale status from games (pure, no stored state)
+    const autoProvisional = isTournamentProvisional(data.games, data.isMultiGroup ?? false);
+    const allGamesValid   = areAllGamesCompleteAndValid(data.games);
+    const isStaleBlocked  = !allGamesValid;
+
+    const [isProvisional, setIsProvisional] = useState(autoProvisional);
+
+    // Reset fields on open; re-derive provisional flag from current data each time
     useEffect(() => {
         if (isOpen) {
             setTournamentName('');
             setError('');
+            setIsProvisional(isTournamentProvisional(data.games, data.isMultiGroup ?? false));
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
 
     // Handle ESC key to close
@@ -48,6 +58,11 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
             setError(t.pdfExport.errors.required);
             return;
         }
+        // Stale check — do not export if games are invalid/incomplete
+        if (isStaleBlocked) {
+            setError(t.pdfExport.staleBlocked);
+            return;
+        }
 
         setIsGenerating(true);
         setError('');
@@ -59,6 +74,7 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                 tournamentName: tournamentName.trim(),
                 date: formatDate(new Date().toISOString(), language),
                 language,
+                isProvisional,
             });
 
             // Small delay before closing to ensure the browser processes the download link
@@ -114,6 +130,16 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
 
                         {/* Content */}
                         <div className="card-body flex-1 overflow-y-auto space-y-5">
+                            {/* Stale blocker warning */}
+                            {isStaleBlocked && (
+                                <div className="p-3 rounded-xl bg-error-500/10 border border-error-500/30 flex items-start gap-2.5">
+                                    <AlertTriangle size={16} className="text-error-400 flex-shrink-0 mt-0.5" />
+                                    <p className="text-xs text-error-300 leading-relaxed font-medium">
+                                        {t.pdfExport.staleBlocked}
+                                    </p>
+                                </div>
+                            )}
+
                             {/* Tournament Name */}
                             <div>
                                 <label
@@ -130,10 +156,23 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                                     placeholder={t.pdfExport.placeholder}
                                     className={`input ${error && !tournamentName.trim() ? 'input-error' : ''}`}
                                     autoFocus
+                                    disabled={isStaleBlocked}
                                 />
                             </div>
 
-
+                            {/* Provisional checkbox */}
+                            <label className="flex items-start gap-3 cursor-pointer group select-none">
+                                <input
+                                    type="checkbox"
+                                    checked={isProvisional}
+                                    onChange={(e) => setIsProvisional(e.target.checked)}
+                                    disabled={isStaleBlocked}
+                                    className="mt-0.5 w-4 h-4 rounded border-dark-400 bg-dark-700 text-primary-500 focus:ring-primary-500 focus:ring-offset-dark-900 cursor-pointer"
+                                />
+                                <span className="text-sm text-gray-300 leading-relaxed group-hover:text-white transition-colors">
+                                    {t.pdfExport.provisionalCheckbox}
+                                </span>
+                            </label>
 
                             {/* Error Message */}
                             {error && (
@@ -166,8 +205,8 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                                 </button>
                                 <button
                                     onClick={handleGenerate}
-                                    disabled={isGenerating}
-                                    className="flex-1 btn-primary"
+                                    disabled={isGenerating || isStaleBlocked}
+                                    className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     {isGenerating ? (
                                         <>

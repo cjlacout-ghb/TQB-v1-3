@@ -106,7 +106,16 @@ export const translations = {
                 gameWarning: "Entered game results for {group} will also be discarded.",
                 confirmButton: "Yes, Replace Teams",
                 cancelButton: "Cancel"
+            },
+            confirmContinueToGames: {
+                title: "Team List Changed",
+                description: "The team selection has changed for {groups}. The existing schedule for those group(s) will be recalculated.",
+                warningResults: "{count} game(s) with entered results will be lost.",
+                warningLocked: "{count} locked game(s) will also be lost.",
+                confirmButton: "Recalculate Schedule",
+                cancelButton: "Cancel"
             }
+
         },
         gameEntry: {
             title: "Enter Game Results",
@@ -179,6 +188,15 @@ export const translations = {
             },
             viewGameResults: "View game results summary",
             proceedToER: "Proceed to ER-TQB Entry",
+            livePanel: {
+                title: "Game in Progress ({group})",
+                titleSingle: "Game in Progress",
+                helperTip: "To edit games directly from this screen, lock completed games on the Games screen.",
+                staleWarning: "Calculation outdated: complete all fields of in-progress games to see updated standings. Showing last valid calculation.",
+                hidePanel: "Hide game in progress",
+                showPanel: "Show game in progress"
+            },
+            provisionalBanner: "⚠ Provisional standings — includes unconfirmed results. Final positions may change."
         },
         earnedRuns: {
             title: "Enter Earned Runs",
@@ -207,6 +225,8 @@ export const translations = {
             cancel: "Cancel",
             generate: "Generate PDF",
             generating: "Generating...",
+            provisionalCheckbox: "Mark document as provisional (unconfirmed results)",
+            staleBlocked: "Cannot export: there are incomplete or invalid game results. Complete all games before exporting.",
             errors: {
                 required: "Please enter a tournament name",
                 failed: "Failed to generate PDF. Please try again."
@@ -229,7 +249,11 @@ export const translations = {
             teamA: "Team A",
             teamB: "Team B",
             runs: "Runs",
-            filename: "WBSC_Standings_Report"
+            filename: "WBSC_Standings_Report",
+            provisionalHeader: "⚠ PROVISIONAL — UNCONFIRMED RESULTS",
+            provisionalFooter: "PROVISIONAL DOCUMENT · Results not yet confirmed",
+            provisionalGameMark: "†",
+            provisionalGameLegend: "† Unconfirmed result"
         }
     },
     es: {
@@ -338,7 +362,17 @@ export const translations = {
                 gameWarning: "También se descartarán los resultados de partidos ingresados en el {group}.",
                 confirmButton: "Sí, Reemplazar Equipos",
                 cancelButton: "Cancelar"
+            },
+            confirmContinueToGames: {
+                title: "Lista de Equipos Modificada",
+                description: "La selección de equipos cambió en {groups}. El calendario de ese/esos grupo(s) se recalculará.",
+                warningResults: "Se perderán {count} partido(s) con resultados ingresados.",
+                warningLocked: "También se perderán {count} partido(s) fijado(s).",
+                confirmButton: "Recalcular Calendario",
+                cancelButton: "Cancelar"
             }
+
+
         },
         gameEntry: {
             title: "Ingresar Resultados",
@@ -410,6 +444,15 @@ export const translations = {
             },
             viewGameResults: "Ver resumen de resultados",
             proceedToER: "Proceder a ER-TQB",
+            livePanel: {
+                title: "Partido en Juego ({group})",
+                titleSingle: "Partido en Juego",
+                helperTip: "Para editar partidos directamente desde esta pantalla, fije los partidos ya finalizados en la pantalla de Partidos.",
+                staleWarning: "Cálculo desactualizado: complete todos los campos del partido en juego para ver las posiciones actualizadas. Se muestra el último cálculo válido.",
+                hidePanel: "Ocultar partido en juego",
+                showPanel: "Mostrar partido en juego"
+            },
+            provisionalBanner: "⚠ Posiciones provisionales — incluye resultados sin confirmar. La clasificación final puede cambiar."
         },
         earnedRuns: {
             title: "Ingresar Carreras Limpias",
@@ -438,6 +481,8 @@ export const translations = {
             cancel: "Cancelar",
             generate: "Generar PDF",
             generating: "Generando...",
+            provisionalCheckbox: "Marcar documento como provisional (resultados sin confirmar)",
+            staleBlocked: "No se puede exportar: hay resultados de partidos incompletos o inválidos. Complete todos los partidos antes de exportar.",
             errors: {
                 required: "Por favor ingrese un nombre de torneo",
                 failed: "Error al generar el PDF. Intente nuevamente."
@@ -460,7 +505,11 @@ export const translations = {
             teamA: "Equipo A",
             teamB: "Equipo B",
             runs: "Carreras",
-            filename: "WBSC_Reporte_de_Posiciones"
+            filename: "WBSC_Reporte_de_Posiciones",
+            provisionalHeader: "⚠ PROVISIONAL — RESULTADOS SIN CONFIRMAR",
+            provisionalFooter: "DOCUMENTO PROVISIONAL · Resultados aún no confirmados",
+            provisionalGameMark: "†",
+            provisionalGameLegend: "† Resultado sin confirmar"
         }
     },
 };

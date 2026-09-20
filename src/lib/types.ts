@@ -62,6 +62,7 @@ export type TieBreakMethod =
 export type ScreenNumber = 0 | 1 | 2 | 3 | 4 | 5;
 
 export interface AppState {
+    version?: number;
     currentScreen: ScreenNumber;
     teams: Team[];
     games: GameData[];
@@ -99,6 +100,11 @@ export interface PDFExportData {
     isMultiGroup?: boolean;
     /** Per-group tie-break methods captured at calculation time */
     groupTieBreakMethod?: Partial<Record<GroupID, TieBreakMethod>>;
+    /**
+     * When true the PDF is marked as provisional (unconfirmed results).
+     * Driven by user checkbox in PDFExportModal; defaults to false.
+     */
+    isProvisional?: boolean;
 }
 
 export type Language = 'en' | 'es';

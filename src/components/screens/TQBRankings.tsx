@@ -1,12 +1,13 @@
 'use client';
 
-import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, ArrowLeft } from 'lucide-react';
+import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, ArrowLeft, ChevronDown, ChevronUp, Activity } from 'lucide-react';
 import { TeamStats, TieBreakMethod, GameData, GroupID } from '@/lib/types';
-import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks, calculateRankings } from '@/lib/calculations';
+import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks, calculateRankings, getLivePanelVisibility, isGroupProvisional } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
+import GameCard from '../GameCard';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo, useMemo } from 'react';
+import React, { memo, useMemo, useState, useCallback } from 'react';
 
 interface TQBRankingsProps {
     rankings: TeamStats[];
@@ -23,6 +24,9 @@ interface TQBRankingsProps {
     groupTieBreakMethod: Partial<Record<GroupID, TieBreakMethod>>;
     activeGroupId: GroupID;
     onSetActiveGroupId: (id: GroupID) => void;
+    onLiveGameUpdate?: (gameId: string, updates: Partial<GameData>) => void;
+    onToggleLockGame?: (gameId: string) => void;
+    isCalculationStale?: boolean;
 }
 
 const TQBRankings = memo(function TQBRankings({
@@ -35,13 +39,16 @@ const TQBRankings = memo(function TQBRankings({
     onBack,
     totalSteps,
     games,
-    onOpenManual,
     isMultiGroup,
     groupTieBreakMethod,
     activeGroupId,
     onSetActiveGroupId,
+    onLiveGameUpdate,
+    onToggleLockGame,
+    isCalculationStale = false,
 }: TQBRankingsProps) {
     const { t, language } = useLanguage();
+    const [isPanelExpanded, setIsPanelExpanded] = useState(true);
 
     // Active group's tie-break method for the status banner
     const activeTieBreakMethod: TieBreakMethod =
@@ -63,6 +70,45 @@ const TQBRankings = memo(function TQBRankings({
         const groupTeams = displayRankings.map(r => ({ id: r.id, name: r.name }));
         return calculateRankings(groupTeams, displayGames, false).needsERTQB;
     }, [isMultiGroup, needsERTQB, displayRankings, displayGames]);
+
+    // Live panel visibility status for the active group
+    const panelVis = useMemo(() =>
+        getLivePanelVisibility(games, activeGroupId),
+        [games, activeGroupId]
+    );
+
+    // Provisional status: active group has at least one locked AND one unlocked game
+    const isActiveGroupProvisional = useMemo(() => {
+        const activeGroupGames = games.filter(g => (g.groupId ?? 'A') === activeGroupId);
+        return isGroupProvisional(activeGroupGames);
+    }, [games, activeGroupId]);
+
+    const handleSwapSides = useCallback((gameId: string) => {
+        const target = games.find(g => g.id === gameId);
+        if (!target || target.isLocked) return;
+        onLiveGameUpdate?.(gameId, {
+            teamAId: target.teamBId,
+            teamBId: target.teamAId,
+            teamAName: target.teamBName,
+            teamBName: target.teamAName,
+            runsA: target.runsB,
+            runsB: target.runsA,
+            inningsABatting: target.inningsBBatting,
+            inningsADefense: target.inningsBDefense,
+            inningsBBatting: target.inningsABatting,
+            inningsBDefense: target.inningsADefense,
+            earnedRunsA: target.earnedRunsB,
+            earnedRunsB: target.earnedRunsA,
+        });
+    }, [games, onLiveGameUpdate]);
+
+    const handleUpdateGame = useCallback((gameId: string, updates: Partial<GameData>) => {
+        onLiveGameUpdate?.(gameId, updates);
+    }, [onLiveGameUpdate]);
+
+    const handleLockToggle = useCallback((gameId: string) => {
+        onToggleLockGame?.(gameId);
+    }, [onToggleLockGame]);
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -141,6 +187,92 @@ const TQBRankings = memo(function TQBRankings({
                         </div>
                     </div>
 
+                    {/* PROVISIONAL BANNER — shown when active group has mixed locked/unlocked games */}
+                    {isActiveGroupProvisional && (
+                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5">
+                            <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-300 leading-relaxed font-medium">
+                                {t.rankings.provisionalBanner}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* LIVE PANEL: >4 Unfixed Helper Tip */}
+                    {panelVis.showHelperText && (
+                        <div className="p-4 rounded-xl bg-dark-700/60 border border-dark-500 flex items-start gap-3">
+                            <Info size={18} className="text-primary-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-gray-300 leading-relaxed">
+                                {t.rankings.livePanel.helperTip}
+                            </p>
+                        </div>
+                    )}
+
+                    {/* LIVE PANEL: "Partido en Juego" (1 to 4 unfixed games) */}
+                    {panelVis.showPanel && (
+                        <div className="rounded-2xl border border-primary-500/30 bg-dark-900/60 overflow-hidden shadow-xl">
+                            {/* Panel Header */}
+                            <div className="p-4 bg-gradient-to-r from-primary-900/40 via-dark-800 to-dark-800 border-b border-dark-600 flex items-center justify-between">
+                                <div className="flex items-center gap-2.5">
+                                    <div className="relative flex items-center justify-center">
+                                        <Activity size={18} className="text-primary-400 animate-pulse" />
+                                    </div>
+                                    <h3 className="text-sm font-bold text-white tracking-wide uppercase">
+                                        {isMultiGroup
+                                            ? t.rankings.livePanel.title.replace('{group}', activeGroupId)
+                                            : t.rankings.livePanel.titleSingle
+                                        }
+                                    </h3>
+                                    <span className="text-[11px] font-semibold text-primary-400 bg-primary-500/10 px-2 py-0.5 rounded-full border border-primary-500/20">
+                                        {panelVis.unfixedCount}
+                                    </span>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setIsPanelExpanded(prev => !prev)}
+                                    className="p-1.5 rounded-lg bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white transition-colors"
+                                    aria-label={isPanelExpanded ? t.rankings.livePanel.hidePanel : t.rankings.livePanel.showPanel}
+                                >
+                                    {isPanelExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                                </button>
+                            </div>
+
+                            {/* Panel Content (Collapsible) */}
+                            {isPanelExpanded && (
+                                <div className="p-4 space-y-4">
+                                    {/* Stale Warning Banner if calculation is outdated */}
+                                    {isCalculationStale && (
+                                        <div className="p-3 rounded-xl bg-warning-500/10 border border-warning-500/30 flex items-start gap-2.5">
+                                            <AlertTriangle size={16} className="text-warning-400 flex-shrink-0 mt-0.5" />
+                                            <p className="text-xs text-warning-300 leading-relaxed font-medium">
+                                                {t.rankings.livePanel.staleWarning}
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Game Cards List */}
+                                    {panelVis.unfixedGames.map(game => {
+                                        const gameIndexInGroup = displayGames.findIndex(g => g.id === game.id);
+                                        const gameNum = gameIndexInGroup !== -1 ? gameIndexInGroup + 1 : 1;
+
+                                        return (
+                                            <GameCard
+                                                key={game.id}
+                                                game={game}
+                                                gameNumber={gameNum}
+                                                showReorderButtons={false}
+                                                errors={{}}
+                                                onUpdate={handleUpdateGame}
+                                                onSwap={handleSwapSides}
+                                                onToggleLock={handleLockToggle}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            )}
+                        </div>
+                    )}
+
                     {/* Rankings Table */}
                     <div className="overflow-x-auto">
                         <table className="table-dark w-full text-[15px]">
@@ -185,91 +317,38 @@ const TQBRankings = memo(function TQBRankings({
                         </table>
                     </div>
 
-                    {/* TQB Explanation Summary */}
-                    <TQBExplanationTable rankings={displayRankings} />
+                    {/* TQB Formula & Detail Explanation Component */}
+                    <TQBExplanationTable
+                        rankings={displayRankings}
+                        isERTQB={false}
+                    />
 
-                    {/* TQB Formula */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-dark-700/50 rounded-xl border border-dark-500">
-                        <div>
-                            <h4 className="text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                                <Info size={14} />
-                                {t.rankings.formula.title}
-                            </h4>
-                            <p className="font-mono text-sm text-primary-400">
-                                {t.rankings.formula.text}
-                            </p>
-                        </div>
-                        <button
-                            onClick={() => onOpenManual?.('official-rule-c11')}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-primary-500/10 border border-primary-500/20 rounded-full hover:bg-primary-500/20 transition-all group"
-                        >
-                            <span className="text-[11px] font-bold text-primary-400 uppercase tracking-wider">
-                                {t.common.ruleC11}
-                            </span>
-                            <Info size={14} className="text-primary-400" />
-                        </button>
-                    </div>
-
-                    {/* Game Results Summary */}
-                    <details className="group">
-                        <summary className="cursor-pointer text-sm text-gray-400 hover:text-white transition-colors flex items-center gap-2">
-                            <span className="group-open:rotate-90 transition-transform">▶</span>
-                            {t.rankings.viewGameResults}
-                        </summary>
-                        <div className="mt-3 p-4 bg-dark-700/30 rounded-xl divide-y divide-dark-600">
-                            {displayGames.map((game, index) => (
-                                <div key={game.id} className="grid grid-cols-[80px_1fr_40px_20px_40px_1fr] items-center gap-2 py-3 first:pt-0 last:pb-0">
-                                    <span className="text-xs text-gray-500 uppercase tracking-wider font-semibold">{t.rankings.game} {index + 1}</span>
-
-                                    <span className="text-right font-medium text-white truncate">{game.teamAName}</span>
-
-                                    <div className={`text-center font-mono text-lg rounded-lg py-1 text-white ${(game.runsA ?? 0) > (game.runsB ?? 0) ? 'bg-success-500/20' :
-                                        (game.runsA ?? 0) < (game.runsB ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
-                                        }`}>
-                                        {game.runsA}
-                                    </div>
-
-                                    <span className="text-gray-600 text-center font-bold">:</span>
-
-                                    <div className={`text-center font-mono text-lg rounded-lg py-1 text-white ${(game.runsB ?? 0) > (game.runsA ?? 0) ? 'bg-success-500/20' :
-                                        (game.runsB ?? 0) < (game.runsA ?? 0) ? 'bg-dark-600' : 'bg-warning-500/20'
-                                        }`}>
-                                        {game.runsB}
-                                    </div>
-
-                                    <span className="text-left font-medium text-white truncate">{game.teamBName}</span>
-                                </div>
-                            ))}
-                        </div>
-                    </details>
-
-                    {/* Actions */}
-                    <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        {needsERTQB ? (
+                    {/* Actions footer */}
+                    <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-dark-600">
+                        {activeGroupNeedsERTQB ? (
                             <button
                                 onClick={onProceedToERTQB}
-                                className="flex-1 btn-warning py-4 text-lg shadow-xl shadow-warning-500/20"
+                                className="flex-1 btn-primary py-3 text-base font-bold shadow-lg shadow-primary-500/20"
                             >
                                 {t.rankings.proceedToER}
                             </button>
                         ) : (
-                            <>
-                                <button
-                                    onClick={onExportPDF}
-                                    className="flex-1 btn-primary py-4 shadow-xl shadow-primary-500/20"
-                                >
-                                    <FileDown size={20} className="mr-1" />
-                                    {t.common.exportPDF}
-                                </button>
-                                <button
-                                    onClick={onStartNew}
-                                    className="flex-1 btn-ghost border border-dark-500 hover:border-gray-400 py-4"
-                                >
-                                    <RotateCcw size={20} className="mr-1" />
-                                    {t.common.startNew}
-                                </button>
-                            </>
+                            <button
+                                onClick={onExportPDF}
+                                className="flex-1 btn-primary py-3 text-base font-bold shadow-lg shadow-primary-500/20"
+                            >
+                                <FileDown size={18} className="mr-2" />
+                                {t.common.exportPDF}
+                            </button>
                         )}
+
+                        <button
+                            onClick={onStartNew}
+                            className="btn-secondary py-3 text-base font-semibold"
+                        >
+                            <RotateCcw size={18} className="mr-2" />
+                            {t.common.reset}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -279,19 +358,32 @@ const TQBRankings = memo(function TQBRankings({
 
 export default TQBRankings;
 
-const RankBadge = memo(function RankBadge({ rank }: { rank: number }) {
-    const getClass = () => {
-        switch (rank) {
-            case 1: return 'rank-1';
-            case 2: return 'rank-2';
-            case 3: return 'rank-3';
-            default: return 'rank-default';
-        }
-    };
-
+// Rank Badge helper component
+function RankBadge({ rank }: { rank: number }) {
+    if (rank === 1) {
+        return (
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-warning-500/20 text-warning-400 font-bold text-sm border border-warning-500/40">
+                1
+            </span>
+        );
+    }
+    if (rank === 2) {
+        return (
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-gray-400/20 text-gray-300 font-bold text-sm border border-gray-400/40">
+                2
+            </span>
+        );
+    }
+    if (rank === 3) {
+        return (
+            <span className="flex items-center justify-center w-7 h-7 rounded-full bg-amber-700/20 text-amber-500 font-bold text-sm border border-amber-700/40">
+                3
+            </span>
+        );
+    }
     return (
-        <div className={getClass()}>
-            #{rank}
-        </div>
+        <span className="flex items-center justify-center w-7 h-7 rounded-full bg-dark-700 text-gray-400 font-medium text-sm border border-dark-600">
+            {rank}
+        </span>
     );
-});
+}

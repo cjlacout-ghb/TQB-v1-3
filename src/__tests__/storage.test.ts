@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { saveState, loadState, clearState, hasSavedState } from '@/lib/storage';
-import { AppState, Team, GameData } from '@/lib/types';
+import { saveState, loadState, clearState, hasSavedState, CURRENT_SCHEMA_VERSION } from '@/lib/storage';
+import { AppState } from '@/lib/types';
 
-describe('Unit Tests: storage.ts & State Migration', () => {
+describe('Unit Tests: storage.ts & Defensive Loading (Phase 7)', () => {
     let memoryStorage: Record<string, string> = {};
 
     beforeEach(() => {
@@ -29,7 +29,7 @@ describe('Unit Tests: storage.ts & State Migration', () => {
         expect(hasSavedState()).toBe(false);
     });
 
-    it('saves state to localStorage and loads it back accurately', () => {
+    it('saves state with current schema version and loads it back accurately', () => {
         const sampleState: AppState = {
             currentScreen: 3,
             teams: [
@@ -45,6 +45,7 @@ describe('Unit Tests: storage.ts & State Migration', () => {
                     inningsABatting: '7', inningsADefense: '7',
                     inningsBBatting: '7', inningsBDefense: '7',
                     earnedRunsA: 0, earnedRunsB: 0,
+                    isLocked: true,
                 },
             ],
             rankings: [],
@@ -59,17 +60,75 @@ describe('Unit Tests: storage.ts & State Migration', () => {
         expect(hasSavedState()).toBe(true);
 
         const loaded = loadState();
-        expect(loaded).toEqual(sampleState);
+        expect(loaded).not.toBeNull();
+        expect(loaded?.version).toBe(CURRENT_SCHEMA_VERSION);
+        expect(loaded?.games[0].isLocked).toBe(true);
+        expect(loaded?.teams).toHaveLength(3);
     });
 
-    it('migrates legacy saved states lacking groupId (defaults groupId to "A")', () => {
-        // Legacy state saved before multi-group feature (teams/games without groupId property)
+    it('clears storage and returns null when teams or games is not an array', () => {
+        // Bad state where teams is not an array
+        localStorage.setItem('tqb_tournament_state', JSON.stringify({
+            currentScreen: 2,
+            teams: "not-an-array",
+            games: [],
+        }));
+
+        expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
+        expect(hasSavedState()).toBe(false);
+
+        // Bad state where games is not an array
+        localStorage.setItem('tqb_tournament_state', JSON.stringify({
+            currentScreen: 2,
+            teams: [{ id: 't1', name: 'Alpha', groupId: 'A' }],
+            games: null,
+        }));
+
+        expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
+        expect(hasSavedState()).toBe(false);
+    });
+
+    it('clears storage and returns null when team or game elements are invalid or lack id', () => {
+        localStorage.setItem('tqb_tournament_state', JSON.stringify({
+            currentScreen: 2,
+            teams: [{ name: 'Team without ID' }],
+            games: [],
+        }));
+
+        expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
+
+        localStorage.setItem('tqb_tournament_state', JSON.stringify({
+            currentScreen: 2,
+            teams: [{ id: 't1', name: 'Alpha' }],
+            games: [null], // null element in games
+        }));
+
+        expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
+    });
+
+    it('clears storage and returns null when schema version is newer than supported', () => {
+        localStorage.setItem('tqb_tournament_state', JSON.stringify({
+            version: 99, // Unknown future version
+            currentScreen: 2,
+            teams: [{ id: 't1', name: 'Alpha', groupId: 'A' }],
+            games: [],
+        }));
+
+        expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
+        expect(hasSavedState()).toBe(false);
+    });
+
+    it('restores legacy state (version 0 / no version field) with safe defaults for missing non-critical fields', () => {
         const legacyStateJSON = JSON.stringify({
             currentScreen: 2,
             teams: [
                 { id: 't1', name: 'Alpha' },
                 { id: 't2', name: 'Beta' },
-                { id: 't3', name: 'Gamma' },
             ],
             games: [
                 {
@@ -78,39 +137,30 @@ describe('Unit Tests: storage.ts & State Migration', () => {
                     runsA: 5, runsB: 2,
                     inningsABatting: '7', inningsADefense: '7',
                     inningsBBatting: '7', inningsBDefense: '7',
-                    earnedRunsA: 0, earnedRunsB: 0,
                 },
             ],
-            rankings: [],
-            tieBreakMethod: 'WIN_LOSS',
-            needsERTQB: false,
-            hasUnresolvedTies: false,
+            // missing rankings, tieBreakMethod, isMultiGroup, groupTieBreakMethod, version
         });
 
         localStorage.setItem('tqb_tournament_state', legacyStateJSON);
 
         const loaded = loadState();
         expect(loaded).not.toBeNull();
-
-        // Perform migration mapping identical to useTQBState useEffect
-        const migratedTeams = loaded!.teams.map((t: Team) => ({
-            ...t,
-            groupId: t.groupId ?? 'A',
-        }));
-        const migratedGames = loaded!.games.map((g: GameData) => ({
-            ...g,
-            groupId: g.groupId ?? 'A',
-        }));
-
-        expect(migratedTeams.every(t => t.groupId === 'A')).toBe(true);
-        expect(migratedGames.every(g => g.groupId === 'A')).toBe(true);
+        expect(loaded?.version).toBe(0);
+        expect(loaded?.teams[0].groupId).toBe('A');
+        expect(loaded?.games[0].groupId).toBe('A');
+        expect(loaded?.games[0].isLocked).toBe(false);
+        expect(loaded?.isMultiGroup).toBe(false);
+        expect(loaded?.groupTieBreakMethod).toEqual({});
+        expect(loaded?.rankings).toEqual([]);
     });
 
-    it('handles corrupt JSON in localStorage without throwing errors (returns null)', () => {
+    it('handles corrupt JSON in localStorage without throwing errors (returns null & clears storage)', () => {
         localStorage.setItem('tqb_tournament_state', 'invalid { json corrupt');
 
         expect(() => loadState()).not.toThrow();
         expect(loadState()).toBeNull();
+        expect(memoryStorage['tqb_tournament_state']).toBeUndefined();
         expect(hasSavedState()).toBe(false);
     });
 

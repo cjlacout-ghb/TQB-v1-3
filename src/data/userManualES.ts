@@ -235,6 +235,15 @@ La visualización de clasificaciones muestra:
 - **Récord V-D**: Victorias y derrotas
 - **Valor TQB/ER-TQB**: Valor de balance calculado (a 4 decimales)
 
+### Panel "Partido en Juego" (Posiciones en Vivo)
+Cuando un grupo cuenta con al menos 1 partido fijado y entre 1 y 4 partidos sin fijar, se despliega el panel colapsable **"Partido en Juego"** en la parte superior de la pantalla de Posiciones TQB (Pantalla 3).
+- **Actualización en Vivo**: Permite editar carreras y entradas del partido en curso directamente dentro del panel. La tabla de posiciones se recalcula al instante en tiempo real sin cambiar de pantalla.
+- **Protección del Candado**: Al fijar un partido desde el panel, su resultado queda protegido y sale del panel hacia la lista de partidos confirmados. El candado protege el marcador principal y las entradas contra ediciones accidentales, permitiendo ingresar carreras limpias en la pantalla de ER-TQB si fuera necesario.
+- **Aviso de Cálculo Desactualizado**: Si un partido en juego tiene campos incompletos o inválidos, se muestra un aviso indicando que se visualiza el último cálculo válido hasta completar los datos.
+
+### Marca de Posiciones Provisionales
+Un grupo se clasifica como **Provisional** cuando contiene al menos 1 partido fijado Y al menos 1 partido sin fijar (un torneo en desarrollo con partidos en juego). En las pantallas 3 (TQB) y 5 (ER-TQB) se despliega un aviso destacado en tono ámbar que advierte que las posiciones incluyen resultados sin confirmar y que la clasificación final puede cambiar.
+
 ### Entendiendo los Valores
 
 - **TQB Positivo**: El equipo anota más carreras por entrada de las que permite (¡bien!)
@@ -261,14 +270,19 @@ En la pantalla de clasificaciones finales, haga clic en **"Exportar a PDF"** par
 **Antes de exportar:**
 1. Ingrese un **Nombre de Torneo** (ej., "Campeonato Regional 2026")
 2. Opcionalmente ajuste la fecha (por defecto es hoy)
-3. Haga clic en **"Generar PDF"**
+3. Marque/desmarque **"Marcar documento como provisional"** (preseleccionado automáticamente si el torneo combina partidos fijados y sin fijar)
+4. Haga clic en **"Generar PDF"**
+
+**Controles de Exportación:**
+- **Casilla de Documento Provisional**: Se preselecciona automáticamente si algún grupo es provisional. El usuario puede marcarla o desmarcarla manualmente para esa exportación específica. Al activarse, el PDF incluye encabezados y pies destacados en todas las páginas e identifica los partidos sin fijar con un símbolo (†) y una leyenda explicativa.
+- **Bloqueo por Cálculo Desactualizado**: Si hay partidos con datos incompletos o inválidos, el sistema bloquea automáticamente la generación del PDF con un mensaje claro para evitar la impresión de tablas obsoletas o inconsistentes.
 
 **El PDF incluye:**
 - Nombre del torneo y fecha
 - Referencia a la Regla C11 de WBSC
 - Tabla de clasificaciones finales con todas las estadísticas
 - Método de desempate utilizado
-- Resumen de resultados de partidos
+- Resumen de resultados de partidos (con marcas de partidos provisonales según corresponda)
 - Referencia de fórmulas
     `,
     },

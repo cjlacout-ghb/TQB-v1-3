@@ -21,6 +21,7 @@ const FeedbackModal = dynamic(() => import('@/components/modals/FeedbackModal'),
 });
 import LandingScreen from '@/components/screens/LandingScreen';
 import ConfirmResetModal from '@/components/modals/ConfirmResetModal';
+import ConfirmContinueToGamesModal from '@/components/modals/ConfirmContinueToGamesModal';
 import { hasSavedState } from '@/lib/storage';
 
 import { useTQBState } from '@/hooks/useTQBState';
@@ -39,6 +40,8 @@ export default function Home() {
         isMultiGroup,
         groupTieBreakMethod,
         activeGroupId,
+        pendingContinueImpact,
+        isCalculationStale,
     } = state;
 
     const {
@@ -51,7 +54,10 @@ export default function Home() {
         handleGroupImport,
         handleGoToLanding,
         handleContinueToGames,
+        handleConfirmContinueToGames,
+        handleCancelContinueToGames,
         handleCalculateTQB,
+        handleLiveGameUpdate,
         handleCalculateERTQB,
         handleStartNew,
         handleContinueTournament: handleContinueTournamentAction,
@@ -166,6 +172,9 @@ export default function Home() {
                         groupTieBreakMethod={groupTieBreakMethod}
                         activeGroupId={activeGroupId}
                         onSetActiveGroupId={setActiveGroupId}
+                        onLiveGameUpdate={handleLiveGameUpdate}
+                        onToggleLockGame={handleToggleLockGame}
+                        isCalculationStale={isCalculationStale}
                     />
                 );
 
@@ -206,8 +215,8 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [currentScreen, teams, games, rankings, tieBreakMethod, needsERTQB,
         hasUnresolvedTies, totalSteps, isMultiGroup, groupTieBreakMethod,
-        activeGroupId, setTeams, setGames, handleToggleLockGame, handleReorderGame, handleCSVImport, handleGroupImport,
-        handleContinueToGames, handleCalculateTQB, handleCalculateERTQB,
+        activeGroupId, isCalculationStale, setTeams, setGames, handleToggleLockGame, handleReorderGame, handleCSVImport, handleGroupImport,
+        handleContinueToGames, handleCalculateTQB, handleLiveGameUpdate, handleCalculateERTQB,
         handleProceedToERTQB, handleStartNewConfirm, handleContinueTournament,
         handleBack, handleOpenManual, setIsMultiGroup, setActiveGroupId]);
 
@@ -274,6 +283,14 @@ export default function Home() {
                 isOpen={isConfirmResetOpen}
                 onClose={() => setIsConfirmResetOpen(false)}
                 onConfirm={handleStartNew}
+            />
+
+            <ConfirmContinueToGamesModal
+                isOpen={pendingContinueImpact !== null}
+                onClose={handleCancelContinueToGames}
+                onConfirm={handleConfirmContinueToGames}
+                impact={pendingContinueImpact}
+                isMultiGroup={isMultiGroup}
             />
         </div>
     );

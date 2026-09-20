@@ -9,8 +9,18 @@ import {
     formatTQBValue,
     calculateDisplayRanks,
     reorderGame,
+    isGameFilledOrLocked,
+    checkContinueToGamesImpact,
+    executeContinueToGamesLogic,
+    getLivePanelVisibility,
+    areAllGamesCompleteAndValid,
+    isGroupProvisional,
+    isTournamentProvisional,
+    getProvisionalGames,
+    getProvisionalGameIds,
 } from '@/lib/calculations';
-import { GameData, TeamStats } from '@/lib/types';
+import { GameData, TeamStats, Team } from '@/lib/types';
+
 
 describe('Unit Tests: calculations.ts Engine', () => {
 
@@ -484,5 +494,321 @@ describe('Unit Tests: calculations.ts Engine', () => {
             expect(reorderedERRankings).toEqual(initialERRankings);
         });
     });
+
+    // -------------------------------------------------------------
+    // 9. FASE 7: Smart Continue to Games Impact & Name Sync
+    // -------------------------------------------------------------
+    describe('9. FASE 7: Smart Continue to Games Impact & Name Sync', () => {
+        const teamsA: Team[] = [
+            { id: 't1', name: 'Alpha', groupId: 'A' },
+            { id: 't2', name: 'Beta', groupId: 'A' },
+            { id: 't3', name: 'Gamma', groupId: 'A' },
+        ];
+
+        const teamsB: Team[] = [
+            { id: 't4', name: 'Delta', groupId: 'B' },
+            { id: 't5', name: 'Echo', groupId: 'B' },
+            { id: 't6', name: 'Foxtrot', groupId: 'B' },
+        ];
+
+        const gamesA: GameData[] = [
+            {
+                id: 'g1', groupId: 'A', teamAId: 't1', teamBId: 't2', teamAName: 'Alpha', teamBName: 'Beta',
+                runsA: 5, runsB: 2, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                earnedRunsA: 4, earnedRunsB: 1, isLocked: true,
+            },
+            {
+                id: 'g2', groupId: 'A', teamAId: 't2', teamBId: 't3', teamAName: 'Beta', teamBName: 'Gamma',
+                runsA: 3, runsB: 1, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                earnedRunsA: 2, earnedRunsB: 0, isLocked: false,
+            },
+        ];
+
+        it('isGameFilledOrLocked identifies locked or filled games', () => {
+            expect(isGameFilledOrLocked(gamesA[0])).toBe(true);
+            expect(isGameFilledOrLocked(gamesA[1])).toBe(true);
+
+            const emptyGame: GameData = {
+                id: 'g-empty', groupId: 'A', teamAId: 't1', teamBId: 't3', teamAName: 'Alpha', teamBName: 'Gamma',
+                runsA: null, runsB: null, inningsABatting: '', inningsADefense: '', inningsBBatting: '', inningsBDefense: '',
+                earnedRunsA: null, earnedRunsB: null, isLocked: false,
+            };
+            expect(isGameFilledOrLocked(emptyGame)).toBe(false);
+        });
+
+        it('checkContinueToGamesImpact correctly flags unchanged groups and zero data loss when team set is identical', () => {
+            const impact = checkContinueToGamesImpact(teamsA, gamesA, false);
+
+            expect(impact.needsConfirmation).toBe(false);
+            expect(impact.unchangedGroups).toEqual(['A']);
+            expect(impact.changedGroups).toEqual([]);
+            expect(impact.discardedGroups).toEqual([]);
+        });
+
+        it('checkContinueToGamesImpact flags changed group and requests confirmation if data would be lost', () => {
+            const modifiedTeamsA: Team[] = [
+                { id: 't1', name: 'Alpha', groupId: 'A' },
+                { id: 't2', name: 'Beta', groupId: 'A' },
+                { id: 't99', name: 'New Team', groupId: 'A' }, // replaced t3 with t99
+            ];
+
+            const impact = checkContinueToGamesImpact(modifiedTeamsA, gamesA, false);
+
+            expect(impact.needsConfirmation).toBe(true);
+            expect(impact.unchangedGroups).toEqual([]);
+            expect(impact.changedGroups).toEqual(['A']);
+            expect(impact.gamesWithResultsCount).toBe(2);
+            expect(impact.lockedCount).toBe(1);
+        });
+
+        it('executeContinueToGamesLogic preserves existing games and synchronizes team names when team set is unchanged', () => {
+            const renamedTeamsA: Team[] = [
+                { id: 't1', name: 'Alpha Renamed', groupId: 'A' },
+                { id: 't2', name: 'Beta Renamed', groupId: 'A' },
+                { id: 't3', name: 'Gamma', groupId: 'A' },
+            ];
+
+            const resultGames = executeContinueToGamesLogic(renamedTeamsA, gamesA, false);
+
+            expect(resultGames).toHaveLength(2);
+            expect(resultGames[0].id).toBe('g1');
+            expect(resultGames[0].teamAName).toBe('Alpha Renamed');
+            expect(resultGames[0].teamBName).toBe('Beta Renamed');
+            expect(resultGames[0].runsA).toBe(5); // Preserves score
+            expect(resultGames[0].isLocked).toBe(true); // Preserves lock
+        });
+
+        it('going from multi-group to single-group discards group B games and flags confirmation if group B had results', () => {
+            const gamesB: GameData[] = [
+                {
+                    id: 'gb1', groupId: 'B', teamAId: teamsB[0].id, teamBId: teamsB[1].id, teamAName: teamsB[0].name, teamBName: teamsB[1].name,
+                    runsA: 1, runsB: 0, inningsABatting: '7', inningsADefense: '7', inningsBBatting: '7', inningsBDefense: '7',
+                    earnedRunsA: 1, earnedRunsB: 0, isLocked: false,
+                },
+            ];
+
+            const allGames = [...gamesA, ...gamesB];
+            const impact = checkContinueToGamesImpact(teamsA, allGames, false); // Single group mode
+
+            expect(impact.needsConfirmation).toBe(true);
+            expect(impact.discardedGroups).toEqual(['B']);
+
+            const resultGames = executeContinueToGamesLogic(teamsA, allGames, false);
+            expect(resultGames.every(g => g.groupId === 'A')).toBe(true);
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 10. FASE 8: Live Panel Visibility & Game Completeness Logic
+    // -------------------------------------------------------------
+    describe('10. FASE 8: Live Panel Visibility & Game Completeness Logic', () => {
+        const mockGame = (id: string, groupId: 'A' | 'B', isLocked: boolean, complete: boolean = true): GameData => ({
+            id,
+            groupId,
+            teamAId: 't1',
+            teamBId: 't2',
+            teamAName: 'Team 1',
+            teamBName: 'Team 2',
+            runsA: complete ? 5 : null,
+            runsB: complete ? 3 : null,
+            inningsABatting: complete ? '7' : '',
+            inningsADefense: complete ? '7' : '',
+            inningsBBatting: complete ? '7' : '',
+            inningsBDefense: complete ? '7' : '',
+            isLocked,
+            earnedRunsA: null,
+            earnedRunsB: null,
+        });
+
+        it('returns showPanel: false, showHelperText: false when 0 locked games exist', () => {
+            const games = [
+                mockGame('g1', 'A', false),
+                mockGame('g2', 'A', false),
+                mockGame('g3', 'A', false),
+            ];
+            const vis = getLivePanelVisibility(games, 'A');
+            expect(vis.showPanel).toBe(false);
+            expect(vis.showHelperText).toBe(false);
+            expect(vis.unfixedGames).toHaveLength(0);
+        });
+
+        it('returns showPanel: false, showHelperText: false when 0 unfixed games exist (all locked)', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', true),
+                mockGame('g3', 'A', true),
+            ];
+            const vis = getLivePanelVisibility(games, 'A');
+            expect(vis.showPanel).toBe(false);
+            expect(vis.showHelperText).toBe(false);
+        });
+
+        it('returns showPanel: true, showHelperText: false when 1 to 4 unfixed games exist with >= 1 locked game', () => {
+            // 2 locked games, 2 unfixed games
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', true),
+                mockGame('g3', 'A', false),
+                mockGame('g4', 'A', false),
+            ];
+            const vis = getLivePanelVisibility(games, 'A');
+            expect(vis.showPanel).toBe(true);
+            expect(vis.showHelperText).toBe(false);
+            expect(vis.unfixedGames.map(g => g.id)).toEqual(['g3', 'g4']);
+        });
+
+        it('returns showPanel: false, showHelperText: true when > 4 unfixed games exist with >= 1 locked game', () => {
+            // 1 locked game, 5 unfixed games
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false),
+                mockGame('g3', 'A', false),
+                mockGame('g4', 'A', false),
+                mockGame('g5', 'A', false),
+                mockGame('g6', 'A', false),
+            ];
+            const vis = getLivePanelVisibility(games, 'A');
+            expect(vis.showPanel).toBe(false);
+            expect(vis.showHelperText).toBe(true);
+        });
+
+        it('evaluates visibility isolated per active group in multi-group mode', () => {
+            // Group A: 1 locked, 1 unfixed -> showPanel true for A
+            // Group B: 0 locked, 3 unfixed -> showPanel false for B
+            const games = [
+                mockGame('ga1', 'A', true),
+                mockGame('ga2', 'A', false),
+                mockGame('gb1', 'B', false),
+                mockGame('gb2', 'B', false),
+                mockGame('gb3', 'B', false),
+            ];
+
+            const visA = getLivePanelVisibility(games, 'A');
+            expect(visA.showPanel).toBe(true);
+
+            const visB = getLivePanelVisibility(games, 'B');
+            expect(visB.showPanel).toBe(false);
+        });
+
+        it('areAllGamesCompleteAndValid evaluates complete vs incomplete games across all groups', () => {
+            const completeGames = [
+                mockGame('g1', 'A', true, true),
+                mockGame('g2', 'A', false, true),
+            ];
+            expect(areAllGamesCompleteAndValid(completeGames)).toBe(true);
+
+            const incompleteGames = [
+                mockGame('g1', 'A', true, true),
+                mockGame('g2', 'A', false, false), // incomplete
+            ];
+            expect(areAllGamesCompleteAndValid(incompleteGames)).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 11. FASE 8b: Provisional Status Rules & PDF Marking Logic
+    // -------------------------------------------------------------
+    describe('11. FASE 8b: Provisional Status Rules & PDF Marking Logic', () => {
+        const mockGame = (id: string, groupId: 'A' | 'B', isLocked: boolean, complete: boolean = true): GameData => ({
+            id,
+            groupId,
+            teamAId: 't1',
+            teamBId: 't2',
+            teamAName: 'Team 1',
+            teamBName: 'Team 2',
+            runsA: complete ? 5 : null,
+            runsB: complete ? 3 : null,
+            inningsABatting: complete ? '7' : '',
+            inningsADefense: complete ? '7' : '',
+            inningsBBatting: complete ? '7' : '',
+            inningsBDefense: complete ? '7' : '',
+            isLocked,
+            earnedRunsA: null,
+            earnedRunsB: null,
+        });
+
+        it('isGroupProvisional returns false when 0 games are locked', () => {
+            const games = [
+                mockGame('g1', 'A', false),
+                mockGame('g2', 'A', false),
+            ];
+            expect(isGroupProvisional(games)).toBe(false);
+        });
+
+        it('isGroupProvisional returns false when ALL games are locked', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', true),
+            ];
+            expect(isGroupProvisional(games)).toBe(false);
+        });
+
+        it('isGroupProvisional returns true when group has mixed locked and unlocked games', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false),
+            ];
+            expect(isGroupProvisional(games)).toBe(true);
+        });
+
+        it('isTournamentProvisional checks groups independently in multi-group mode', () => {
+            const gamesGroupAProvisional = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false), // group A is provisional
+                mockGame('g3', 'B', true),
+                mockGame('g4', 'B', true),  // group B is NOT provisional
+            ];
+            expect(isTournamentProvisional(gamesGroupAProvisional, true)).toBe(true);
+
+            const gamesNeitherProvisional = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', true),
+                mockGame('g3', 'B', false),
+                mockGame('g4', 'B', false),
+            ];
+            expect(isTournamentProvisional(gamesNeitherProvisional, true)).toBe(false);
+        });
+
+        it('getProvisionalGames returns unlocked games for a group', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false),
+            ];
+            const prov = getProvisionalGames(games, 'A');
+            expect(prov.map(g => g.id)).toEqual(['g2']);
+        });
+
+        it('getProvisionalGameIds returns empty set when isProvisionalDoc is false', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false),
+            ];
+            expect(getProvisionalGameIds(games, false).size).toBe(0);
+        });
+
+        it('getProvisionalGameIds returns unlocked game IDs when group has locked games and isProvisionalDoc is true', () => {
+            const games = [
+                mockGame('g1', 'A', true),
+                mockGame('g2', 'A', false),
+            ];
+            const ids = getProvisionalGameIds(games, true);
+            expect(ids.has('g2')).toBe(true);
+            expect(ids.has('g1')).toBe(false);
+        });
+
+        it('getProvisionalGameIds marks all scored games when user forces provisional on a tournament with 0 locked games', () => {
+            const games = [
+                mockGame('g1', 'A', false, true),
+                mockGame('g2', 'A', false, true),
+                mockGame('g3', 'A', false, false), // incomplete (no scores)
+            ];
+            const ids = getProvisionalGameIds(games, true);
+            expect(ids.has('g1')).toBe(true);
+            expect(ids.has('g2')).toBe(true);
+            expect(ids.has('g3')).toBe(false);
+        });
+    });
 });
+
+
 

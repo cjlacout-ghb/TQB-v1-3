@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { PDFExportData, TeamStats, GameData, TieBreakMethod } from './types';
-import { formatTQBValue, outsToInnings, calculateDisplayRanks, getTieBreakMethodText } from './calculations';
+import { formatTQBValue, outsToInnings, calculateDisplayRanks, getTieBreakMethodText, getProvisionalGameIds } from './calculations';
 import { translations } from '@/data/translations';
 
 type TranslationSet = typeof translations['en'];
@@ -34,6 +34,7 @@ function renderGroupContent(
     pageWidth: number,
     startY: number,
     groupLabel?: string,
+    isProvisional?: boolean,
 ): number {
     let yPos = startY;
 
@@ -213,11 +214,14 @@ function renderGroupContent(
     doc.text(t.pdf.resultsSummary, 14, yPos);
     yPos += 8;
 
+    const provGameIds = getProvisionalGameIds(games, !!isProvisional);
+    const provMark = t.pdf.provisionalGameMark || '†';
+
     autoTable(doc, {
         startY: yPos,
         head: [[t.pdf.teamA, t.pdf.runs, '', t.pdf.runs, t.pdf.teamB]],
         body: games.map(game => [
-            game.teamAName,
+            provGameIds.has(game.id) ? `${game.teamAName} ${provMark}` : game.teamAName,
             `${game.runsA ?? 0}`,
             'vs',
             `${game.runsB ?? 0}`,
@@ -242,7 +246,17 @@ function renderGroupContent(
         margin: { left: 14, right: 14, bottom: 25 },
     });
 
-    return (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 15;
+    let finalY = (doc as jsPDF & { lastAutoTable: { finalY: number } }).lastAutoTable.finalY + 4;
+
+    if (provGameIds.size > 0) {
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(217, 119, 6);
+        doc.text(t.pdf.provisionalGameLegend, 14, finalY + 2);
+        finalY += 6;
+    }
+
+    return finalY + 11;
 }
 
 /**
@@ -292,10 +306,10 @@ export function generatePDF(data: PDFExportData): void {
         const tieA = data.groupTieBreakMethod?.['A'] ?? data.tieBreakMethod;
         const tieB = data.groupTieBreakMethod?.['B'] ?? data.tieBreakMethod;
 
-        renderGroupContent(doc, gAR, gAG, tieA, data.useERTQB, lang, t, pageWidth, 60, t.common.groupTab.replace('{gId}', 'A'));
-        renderGroupContent(doc, gBR, gBG, tieB, data.useERTQB, lang, t, pageWidth, 0,  t.common.groupTab.replace('{gId}', 'B'));
+        renderGroupContent(doc, gAR, gAG, tieA, data.useERTQB, lang, t, pageWidth, 60, t.common.groupTab.replace('{gId}', 'A'), data.isProvisional);
+        renderGroupContent(doc, gBR, gBG, tieB, data.useERTQB, lang, t, pageWidth, 0,  t.common.groupTab.replace('{gId}', 'B'), data.isProvisional);
     } else {
-        renderGroupContent(doc, data.rankings, data.games, data.tieBreakMethod, data.useERTQB, lang, t, pageWidth, 60);
+        renderGroupContent(doc, data.rankings, data.games, data.tieBreakMethod, data.useERTQB, lang, t, pageWidth, 60, undefined, data.isProvisional);
     }
 
     // ===== FOOTER & PAGE NUMBERS =====
@@ -304,6 +318,23 @@ export function generatePDF(data: PDFExportData): void {
 
     for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
+
+        if (data.isProvisional) {
+            // Prominent banner at top of every page
+            doc.setFillColor(245, 158, 11);
+            doc.rect(0, 0, pageWidth, 6, 'F');
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(255, 255, 255);
+            doc.text(t.pdf.provisionalHeader, pageWidth / 2, 4.2, { align: 'center' });
+
+            // Prominent footer notice
+            doc.setFontSize(7.5);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(217, 119, 6);
+            doc.text(t.pdf.provisionalFooter, pageWidth / 2, footerY - 4, { align: 'center' });
+        }
+
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
         doc.setTextColor(...textMuted);

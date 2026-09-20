@@ -12,6 +12,7 @@ A web application that calculates softball tournament standings using the **WBSC
 - **Round-robin matchup generation**: Automatically creates all pairings for up to 8 teams
 - **Game schedule reordering**: Reorder matches (move up/down) to match real-world playing order
 - **Game result locking & fast recalculation**: Lock completed matches (read-only) and quickly simulate/recalculate standings while editing only the game in play
+- **Provisional Standings & PDF Safeguards**: Automatic detection of in-progress tournaments (mixed locked/unlocked games) displaying amber warning banners on standings screens, pre-selecting provisional markings on PDF exports, and blocking exports if game results are incomplete or invalid
 - **Complete tie-breaking hierarchy**:
   1. Win-Loss Record
   2. Head-to-Head Results

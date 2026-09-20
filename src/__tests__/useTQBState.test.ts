@@ -777,7 +777,7 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             expect(result.current.state.games.map(g => g.id)).toEqual(['g-a-1', 'g-a-2', 'g-a-3']);
         });
 
-        it('reinicia el orden al volver a generar matchups por edición de equipos (handleContinueToGames)', () => {
+        it('cuando los equipos NO cambian, handleContinueToGames conserva el orden manual existente (no regenera)', () => {
             const { result } = renderHook(() => useTQBState());
 
             const teams = [
@@ -800,15 +800,18 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
                 result.current.actions.handleReorderGame(initialIds[1], 'up');
             });
 
-            expect(result.current.state.games.map(g => g.id)).not.toEqual(initialIds);
+            const reorderedIds = result.current.state.games.map(g => g.id);
+            expect(reorderedIds).not.toEqual(initialIds);
 
-            // Re-generating games resets to default order
+            // Call handleContinueToGames again with same teams — should preserve reordered games
             act(() => {
                 result.current.actions.handleContinueToGames();
             });
 
-            expect(result.current.state.games.map(g => g.id)).toEqual(initialIds);
+            // Order is preserved because teams didn't change
+            expect(result.current.state.games.map(g => g.id)).toEqual(reorderedIds);
         });
+
 
         it('reinicia el orden al importar CSV/Texto (handleCSVImport / handleGroupImport)', () => {
             const { result } = renderHook(() => useTQBState());
@@ -1024,7 +1027,7 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             expect(r3.current.state.games.every(g => !g.isLocked)).toBe(true);
         });
 
-        it('reinicio de lo fijado al cambiar equipos, importar CSV o volver al inicio, y conservación al continuar torneo', () => {
+        it('conservación de lo fijado cuando equipos no cambian, y reinicio al cambiar equipos (tras confirmar) o al importar CSV', () => {
             const { result } = renderHook(() => useTQBState());
             const teams = createMockTeams(3, 'A');
             const games = createClearWinnerGames(teams, 'A');
@@ -1037,14 +1040,30 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
 
             expect(result.current.state.games.find(g => g.id === 'g-a-1')?.isLocked).toBe(true);
 
-            // Re-generating games on team edit resets lock status
+            // Calling handleContinueToGames with UNCHANGED teams preserves lock status
             act(() => {
                 result.current.actions.handleContinueToGames();
+            });
+            expect(result.current.state.games.find(g => g.id === 'g-a-1')?.isLocked).toBe(true);
+
+            // Adding a new team and confirming regeneration resets lock status
+            act(() => {
+                result.current.actions.setTeams([
+                    ...teams,
+                    { id: 't-a-4', name: 'Team A 4', groupId: 'A' },
+                ]);
+            });
+            act(() => {
+                result.current.actions.handleContinueToGames();
+            });
+            act(() => {
+                result.current.actions.handleConfirmContinueToGames();
             });
             expect(result.current.state.games.every(g => !g.isLocked)).toBe(true);
 
             // Relock and test CSV import reset
             act(() => {
+                result.current.actions.setTeams(teams);
                 result.current.actions.setGames(games);
                 result.current.actions.handleToggleLockGame('g-a-1');
             });
@@ -1055,6 +1074,7 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             });
             expect(result.current.state.games.every(g => !g.isLocked)).toBe(true);
         });
+
 
         it('cambiar solo el partido no fijado actualiza las posiciones sin alterar los datos de los partidos fijados', () => {
             const { result } = renderHook(() => useTQBState());
@@ -1149,6 +1169,266 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             expect(rLocked.current.state.tieBreakMethod).toEqual(rUnlocked.current.state.tieBreakMethod);
         });
     });
+
+    // -------------------------------------------------------------
+    // 10. FASE 7: Propagation of Team Name Changes & Confirmation Modal
+    // -------------------------------------------------------------
+    describe('10. FASE 7: Team Name Propagation & Smart Continue Confirmation', () => {
+        it('renombrar un equipo propaga de inmediato a partidos normales y bloqueados sin modificar carreras ni entradas', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+                result.current.actions.handleToggleLockGame(games[0].id); // Lock game 1
+            });
+
+            // Lock check
+            expect(result.current.state.games[0].isLocked).toBe(true);
+
+            // Rename team 1 from 'Team A 1' to 'Renamed Alpha'
+            act(() => {
+                result.current.actions.setTeams(prev =>
+                    prev.map(t => t.id === teams[0].id ? { ...t, name: 'Renamed Alpha' } : t)
+                );
+            });
+
+            // Check game 1 (locked) and game 2 (unlocked) where team 1 plays
+            const g1 = result.current.state.games.find(g => g.id === games[0].id);
+            const g2 = result.current.state.games.find(g => g.id === games[1].id);
+
+            expect(g1?.teamAName).toBe('Renamed Alpha');
+            expect(g1?.runsA).toBe(10); // Runs preserved
+            expect(g1?.isLocked).toBe(true); // Lock preserved
+
+            expect(g2?.teamAName).toBe('Renamed Alpha');
+            expect(g2?.runsA).toBe(10);
+        });
+
+        it('agregar un equipo nuevo cuando hay partidos con resultados activa la confirmación; cancelar no modifica nada', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+                result.current.actions.setCurrentScreen(1);
+            });
+
+            // Add a 4th team to group A
+            act(() => {
+                result.current.actions.setTeams(prev => [
+                    ...prev,
+                    { id: 't-a-4', name: 'Team A 4', groupId: 'A' },
+                ]);
+            });
+
+            // Try to continue to games
+            act(() => {
+                result.current.actions.handleContinueToGames();
+            });
+
+            // Should set pendingContinueImpact and stay on screen 1
+            expect(result.current.state.pendingContinueImpact).not.toBeNull();
+            expect(result.current.state.pendingContinueImpact?.needsConfirmation).toBe(true);
+            expect(result.current.state.currentScreen).toBe(1);
+
+            // Cancel confirmation
+            act(() => {
+                result.current.actions.handleCancelContinueToGames();
+            });
+
+            expect(result.current.state.pendingContinueImpact).toBeNull();
+            expect(result.current.state.currentScreen).toBe(1);
+            expect(result.current.state.games).toHaveLength(3); // Games preserved
+        });
+
+        it('confirmar la regeneración recalcula solo el grupo afectado dejando el otro intacto', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teamsA = createMockTeams(3, 'A');
+            const teamsB = createMockTeams(3, 'B');
+            const gamesA = createClearWinnerGames(teamsA, 'A');
+            const gamesB = createClearWinnerGames(teamsB, 'B');
+
+            act(() => {
+                result.current.actions.setIsMultiGroup(true);
+                result.current.actions.setTeams([...teamsA, ...teamsB]);
+                result.current.actions.setGames([...gamesA, ...gamesB]);
+                result.current.actions.setCurrentScreen(1);
+            });
+
+            // Add a team to Group A only
+            act(() => {
+                result.current.actions.setTeams(prev => [
+                    ...prev,
+                    { id: 't-a-4', name: 'Team A 4', groupId: 'A' },
+                ]);
+            });
+
+            act(() => {
+                result.current.actions.handleContinueToGames();
+            });
+
+            expect(result.current.state.pendingContinueImpact?.changedGroups).toEqual(['A']);
+            expect(result.current.state.pendingContinueImpact?.unchangedGroups).toEqual(['B']);
+
+            // Confirm regeneration
+            act(() => {
+                result.current.actions.handleConfirmContinueToGames();
+            });
+
+            expect(result.current.state.currentScreen).toBe(2);
+
+            // Group A games regenerated (4 teams -> 6 games)
+            const newGamesA = result.current.state.games.filter(g => g.groupId === 'A');
+            expect(newGamesA).toHaveLength(6);
+
+            // Group B games preserved intact (3 teams -> 3 games with scores preserved)
+            const newGamesB = result.current.state.games.filter(g => g.groupId === 'B');
+            expect(newGamesB).toHaveLength(3);
+            expect(newGamesB[0].runsA).toBe(10); // Scores preserved in group B!
+        });
+
+        it('la restauración con estado corrupto en localStorage no lanza excepción en el hook y resetea a estado inicial', () => {
+            localStorage.setItem('tqb_tournament_state', JSON.stringify({
+                version: 1,
+                currentScreen: 2,
+                teams: "invalid-non-array",
+                games: [],
+            }));
+
+            // renderHook should not throw an unhandled error
+            expect(() => {
+                renderHook(() => useTQBState());
+            }).not.toThrow();
+
+            const { result } = renderHook(() => useTQBState());
+            expect(result.current.state.currentScreen).toBe(0);
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 11. FASE 8: Live Game Update & Stale Indicator in Hook
+    // -------------------------------------------------------------
+    describe('11. FASE 8: Live Game Update & Stale Indicator in Hook', () => {
+        it('handleLiveGameUpdate actualiza los partidos y recalcula rankings cuando todos los partidos son válidos sin cambiar currentScreen', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+                result.current.actions.handleCalculateTQB(); // Go to screen 3
+            });
+
+            expect(result.current.state.currentScreen).toBe(3);
+            const initialRankings = result.current.state.rankings;
+
+            // Live edit game 3 from score 5-1 to score 20-1
+            act(() => {
+                result.current.actions.handleLiveGameUpdate('g-a-3', { runsA: 20, runsB: 1 });
+            });
+
+            // currentScreen must remain at 3
+            expect(result.current.state.currentScreen).toBe(3);
+            // rankings must be updated automatically
+            expect(result.current.state.rankings).not.toEqual(initialRankings);
+            // games in state must be updated
+            expect(result.current.state.games.find(g => g.id === 'g-a-3')?.runsA).toBe(20);
+            // isCalculationStale should be false because all games are complete & valid
+            expect(result.current.state.isCalculationStale).toBe(false);
+        });
+
+        it('handleLiveGameUpdate en partido bloqueado es rechazado por el guardián de bloqueo', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+                result.current.actions.handleToggleLockGame('g-a-1');
+            });
+
+            expect(result.current.state.games.find(g => g.id === 'g-a-1')?.isLocked).toBe(true);
+
+            // Attempt live update on locked game 1
+            act(() => {
+                result.current.actions.handleLiveGameUpdate('g-a-1', { runsA: 99 });
+            });
+
+            // Score of locked game 1 must NOT change
+            expect(result.current.state.games.find(g => g.id === 'g-a-1')?.runsA).toBe(10);
+        });
+
+        it('cuando un partido queda incompleto, handleLiveGameUpdate no recalcula rankings e isCalculationStale pasa a ser true', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+                result.current.actions.handleCalculateTQB();
+            });
+
+            const initialValidRankings = result.current.state.rankings;
+
+            // Edit game 3 to set runsA to null (incomplete)
+            act(() => {
+                result.current.actions.handleLiveGameUpdate('g-a-3', { runsA: null });
+            });
+
+            // Rankings must retain last valid calculation
+            expect(result.current.state.rankings).toEqual(initialValidRankings);
+            // isCalculationStale must be true
+            expect(result.current.state.isCalculationStale).toBe(true);
+        });
+
+        it('needsERTQB se actualiza cuando la edición en vivo provoca o resuelve un empate que requiere ER-TQB', () => {
+            const { result } = renderHook(() => useTQBState());
+            const teams = createMockTeams(3, 'A');
+            const circleTieGames = createCircleTieGames(teams, 'A'); // Circle tie -> needsERTQB true
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(circleTieGames);
+                result.current.actions.handleCalculateTQB();
+            });
+
+            expect(result.current.state.needsERTQB).toBe(true);
+
+            // Turn games into clear winner games via live update
+            const clearWinnerGames = createClearWinnerGames(teams, 'A');
+            act(() => {
+                result.current.actions.handleLiveGameUpdate(clearWinnerGames[0].id, {
+                    runsA: clearWinnerGames[0].runsA,
+                    runsB: clearWinnerGames[0].runsB,
+                });
+            });
+            act(() => {
+                result.current.actions.handleLiveGameUpdate(clearWinnerGames[1].id, {
+                    runsA: clearWinnerGames[1].runsA,
+                    runsB: clearWinnerGames[1].runsB,
+                });
+            });
+            act(() => {
+                result.current.actions.handleLiveGameUpdate(clearWinnerGames[2].id, {
+                    runsA: clearWinnerGames[2].runsA,
+                    runsB: clearWinnerGames[2].runsB,
+                });
+            });
+
+            expect(result.current.state.needsERTQB).toBe(false);
+        });
+
+    });
 });
+
+
 
 

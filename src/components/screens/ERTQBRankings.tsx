@@ -2,11 +2,11 @@
 
 import { FileDown, RotateCcw, AlertTriangle, Trophy, Info, CheckCircle, ArrowLeft } from 'lucide-react';
 import { TeamStats, TieBreakMethod, GameData, GroupID } from '@/lib/types';
-import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks } from '@/lib/calculations';
+import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks, isGroupProvisional } from '@/lib/calculations';
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
-import React, { memo } from 'react';
+import React, { memo, useMemo } from 'react';
 
 interface ERTQBRankingsProps {
     rankings: TeamStats[];
@@ -54,6 +54,11 @@ const ERTQBRankings = memo(function ERTQBRankings({
     const displayGames = isMultiGroup
         ? games.filter(g => g.groupId === activeGroupId)
         : games;
+
+    const isActiveGroupProvisional = useMemo(() => {
+        const activeGroupGames = games.filter(g => (g.groupId ?? 'A') === activeGroupId);
+        return isGroupProvisional(activeGroupGames);
+    }, [games, activeGroupId]);
 
     return (
         <div className="max-w-4xl mx-auto animate-fade-in">
@@ -139,6 +144,16 @@ const ERTQBRankings = memo(function ERTQBRankings({
                             )}
                         </div>
                     </div>
+
+                    {/* PROVISIONAL BANNER — shown when active group has mixed locked/unlocked games */}
+                    {isActiveGroupProvisional && (
+                        <div className="p-3 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-start gap-2.5">
+                            <AlertTriangle size={16} className="text-amber-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-amber-300 leading-relaxed font-medium">
+                                {t.rankings.provisionalBanner}
+                            </p>
+                        </div>
+                    )}
 
                     {/* Rankings Table */}
                     <div className="overflow-x-auto">
