@@ -3,6 +3,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 import Header from '@/components/Header';
 import TeamEntry from '@/components/screens/TeamEntry';
@@ -240,12 +241,14 @@ export default function Home() {
                     <p>{t.common.footer.dev}</p>
                     <p className="text-xs text-gray-600">{t.common.footer.rights}</p>
                     <div className="mt-2">
-                        <button
-                            onClick={() => setIsFeedbackOpen(true)}
-                            className="text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mx-auto"
-                        >
-                            {t.common.feedback}
-                        </button>
+                        <Tooltip text={t.tooltips.footerFeedback}>
+                            <button
+                                onClick={() => setIsFeedbackOpen(true)}
+                                className="text-primary-400 hover:text-primary-300 transition-colors flex items-center gap-1 mx-auto"
+                            >
+                                {t.common.feedback}
+                            </button>
+                        </Tooltip>
                     </div>
                 </div>
             </footer>

@@ -121,14 +121,30 @@ El sistema genera automáticamente todos los emparejamientos posibles en formato
 - 7 equipos = 21 partidos
 - 8 equipos = 28 partidos
 
-### Reordenar Partidos del Cronograma (Subir / Bajar)
-En el encabezado de cada partido (junto al número #N), dispone de botones para **Subir** (▲) o **Bajar** (▼) el partido. Esto permite ajustar la lista para reflejar el orden real en que se juegan los partidos en el torneo. La numeración #N se actualiza automáticamente y el orden personalizado se refleja en todos los listados y en los reportes exportados en PDF.
+### Orden de Controles en el Encabezado de la Tarjeta de Partido
+En el encabezado de cada tarjeta de partido, los botones y controles están dispuestos de izquierda a derecha en el siguiente orden estándar:
+1. **Flechas Subir / Bajar** (▲/▼): ajustan la posición del partido en el cronograma.
+2. **Número de Partido** (#N): muestra la numeración ordinal del partido.
+3. **Botón de Candado**: permite fijar o desbloquear los resultados del partido.
+
+Seguidos de los nombres de los equipos y las etiquetas de estado. La numeración #N se actualiza automáticamente y el orden personalizado se refleja en los reportes exportados en PDF.
 
 ### Fijar Resultados de Partidos (Candado de Bloqueo)
 Cada partido cuenta con un botón de **candado** en su encabezado para fijar sus resultados una vez disputado:
-- **Solo lectura**: Al fijar un partido completo, sus carreras y entradas quedan deshabilitadas para evitar modificaciones accidentales.
+- **Solo lectura e indicador visual**: Al fijar un partido completo, muestra una etiqueta carmesí **"Fijado"** (con su botón de candado en tono carmesí) y sus carreras y entradas quedan deshabilitadas para evitar modificaciones accidentales.
+- **Reglas estrictas**: Solo se pueden fijar partidos que cumplan las reglas oficiales de partido finalizado (ej. entradas del equipo local según el resultado). Al hacer clic en un candado bloqueado, se muestra una explicación interactive con el motivo exacto (datos incompletos o regla de partido finalizado no cumplida).
 - **Recálculo rápido**: Permite simular distintos escenarios modificando solo el partido en curso sin reingresar ni alterar los partidos ya confirmados.
 - **Desbloqueo**: Hacer clic en el candado desbloquea el partido de forma inmediata.
+
+### Sugerencias Visuales (Tooltips)
+Todos los botones e iconos interactivos de la aplicación cuentan con sugerencias visuales emergentes (tooltips) al posar el cursor o enfocar con el teclado. Estas explicaciones facilitan la navegación y describen la función exacta de cada acción.
+
+### Partido en Juego ("En Juego")
+- **Foto del momento**: La app permite calcular la clasificación en tiempo real (*on the fly*) para un partido en curso, incluyendo parciales a mitad de entrada (media entrada).
+- **Etiqueta visual**: Se muestra la etiqueta en tonos dorados **"En juego"** (con punto pulsante animado) únicamente cuando el grupo tiene exactamente 1 partido sin fijar y al menos 1 partido fijado.
+- **Regla de fijación de partidos del grupo**: Por cada grupo se permite como **máximo 1 partido sin fijar** ("En juego"). Todos los demás partidos disputados del grupo deben estar **fijados con el candado** como partidos finales antes de presionar "Calcular Posiciones". Si hay más de un partido sin fijar, al hacer clic en "Calcular Posiciones" o "Exportar PDF" se despliega un resumen indicando qué partidos se pueden fijar (✓) y cuáles requieren corregir datos (⚠).
+- **Validación flexible**: El partido en juego solo requiere datos numéricos y de entradas con formato válido. Las reglas estrictas de finalización (ganador local con menos entradas al bate, etc.) solo se aplican a los partidos fijados o al intentar cerrar el candado.
+
 
 ### Para Cada Partido, Ingrese:
 

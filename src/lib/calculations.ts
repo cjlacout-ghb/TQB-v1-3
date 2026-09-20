@@ -321,6 +321,8 @@ export function calculateRankings(
     };
 }
 
+import { MAX_UNFIXED_GAMES_PER_GROUP } from './constants';
+
 /**
  * Validate innings format (X, X.1, or X.2 only)
  */
@@ -331,9 +333,10 @@ export function validateInningsFormat(value: string): boolean {
 }
 
 /**
- * Check if a game has complete and valid data according to all game rules
+ * Check if a game has basic data integrity (required non-negative scores and valid innings format).
+ * Applicable to both in-play and final games.
  */
-export function isGameCompleteAndValid(game: GameData): boolean {
+export function isGameIntegrityValid(game: GameData): boolean {
     if (game.runsA === null || game.runsA === undefined || game.runsA < 0) return false;
     if (game.runsB === null || game.runsB === undefined || game.runsB < 0) return false;
 
@@ -342,10 +345,36 @@ export function isGameCompleteAndValid(game: GameData): boolean {
     if (!game.inningsBBatting || !validateInningsFormat(game.inningsBBatting)) return false;
     if (!game.inningsBDefense || !validateInningsFormat(game.inningsBDefense)) return false;
 
+    return true;
+}
+
+/**
+ * Check if a specific game in a group should display the "In Play" ("En juego") badge:
+ * Condition: The game is unfixed (!isLocked), the group has at least 1 locked game,
+ * AND the group has EXACTLY 1 unfixed game.
+ */
+export function shouldShowInPlayBadge(groupGames: GameData[], gameId: string): boolean {
+    const game = groupGames.find(g => g.id === gameId);
+    if (!game || game.isLocked) return false;
+
+    const lockedCount = groupGames.filter(g => g.isLocked).length;
+    const unfixedCount = groupGames.filter(g => !g.isLocked).length;
+
+    return lockedCount >= 1 && unfixedCount === 1;
+}
+
+/**
+ * Check if a game is final and meets strict WBSC/softball rules:
+ * - Winning home team must have fewer innings at bat than visitor (homeOuts < visitorOuts)
+ * - Losing home team must have same innings at bat as visitor (homeOuts === visitorOuts)
+ */
+export function isGameFinalAndValid(game: GameData): boolean {
+    if (!isGameIntegrityValid(game)) return false;
+
     const visitorOuts = inningsToOuts(game.inningsABatting);
     const homeOuts = inningsToOuts(game.inningsBBatting);
-    const visitorRuns = game.runsA;
-    const homeRuns = game.runsB;
+    const visitorRuns = game.runsA!;
+    const homeRuns = game.runsB!;
 
     if (homeRuns > visitorRuns) {
         if (homeOuts >= visitorOuts) return false;
@@ -355,6 +384,50 @@ export function isGameCompleteAndValid(game: GameData): boolean {
 
     return true;
 }
+
+/**
+ * Check if a game has complete and valid data according to strict end-of-game rules (alias of isGameFinalAndValid)
+ */
+export function isGameCompleteAndValid(game: GameData): boolean {
+    return isGameFinalAndValid(game);
+}
+
+/**
+ * Check if a single group is valid for calculation:
+ * - All games must pass basic integrity checks.
+ * - All locked games must pass strict final game rules.
+ * - At most MAX_UNFIXED_GAMES_PER_GROUP (1) unfixed game is allowed per group.
+ */
+export function isGroupValidForCalculation(groupGames: GameData[]): boolean {
+    if (groupGames.length === 0) return false;
+
+    const unfixedCount = groupGames.filter(g => !g.isLocked).length;
+    if (unfixedCount > MAX_UNFIXED_GAMES_PER_GROUP) return false;
+
+    for (const g of groupGames) {
+        if (!isGameIntegrityValid(g)) return false;
+        if (g.isLocked && !isGameFinalAndValid(g)) return false;
+    }
+
+    return true;
+}
+
+/**
+ * Check if ALL active groups are valid for calculation under the in-play design:
+ * Each group must have at most 1 unfixed game, all games must have valid basic integrity,
+ * and all locked games must be strictly valid final games.
+ */
+export function areAllGroupsValidForCalculation(games: GameData[], isMultiGroup: boolean = false): boolean {
+    if (games.length === 0) return false;
+    const groups: GroupID[] = isMultiGroup
+        ? ['A', 'B']
+        : Array.from(new Set(games.map(g => (g.groupId ?? 'A') as GroupID)));
+    return groups.every(gId => {
+        const groupGames = games.filter(g => (g.groupId ?? 'A') === gId);
+        return isGroupValidForCalculation(groupGames);
+    });
+}
+
 
 /**
  * Generate all round-robin matchups
@@ -638,7 +711,7 @@ export function getLivePanelVisibility(
     const unfixedGames = activeGroupGames.filter(g => !g.isLocked);
     const unfixedCount = unfixedGames.length;
 
-    if (lockedCount >= 1 && unfixedCount >= 1 && unfixedCount <= 4) {
+    if (lockedCount >= 1 && unfixedCount >= 1 && unfixedCount <= MAX_UNFIXED_GAMES_PER_GROUP) {
         return {
             showPanel: true,
             showHelperText: false,
@@ -648,7 +721,7 @@ export function getLivePanelVisibility(
         };
     }
 
-    if (lockedCount >= 1 && unfixedCount > 4) {
+    if (lockedCount >= 1 && unfixedCount > MAX_UNFIXED_GAMES_PER_GROUP) {
         return {
             showPanel: false,
             showHelperText: true,
@@ -668,12 +741,14 @@ export function getLivePanelVisibility(
 }
 
 /**
- * Check if ALL games across ALL groups are complete and valid according to WBSC/baseball rules
+ * Check if ALL games across ALL groups are complete and valid according to WBSC/baseball rules.
+ * Retained for backward compatibility — delegates to areAllGroupsValidForCalculation.
  */
 export function areAllGamesCompleteAndValid(games: GameData[]): boolean {
     if (games.length === 0) return false;
-    return games.every(g => isGameCompleteAndValid(g));
+    return areAllGroupsValidForCalculation(games, false);
 }
+
 
 // ───────────────────────────────────────────────────────────────
 // FASE 8b: PROVISIONAL STATUS — pure, state-free, testable

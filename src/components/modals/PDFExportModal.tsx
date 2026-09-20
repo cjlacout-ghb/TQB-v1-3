@@ -5,7 +5,9 @@ import { X, FileDown, AlertTriangle } from 'lucide-react';
 import { PDFExportData } from '@/lib/types';
 import { generatePDF } from '@/lib/pdfGenerator';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { isTournamentProvisional, areAllGamesCompleteAndValid } from '@/lib/calculations';
+import { isTournamentProvisional, areAllGroupsValidForCalculation } from '@/lib/calculations';
+
+import Tooltip from '@/components/ui/Tooltip';
 
 interface PDFExportModalProps {
     isOpen: boolean;
@@ -21,7 +23,7 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
 
     // Derive provisional and stale status from games (pure, no stored state)
     const autoProvisional = isTournamentProvisional(data.games, data.isMultiGroup ?? false);
-    const allGamesValid   = areAllGamesCompleteAndValid(data.games);
+    const allGamesValid   = areAllGroupsValidForCalculation(data.games, data.isMultiGroup ?? false);
     const isStaleBlocked  = !allGamesValid;
 
     const [isProvisional, setIsProvisional] = useState(autoProvisional);
@@ -35,6 +37,7 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isOpen]);
+
 
     // Handle ESC key to close
     useEffect(() => {
@@ -60,7 +63,7 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
         }
         // Stale check — do not export if games are invalid/incomplete
         if (isStaleBlocked) {
-            setError(t.pdfExport.staleBlocked);
+            setError(t.gameEntry.pdfBlockedInstruction || t.pdfExport.staleBlocked);
             return;
         }
 
@@ -119,13 +122,15 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                                 </h2>
                             </div>
 
-                            <button
-                                onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <X size={20} />
-                            </button>
+                            <Tooltip text={t.tooltips.modalClose}>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    aria-label="Close modal"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {/* Content */}
@@ -164,10 +169,10 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
                             <label className="flex items-start gap-3 cursor-pointer group select-none">
                                 <input
                                     type="checkbox"
-                                    checked={isProvisional}
+                                    checked={autoProvisional || isProvisional}
                                     onChange={(e) => setIsProvisional(e.target.checked)}
-                                    disabled={isStaleBlocked}
-                                    className="mt-0.5 w-4 h-4 rounded border-dark-400 bg-dark-700 text-primary-500 focus:ring-primary-500 focus:ring-offset-dark-900 cursor-pointer"
+                                    disabled={isStaleBlocked || autoProvisional}
+                                    className="mt-0.5 w-4 h-4 rounded border-dark-400 bg-dark-700 text-primary-500 focus:ring-primary-500 focus:ring-offset-dark-900 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                                 />
                                 <span className="text-sm text-gray-300 leading-relaxed group-hover:text-white transition-colors">
                                     {t.pdfExport.provisionalCheckbox}
@@ -197,44 +202,49 @@ export default function PDFExportModal({ isOpen, onClose, data }: PDFExportModal
 
                             {/* Actions */}
                             <div className="flex gap-3 pt-2">
-                                <button
-                                    onClick={onClose}
-                                    className="flex-1 btn btn-ghost"
-                                >
-                                    {t.pdfExport.cancel}
-                                </button>
-                                <button
-                                    onClick={handleGenerate}
-                                    disabled={isGenerating || isStaleBlocked}
-                                    className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {isGenerating ? (
-                                        <>
-                                            <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                                                <circle
-                                                    className="opacity-25"
-                                                    cx="12"
-                                                    cy="12"
-                                                    r="10"
-                                                    stroke="currentColor"
-                                                    strokeWidth="4"
-                                                    fill="none"
-                                                />
-                                                <path
-                                                    className="opacity-75"
-                                                    fill="currentColor"
-                                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                                                />
-                                            </svg>
-                                            {t.pdfExport.generating}
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FileDown size={18} />
-                                            {t.pdfExport.generate}
-                                        </>
-                                    )}
-                                </button>
+                                <Tooltip text={t.tooltips.modalCancel} className="flex-1">
+                                    <button
+                                        onClick={onClose}
+                                        className="w-full btn btn-ghost"
+                                    >
+                                        {t.pdfExport.cancel}
+                                    </button>
+                                </Tooltip>
+                                <Tooltip text={t.tooltips.pdfExportDownload} className="flex-1">
+                                    <button
+                                        onClick={handleGenerate}
+                                        disabled={isGenerating}
+                                        aria-disabled={isStaleBlocked}
+                                        className={`w-full btn-primary ${isStaleBlocked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {isGenerating ? (
+                                            <>
+                                                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="4"
+                                                        fill="none"
+                                                    />
+                                                    <path
+                                                        className="opacity-75"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
+                                                </svg>
+                                                {t.pdfExport.generating}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <FileDown size={18} />
+                                                {t.pdfExport.generate}
+                                            </>
+                                        )}
+                                    </button>
+                                </Tooltip>
                             </div>
                         </div>
                     </div>

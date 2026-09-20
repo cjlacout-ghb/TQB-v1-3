@@ -7,6 +7,7 @@ import { parseCSV, getSampleCSV, shouldConfirmImport } from '@/lib/csvParser';
 import { MIN_TEAMS, MAX_TEAMS } from '@/lib/constants';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 import ConfirmImportModal from '../modals/ConfirmImportModal';
 
 interface TeamEntryProps {
@@ -255,53 +256,58 @@ const TeamEntry = memo(function TeamEntry({
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex items-center gap-4">
                             {onBack && (
-                                <button
-                                    onClick={onBack}
-                                    className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
-                                    title={t.common.reset}
-                                    aria-label={t.common.reset}
-                                >
-                                    <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-                                </button>
+                                <Tooltip text={t.tooltips.headerHomeReset}>
+                                    <button
+                                        onClick={onBack}
+                                        className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
+                                        aria-label={t.tooltips.headerHomeReset}
+                                    >
+                                        <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                    </button>
+                                </Tooltip>
                             )}
                             <h2 className="text-2xl font-bold text-white">{t.teamEntry.title}</h2>
                         </div>
 
                         {/* Multi-group toggle */}
                         {!isMultiGroup ? (
-                            <button
-                                onClick={() => {
-                                    onSetMultiGroup(true);
-                                    const ts = Date.now();
-                                    const bTeams: Team[] = [
-                                        { id: `team-b-1-${ts}`, name: '', groupId: 'B' },
-                                        { id: `team-b-2-${ts + 1}`, name: '', groupId: 'B' },
-                                        { id: `team-b-3-${ts + 2}`, name: '', groupId: 'B' },
-                                    ];
-                                     onTeamsChange([...teams, ...bTeams]);
-                                    onSetActiveGroupId('B');
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                    bg-primary-500/10 text-primary-400 border border-primary-500/30
-                                    hover:bg-primary-500/20 transition-all duration-200 text-sm font-medium whitespace-nowrap"
-                            >
-                                <Users size={14} />
-                                {t.common.addGroupB}
-                            </button>
+                            <Tooltip text={t.tooltips.teamEntryAddGroup}>
+                                <button
+                                    onClick={() => {
+                                        onSetMultiGroup(true);
+                                        const ts = Date.now();
+                                        const bTeams: Team[] = [
+                                            { id: `team-b-1-${ts}`, name: '', groupId: 'B' },
+                                            { id: `team-b-2-${ts + 1}`, name: '', groupId: 'B' },
+                                            { id: `team-b-3-${ts + 2}`, name: '', groupId: 'B' },
+                                        ];
+                                         onTeamsChange([...teams, ...bTeams]);
+                                        onSetActiveGroupId('B');
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                        bg-primary-500/10 text-primary-400 border border-primary-500/30
+                                        hover:bg-primary-500/20 transition-all duration-200 text-sm font-medium whitespace-nowrap"
+                                >
+                                    <Users size={14} />
+                                    {t.common.addGroupB}
+                                </button>
+                            </Tooltip>
                         ) : (
-                            <button
-                                onClick={() => {
-                                    onSetMultiGroup(false);
-                                    onTeamsChange(teams.filter(t => t.groupId !== 'B'));
-                                    onSetActiveGroupId('A');
-                                }}
-                                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
-                                    bg-dark-600 text-gray-400 border border-dark-500
-                                    hover:border-error-500/50 hover:text-error-400
-                                    transition-all duration-200 text-sm font-medium whitespace-nowrap"
-                            >
-                                {t.common.onlyGroupA}
-                            </button>
+                            <Tooltip text={t.tooltips.teamEntryRemoveGroup}>
+                                <button
+                                    onClick={() => {
+                                        onSetMultiGroup(false);
+                                        onTeamsChange(teams.filter(t => t.groupId !== 'B'));
+                                        onSetActiveGroupId('A');
+                                    }}
+                                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg
+                                        bg-dark-600 text-gray-400 border border-dark-500
+                                        hover:border-error-500/50 hover:text-error-400
+                                        transition-all duration-200 text-sm font-medium whitespace-nowrap"
+                                >
+                                    {t.common.onlyGroupA}
+                                </button>
+                            </Tooltip>
                         )}
                     </div>
                 </div>
@@ -314,19 +320,20 @@ const TeamEntry = memo(function TeamEntry({
                                 const ready = gId === 'A' ? groupAReady : groupBReady;
                                 const isActive = activeGroupId === gId;
                                 return (
-                                    <button
-                                        key={gId}
-                                        onClick={() => { onSetActiveGroupId(gId); setErrors({}); setCSVError([]); }}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                            ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                    >
-                                        {t.common.groupTab.replace('{gId}', gId)}
-                                        <span
-                                            title={ready ? 'Listo' : 'Incompleto'}
-                                            className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400' : 'bg-yellow-500/70'
-                                                }`}
-                                        />
-                                    </button>
+                                    <Tooltip key={gId} text={t.tooltips.teamEntryGroupTab.replace('{gId}', gId)} className="flex-1">
+                                        <button
+                                            onClick={() => { onSetActiveGroupId(gId); setErrors({}); setCSVError([]); }}
+                                            className={`w-full flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                                ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            {t.common.groupTab.replace('{gId}', gId)}
+                                            <span
+                                                title={ready ? 'Listo' : 'Incompleto'}
+                                                className={`w-2 h-2 rounded-full transition-colors ${ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                                    }`}
+                                            />
+                                        </button>
+                                    </Tooltip>
                                 );
                             })}
                         </div>
@@ -358,31 +365,35 @@ const TeamEntry = memo(function TeamEntry({
                                         </p>
                                     )}
                                 </div>
-                                <button
-                                    onClick={() => removeTeam(team.id)}
-                                    disabled={displayTeams.length <= MIN_TEAMS}
-                                    className="h-10 px-3 text-gray-400 hover:text-error-400 hover:bg-error-500/10 
-                    rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
-                                    aria-label={t.teamEntry.removeTeam}
-                                >
-                                    <Trash2 size={18} />
-                                </button>
+                                <Tooltip text={t.tooltips.teamEntryRemoveTeam}>
+                                    <button
+                                        onClick={() => removeTeam(team.id)}
+                                        disabled={displayTeams.length <= MIN_TEAMS}
+                                        className="h-10 px-3 text-gray-400 hover:text-error-400 hover:bg-error-500/10 
+                        rounded-lg transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                                        aria-label={t.tooltips.teamEntryRemoveTeam}
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
+                                </Tooltip>
                             </div>
                         ))}
                     </div>
 
                     {/* Add Team Button */}
-                    <button
-                        onClick={addTeam}
-                        disabled={displayTeams.length >= MAX_TEAMS}
-                        className="w-full py-3 border-2 border-dashed border-dark-500 rounded-xl
-              text-gray-400 hover:text-primary-400 hover:border-primary-500/50
-              transition-all duration-200 flex items-center justify-center gap-2
-              disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:border-dark-500"
-                    >
-                        <Plus size={18} />
-                        {t.teamEntry.addTeam} ({displayTeams.length}/{MAX_TEAMS})
-                    </button>
+                    <Tooltip text={t.tooltips.teamEntryAddTeam} className="w-full">
+                        <button
+                            onClick={addTeam}
+                            disabled={displayTeams.length >= MAX_TEAMS}
+                            className="w-full py-3 border-2 border-dashed border-dark-500 rounded-xl
+                  text-gray-400 hover:text-primary-400 hover:border-primary-500/50
+                  transition-all duration-200 flex items-center justify-center gap-2
+                  disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:text-gray-400 disabled:hover:border-dark-500"
+                        >
+                            <Plus size={18} />
+                            {t.teamEntry.addTeam} ({displayTeams.length}/{MAX_TEAMS})
+                        </button>
+                    </Tooltip>
 
                     {/* Divider */}
                     <div className="relative py-4">
@@ -400,26 +411,30 @@ const TeamEntry = memo(function TeamEntry({
                     <div className="space-y-4">
                         {/* Tabs */}
                         <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
-                            <button
-                                onClick={() => { setImportMethod('file'); setCSVError([]); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                    ${importMethod === 'file'
-                                        ? 'bg-primary-500 text-white shadow-lg'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                            >
-                                <FileText size={16} />
-                                {t.teamEntry.importFile}
-                            </button>
-                            <button
-                                onClick={() => { setImportMethod('paste'); setCSVError([]); }}
-                                className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                    ${importMethod === 'paste'
-                                        ? 'bg-primary-500 text-white shadow-lg'
-                                        : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                            >
-                                <ClipboardList size={16} />
-                                {t.teamEntry.importPaste}
-                            </button>
+                            <Tooltip text={t.tooltips.teamEntryImportCSV} className="flex-1">
+                                <button
+                                    onClick={() => { setImportMethod('file'); setCSVError([]); }}
+                                    className={`w-full flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                        ${importMethod === 'file'
+                                            ? 'bg-primary-500 text-white shadow-lg'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    <FileText size={16} />
+                                    {t.teamEntry.importFile}
+                                </button>
+                            </Tooltip>
+                            <Tooltip text={t.tooltips.teamEntryImportCSV} className="flex-1">
+                                <button
+                                    onClick={() => { setImportMethod('paste'); setCSVError([]); }}
+                                    className={`w-full flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                        ${importMethod === 'paste'
+                                            ? 'bg-primary-500 text-white shadow-lg'
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                >
+                                    <ClipboardList size={16} />
+                                    {t.teamEntry.importPaste}
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {importMethod === 'file' ? (
@@ -466,37 +481,41 @@ const TeamEntry = memo(function TeamEntry({
                                     className="w-full h-40 input font-mono text-sm resize-none"
                                     aria-label={t.teamEntry.importPaste}
                                 />
-                                <button
-                                    onClick={handlePasteProcess}
-                                    disabled={!pastedText.trim() || isProcessing}
-                                    className="w-full py-3 bg-dark-700 hover:bg-dark-600 border border-dark-500 
-                                             text-primary-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2
-                                             disabled:opacity-30 disabled:cursor-not-allowed group"
-                                >
-                                    {isProcessing ? (
-                                        <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
-                                    ) : (
-                                        <>
-                                            <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
-                                            {t.teamEntry.processButton}
-                                        </>
-                                    )}
-                                </button>
+                                <Tooltip text={t.tooltips.teamEntryImportCSV} className="w-full">
+                                    <button
+                                        onClick={handlePasteProcess}
+                                        disabled={!pastedText.trim() || isProcessing}
+                                        className="w-full py-3 bg-dark-700 hover:bg-dark-600 border border-dark-500 
+                                                 text-primary-400 font-semibold rounded-xl transition-all flex items-center justify-center gap-2
+                                                 disabled:opacity-30 disabled:cursor-not-allowed group"
+                                    >
+                                        {isProcessing ? (
+                                            <div className="w-5 h-5 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
+                                        ) : (
+                                            <>
+                                                <ArrowRight size={18} className="group-hover:translate-x-1 transition-transform" />
+                                                {t.teamEntry.processButton}
+                                            </>
+                                        )}
+                                    </button>
+                                </Tooltip>
                             </div>
                         )}
 
                         {/* Common Format Help Toggle */}
                         <div className="flex justify-center">
-                            <button
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    setShowCSVHelp(!showCSVHelp);
-                                }}
-                                className="inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
-                            >
-                                <HelpCircle size={14} />
-                                {t.teamEntry.viewFormat}
-                            </button>
+                            <Tooltip text={t.teamEntry.viewFormat}>
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        setShowCSVHelp(!showCSVHelp);
+                                    }}
+                                    className="inline-flex items-center gap-1 text-sm text-primary-400 hover:text-primary-300 transition-colors"
+                                >
+                                    <HelpCircle size={14} />
+                                    {t.teamEntry.viewFormat}
+                                </button>
+                            </Tooltip>
                         </div>
                     </div>
 
@@ -528,14 +547,16 @@ const TeamEntry = memo(function TeamEntry({
                     )}
 
                     {/* Continue Button */}
-                    <button
-                        onClick={handleContinue}
-                        disabled={!hasValidTeams}
-                        className="w-full btn-primary py-4 text-lg"
-                    >
-                        {t.teamEntry.continueButton}
-                        <ArrowRight size={20} />
-                    </button>
+                    <Tooltip text={hasValidTeams ? t.tooltips.teamEntryContinue : t.tooltips.teamEntryContinueDisabled} className="w-full">
+                        <button
+                            onClick={handleContinue}
+                            disabled={!hasValidTeams}
+                            className="w-full btn-primary py-4 text-lg"
+                        >
+                            {t.teamEntry.continueButton}
+                            <ArrowRight size={20} />
+                        </button>
+                    </Tooltip>
                 </div>
             </div>
 

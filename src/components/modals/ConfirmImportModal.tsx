@@ -2,6 +2,7 @@
 
 import React, { useEffect } from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 import { GroupID } from '@/lib/types';
 
 interface ConfirmImportModalProps {
@@ -69,21 +70,25 @@ const ConfirmImportModal: React.FC<ConfirmImportModalProps> = ({
                 )}
 
                 <div className="flex flex-col gap-3">
-                    <button 
-                        onClick={() => {
-                            onConfirm();
-                            onClose();
-                        }}
-                        className="w-full py-3.5 bg-error-600 hover:bg-error-500 text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-error-600/20"
-                    >
-                        {t.teamEntry.confirmImport.confirmButton}
-                    </button>
-                    <button 
-                        onClick={onClose}
-                        className="w-full py-3.5 bg-dark-600 hover:bg-dark-500 text-white font-bold rounded-xl transition-all active:scale-[0.98]"
-                    >
-                        {t.teamEntry.confirmImport.cancelButton}
-                    </button>
+                    <Tooltip text={t.tooltips.confirmImportSubmit} className="w-full">
+                        <button 
+                            onClick={() => {
+                                onConfirm();
+                                onClose();
+                            }}
+                            className="w-full py-3.5 bg-error-600 hover:bg-error-500 text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-error-600/20"
+                        >
+                            {t.teamEntry.confirmImport.confirmButton}
+                        </button>
+                    </Tooltip>
+                    <Tooltip text={t.tooltips.modalCancel} className="w-full">
+                        <button 
+                            onClick={onClose}
+                            className="w-full py-3.5 bg-dark-600 hover:bg-dark-500 text-white font-bold rounded-xl transition-all active:scale-[0.98]"
+                        >
+                            {t.teamEntry.confirmImport.cancelButton}
+                        </button>
+                    </Tooltip>
                 </div>
             </div>
         </div>

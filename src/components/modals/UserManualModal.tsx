@@ -9,6 +9,8 @@ import { userManualEN } from '@/data/userManualEN';
 import { userManualES } from '@/data/userManualES';
 import { useLanguage } from '@/contexts/LanguageContext';
 
+import Tooltip from '@/components/ui/Tooltip';
+
 interface UserManualModalProps {
     isOpen: boolean;
     onClose: () => void;
@@ -83,34 +85,40 @@ export default function UserManualModal({ isOpen, onClose, initialSection }: Use
 
                                 {/* Language Toggle */}
                                 <div className="flex items-center bg-dark-700 rounded-lg p-1">
-                                    <button
-                                        onClick={() => setLanguage('en')}
-                                        className={`px-3 py-1 text-sm rounded-md transition-all duration-200 ${language === 'en'
-                                            ? 'bg-primary-500 text-white'
-                                            : 'text-gray-400 hover:text-white'
-                                            }`}
-                                    >
-                                        ENG
-                                    </button>
-                                    <button
-                                        onClick={() => setLanguage('es')}
-                                        className={`px-3 py-1 text-sm rounded-md transition-all duration-200 ${language === 'es'
-                                            ? 'bg-primary-500 text-white'
-                                            : 'text-gray-400 hover:text-white'
-                                            }`}
-                                    >
-                                        ESP
-                                    </button>
+                                    <Tooltip text={t.tooltips.userManualTabEn}>
+                                        <button
+                                            onClick={() => setLanguage('en')}
+                                            className={`px-3 py-1 text-sm rounded-md transition-all duration-200 ${language === 'en'
+                                                ? 'bg-primary-500 text-white'
+                                                : 'text-gray-400 hover:text-white'
+                                                }`}
+                                        >
+                                            ENG
+                                        </button>
+                                    </Tooltip>
+                                    <Tooltip text={t.tooltips.userManualTabEs}>
+                                        <button
+                                            onClick={() => setLanguage('es')}
+                                            className={`px-3 py-1 text-sm rounded-md transition-all duration-200 ${language === 'es'
+                                                ? 'bg-primary-500 text-white'
+                                                : 'text-gray-400 hover:text-white'
+                                                }`}
+                                        >
+                                            ESP
+                                        </button>
+                                    </Tooltip>
                                 </div>
                             </div>
 
-                            <button
-                                onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <X size={20} />
-                            </button>
+                            <Tooltip text={t.tooltips.modalClose}>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    aria-label="Close modal"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {/* Content */}
@@ -120,15 +128,17 @@ export default function UserManualModal({ isOpen, onClose, initialSection }: Use
                                 <ul className="space-y-1">
                                     {content.map((section) => (
                                         <li key={section.id}>
-                                            <button
-                                                onClick={() => setActiveSection(section.id)}
-                                                className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all duration-200 ${activeSection === section.id
-                                                    ? 'bg-primary-500/20 text-primary-400 border-l-2 border-primary-500'
-                                                    : 'text-gray-400 hover:text-white hover:bg-white/5'
-                                                    }`}
-                                            >
-                                                {section.title}
-                                            </button>
+                                            <Tooltip text={t.tooltips.userManualNav.replace('{sec}', section.title)} className="w-full">
+                                                <button
+                                                    onClick={() => setActiveSection(section.id)}
+                                                    className={`w-full text-left px-3 py-2 text-sm rounded-lg transition-all duration-200 ${activeSection === section.id
+                                                        ? 'bg-primary-500/20 text-primary-400 border-l-2 border-primary-500'
+                                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                                        }`}
+                                                >
+                                                    {section.title}
+                                                </button>
+                                            </Tooltip>
                                         </li>
                                     ))}
                                 </ul>

@@ -11,8 +11,9 @@ A web application that calculates softball tournament standings using the **WBSC
 - **Multi-screen workflow**: Team entry → Game results → TQB Rankings → (optional) ER-TQB
 - **Round-robin matchup generation**: Automatically creates all pairings for up to 8 teams
 - **Game schedule reordering**: Reorder matches (move up/down) to match real-world playing order
-- **Game result locking & fast recalculation**: Lock completed matches (read-only) and quickly simulate/recalculate standings while editing only the game in play
-- **Provisional Standings & PDF Safeguards**: Automatic detection of in-progress tournaments (mixed locked/unlocked games) displaying amber warning banners on standings screens, pre-selecting provisional markings on PDF exports, and blocking exports if game results are incomplete or invalid
+- **Game in Progress ("En juego") calculation**: Calculate standings on-the-fly for up to 1 game in progress per group (including mid-inning scores), visually highlighted with gold badges. All other finished games in the group must be locked.
+- **Game result locking & fast recalculation**: Lock completed matches (read-only) with crimson badges and padlocks, and quickly simulate/recalculate standings while editing only the game in play
+- **Provisional Standings & PDF Safeguards**: Automatic detection of in-progress tournaments (mixed locked/unlocked games) displaying gold "En juego" badges and warning banners on standings screens, pre-selecting provisional markings on PDF exports, and blocking exports if game results are incomplete or invalid
 - **Complete tie-breaking hierarchy**:
   1. Win-Loss Record
   2. Head-to-Head Results
@@ -22,7 +23,7 @@ A web application that calculates softball tournament standings using the **WBSC
 - **CSV upload**: Pre-fill all team and game data from a spreadsheet
 - **PDF export**: Generate professional tournament reports
 - **Bilingual user manual**: English and Spanish support
-- **Dark theme UI**: Modern, accessible design with purple/green accents
+- **Dark theme UI**: Modern, accessible dark design with crimson ("Fijado") and gold ("En juego") status badges and purple/emerald accents
 
 ## Getting Started
 

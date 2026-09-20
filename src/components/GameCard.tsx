@@ -1,10 +1,11 @@
 'use client';
 
-import React, { memo } from 'react';
-import { ArrowLeftRight, ChevronUp, ChevronDown, Lock, Unlock } from 'lucide-react';
+import React, { memo, useState, useRef } from 'react';
+import { ArrowLeftRight, ChevronUp, ChevronDown, Lock, Unlock, X } from 'lucide-react';
 import { GameData } from '@/lib/types';
-import { isGameCompleteAndValid } from '@/lib/calculations';
+import { isGameFinalAndValid, isGameIntegrityValid } from '@/lib/calculations';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 export interface GameCardProps {
     game: GameData;
@@ -18,6 +19,8 @@ export interface GameCardProps {
     onMoveUp?: () => void;
     onMoveDown?: () => void;
     showReorderButtons?: boolean;
+    /** Show "In Play" badge: true only when group has exactly 1 unfixed and ≥1 locked */
+    showInPlayBadge?: boolean;
 }
 
 export const GameCard = memo(function GameCard({
@@ -32,9 +35,53 @@ export const GameCard = memo(function GameCard({
     onMoveUp,
     onMoveDown,
     showReorderButtons = true,
+    showInPlayBadge = false,
 }: GameCardProps) {
     const { t } = useLanguage();
-    const canLock = isGameCompleteAndValid(game);
+    const canLock = isGameFinalAndValid(game);
+    const isIntegrityValid = isGameIntegrityValid(game);
+
+    // Inline message shown when user clicks the lock button while it's blocked
+    const [lockBlockedMsg, setLockBlockedMsg] = useState<string | null>(null);
+    const lockBlockedRef = useRef<HTMLDivElement>(null);
+    const lockBlockedShakeRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const lockTitle = game.isLocked
+        ? t.gameEntry.unlockGame
+        : canLock
+            ? t.gameEntry.lockGame
+            : isIntegrityValid
+                ? t.gameEntry.lockDisabledStrict
+                : (t.gameEntry.lockDisabledIntegrity || t.gameEntry.lockDisabledTooltip);
+
+    const handleLockClick = () => {
+        if (game.isLocked || canLock) {
+            // Normal toggle
+            onToggleLock(game.id);
+            setLockBlockedMsg(null);
+            return;
+        }
+        // Blocked — show inline explanation
+        const msg = isIntegrityValid
+            ? t.gameEntry.lockBlockedStrict
+            : t.gameEntry.lockBlockedIntegrity;
+
+        if (lockBlockedMsg !== null) {
+            // Repeat click: shake the existing message
+            if (lockBlockedRef.current) {
+                lockBlockedRef.current.classList.remove('animate-shake');
+                // Force reflow
+                void lockBlockedRef.current.offsetWidth;
+                lockBlockedRef.current.classList.add('animate-shake');
+            }
+            if (lockBlockedShakeRef.current) clearTimeout(lockBlockedShakeRef.current);
+            lockBlockedShakeRef.current = setTimeout(() => {
+                lockBlockedRef.current?.classList.remove('animate-shake');
+            }, 400);
+        } else {
+            setLockBlockedMsg(msg);
+        }
+    };
 
     const handleRunsChange = (field: 'runsA' | 'runsB', value: string) => {
         if (game.isLocked) return;
@@ -65,53 +112,59 @@ export const GameCard = memo(function GameCard({
             {/* Game Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-dark-600">
                 <div className="flex items-center gap-3">
-                    {/* Controls: Reorder + Lock */}
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                        {showReorderButtons && onMoveUp && onMoveDown && (
-                            <div className="flex flex-col gap-1">
+                    {/* 1. Reorder buttons */}
+                    {showReorderButtons && onMoveUp && onMoveDown && (
+                        <div className="flex flex-col gap-1 flex-shrink-0">
+                            <Tooltip text={t.tooltips.gameCardMoveUp}>
                                 <button
                                     type="button"
                                     onClick={onMoveUp}
                                     disabled={isFirst}
-                                    aria-label={t.gameEntry.moveUp}
+                                    aria-label={t.tooltips.gameCardMoveUp}
                                     className="flex items-center justify-center w-7 h-5 rounded bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white disabled:opacity-25 disabled:hover:bg-dark-700 disabled:hover:text-gray-300 disabled:cursor-not-allowed border border-dark-500 transition-colors"
                                 >
                                     <ChevronUp size={14} />
                                 </button>
+                            </Tooltip>
+                            <Tooltip text={t.tooltips.gameCardMoveDown}>
                                 <button
                                     type="button"
                                     onClick={onMoveDown}
                                     disabled={isLast}
-                                    aria-label={t.gameEntry.moveDown}
+                                    aria-label={t.tooltips.gameCardMoveDown}
                                     className="flex items-center justify-center w-7 h-5 rounded bg-dark-700 hover:bg-dark-600 text-gray-300 hover:text-white disabled:opacity-25 disabled:hover:bg-dark-700 disabled:hover:text-gray-300 disabled:cursor-not-allowed border border-dark-500 transition-colors"
                                 >
                                     <ChevronDown size={14} />
                                 </button>
-                            </div>
-                        )}
+                            </Tooltip>
+                        </div>
+                    )}
 
-                        <button
-                            type="button"
-                            onClick={() => onToggleLock(game.id)}
-                            disabled={!game.isLocked && !canLock}
-                            aria-label={game.isLocked ? t.gameEntry.unlockGame : (canLock ? t.gameEntry.lockGame : t.gameEntry.lockDisabledTooltip)}
-                            title={game.isLocked ? t.gameEntry.unlockGame : (canLock ? t.gameEntry.lockGame : t.gameEntry.lockDisabledTooltip)}
-                            className={`flex items-center justify-center w-8 h-11 rounded-lg border transition-all ${
-                                game.isLocked
-                                    ? 'bg-primary-500/20 text-primary-400 border-primary-500/40 hover:bg-primary-500/30 shadow-sm'
-                                    : canLock
-                                        ? 'bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white border-dark-500'
-                                        : 'bg-dark-700/50 text-gray-600 border-dark-600 cursor-not-allowed opacity-40'
-                            }`}
-                        >
-                            {game.isLocked ? <Lock size={16} /> : <Unlock size={16} />}
-                        </button>
-                    </div>
-
+                    {/* 2. Game number badge */}
                     <span className="flex items-center justify-center w-12 h-12 bg-dark-700/50 rounded-xl text-sm font-mono text-primary-400 border border-dark-500 shadow-inner flex-shrink-0">
                         #{gameNumber}
                     </span>
 
+                    {/* 3. Lock button */}
+                    <Tooltip text={game.isLocked ? t.tooltips.gameCardUnlock : canLock ? t.tooltips.gameCardLock : t.tooltips.gameCardLockDisabled}>
+                        <button
+                            type="button"
+                            onClick={handleLockClick}
+                            aria-label={lockTitle}
+                            aria-disabled={!game.isLocked && !canLock}
+                            className={`flex items-center justify-center w-8 h-11 rounded-lg border transition-all ${
+                                game.isLocked
+                                    ? 'bg-crimson-500/20 text-crimson-400 border-crimson-500/40 hover:bg-crimson-500/30 shadow-sm'
+                                    : canLock
+                                        ? 'bg-dark-700 hover:bg-dark-600 text-gray-400 hover:text-white border-dark-500'
+                                        : 'bg-dark-700/50 text-gray-600 border-dark-600 opacity-40'
+                            }`}
+                        >
+                            {game.isLocked ? <Lock size={16} /> : <Unlock size={16} />}
+                        </button>
+                    </Tooltip>
+
+                    {/* 4. Team names & status badges */}
                     <div>
                         <div className="flex items-center gap-3">
                             <h3 className="text-xl font-bold text-white tracking-tight">
@@ -119,24 +172,57 @@ export const GameCard = memo(function GameCard({
                                 <span className="mx-2 text-gray-600 font-light">vs</span>
                                 {game.teamBName}
                             </h3>
-                            {game.isLocked && (
-                                <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">
+                            {game.isLocked ? (
+                                <span className="text-[10px] font-bold text-crimson-400 tracking-widest uppercase bg-crimson-500/10 px-2 py-0.5 rounded border border-crimson-500/20">
                                     {t.gameEntry.locked}
                                 </span>
+                            ) : (
+                                showInPlayBadge && (
+                                    <span
+                                        title={t.gameEntry.inPlayTooltip}
+                                        className="text-[10px] font-bold text-gold-400 tracking-widest uppercase bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/20 flex items-center gap-1 cursor-help"
+                                    >
+                                        <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />
+                                        {t.gameEntry.inPlay}
+                                    </span>
+                                )
                             )}
                         </div>
+
+                        {/* Inline lock-blocked message */}
+                        {lockBlockedMsg && (
+                            <div
+                                ref={lockBlockedRef}
+                                className="mt-1.5 flex items-center gap-1.5 text-[11px] text-amber-300 bg-amber-500/10 border border-amber-500/20 rounded px-2 py-1"
+                                role="alert"
+                            >
+                                <span className="flex-1">{lockBlockedMsg}</span>
+                                <Tooltip text={t.tooltips.gameCardCloseNotice}>
+                                    <button
+                                        type="button"
+                                        onClick={() => setLockBlockedMsg(null)}
+                                        aria-label={t.tooltips.gameCardCloseNotice}
+                                        className="text-amber-400 hover:text-amber-200 flex-shrink-0"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </Tooltip>
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <button
-                    type="button"
-                    onClick={() => onSwap(game.id)}
-                    disabled={game.isLocked}
-                    className="flex items-center gap-2 px-4 py-2 bg-dark-600/50 hover:bg-primary-500/10 text-gray-400 hover:text-primary-400 border border-dark-500 hover:border-primary-500/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-dark-600/50 disabled:hover:text-gray-400"
-                >
-                    <ArrowLeftRight size={14} />
-                    {t.gameEntry.swapSides}
-                </button>
+                <Tooltip text={game.isLocked ? t.tooltips.gameCardSwapDisabled : t.tooltips.gameCardSwap}>
+                    <button
+                        type="button"
+                        onClick={() => onSwap(game.id)}
+                        disabled={game.isLocked}
+                        className="flex items-center gap-2 px-4 py-2 bg-dark-600/50 hover:bg-primary-500/10 text-gray-400 hover:text-primary-400 border border-dark-500 hover:border-primary-500/30 rounded-lg transition-all text-xs font-bold uppercase tracking-wider disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-dark-600/50 disabled:hover:text-gray-400"
+                    >
+                        <ArrowLeftRight size={14} />
+                        {t.gameEntry.swapSides}
+                    </button>
+                </Tooltip>
             </div>
 
             {/* Two Column Layout for Teams */}

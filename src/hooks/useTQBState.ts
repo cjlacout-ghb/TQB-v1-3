@@ -3,8 +3,8 @@ import { Team, GameData, TeamStats, TieBreakMethod, ScreenNumber, GroupID } from
 import {
     calculateRankings,
     reorderGame,
-    isGameCompleteAndValid,
-    areAllGamesCompleteAndValid,
+    isGameFinalAndValid,
+    areAllGroupsValidForCalculation,
     checkContinueToGamesImpact,
     executeContinueToGamesLogic,
     ContinueToGamesImpact,
@@ -145,7 +145,7 @@ export function useTQBState(): TQBStateReturn {
                 } else {
                     // If prevGame was NOT locked, but nextGame attempts to set isLocked: true
                     if (nextGame.isLocked) {
-                        if (!isGameCompleteAndValid(nextGame)) {
+                        if (!isGameFinalAndValid(nextGame)) {
                             return { ...nextGame, isLocked: false };
                         }
                     }
@@ -155,7 +155,7 @@ export function useTQBState(): TQBStateReturn {
         });
     }, []);
 
-    const isCalculationStale = useMemo(() => !areAllGamesCompleteAndValid(games), [games]);
+    const isCalculationStale = useMemo(() => !areAllGroupsValidForCalculation(games, isMultiGroup), [games, isMultiGroup]);
 
     const recalculateRankingsInternal = useCallback((targetTeams: Team[], targetGames: GameData[], multiGroupFlag: boolean) => {
         if (multiGroupFlag) {
@@ -194,7 +194,7 @@ export function useTQBState(): TQBStateReturn {
                 if (g.isLocked) return g;
                 return { ...g, ...updates };
             });
-            if (areAllGamesCompleteAndValid(nextGames)) {
+            if (areAllGroupsValidForCalculation(nextGames, isMultiGroup)) {
                 recalculateRankingsInternal(teams, nextGames, isMultiGroup);
             }
             return nextGames;
@@ -208,18 +208,19 @@ export function useTQBState(): TQBStateReturn {
                 if (g.isLocked) {
                     return { ...g, isLocked: false };
                 } else {
-                    if (isGameCompleteAndValid(g)) {
+                    if (isGameFinalAndValid(g)) {
                         return { ...g, isLocked: true };
                     }
                     return g;
                 }
             });
-            if (areAllGamesCompleteAndValid(nextGames)) {
+            if (areAllGroupsValidForCalculation(nextGames, isMultiGroup)) {
                 recalculateRankingsInternal(teams, nextGames, isMultiGroup);
             }
             return nextGames;
         });
     }, [teams, isMultiGroup, recalculateRankingsInternal]);
+
 
 
     // Load state on mount — fully defensive, relies on loadState() from storage.ts

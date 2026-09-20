@@ -121,14 +121,30 @@ The system automatically generates all possible matchups in a round-robin format
 - 7 teams = 21 games
 - 8 teams = 28 games
 
-### Reordering Game Schedule (Move Up / Move Down)
-In the header of each game card (next to the #N number), use the **Move Up** (▲) and **Move Down** (▼) buttons to adjust the position of any match. This allows you to match the actual real-world playing schedule of your tournament. Match numbering #N updates dynamically, and your custom order is preserved across browser sessions and PDF exports.
+### Header Controls Order in Game Cards
+In the header of each game card, buttons and controls are arranged from left to right in the following standard order:
+1. **Move Up / Move Down Arrows** (▲/▼): adjust the game position in the schedule.
+2. **Game Number Badge** (#N): displays the ordinal game number.
+3. **Lock Button**: locks or unlocks match results.
+
+Followed by team names and status badges. Match numbering #N updates dynamically, and your custom order is preserved across browser sessions and PDF exports.
 
 ### Locking Completed Game Results
 Each game features a **lock** button in its header to lock results once completed:
-- **Read-only**: Locking a complete game disables its runs and innings fields to prevent accidental edits.
+- **Read-only and visual indicator**: Locking a complete game displays a crimson **"Locked"** badge (with a matching crimson lock button) and disables its runs and innings fields to prevent accidental edits.
+- **Strict rules**: Games can only be locked if they satisfy official end-of-game rules (e.g. Home team innings relative to score). Clicking a blocked lock button displays an interactive explanation of the exact reason (incomplete data or end-of-game rule mismatch).
 - **Fast Recalculation**: Allows editing only the ongoing game in play to simulate scenarios and obtain updated standings instantly without altering locked games.
 - **Unlocking**: Click the lock icon on a locked game to immediately unlock it for editing.
+
+### Assistive Tooltips
+All buttons and interactive icons across the app feature visual tooltips on hover or keyboard focus, providing clear descriptions of their functionality.
+
+### Game in Progress ("In Play")
+- **Snap-shot calculation**: Standing calculation can be run on-the-fly for an ongoing game, including mid-inning scores (e.g. 5th inning partials).
+- **Visual badge**: The golden **"In Play"** badge (with an animated pulsing dot) appears only when the group has exactly 1 unfixed game and at least 1 locked game.
+- **Group locking rule**: Per group, at **most 1 game in progress** (unfixed) is allowed. All other finished matches in that group must be **locked** as final games before clicking "Calculate Rankings". If more than 1 game is unfixed, clicking "Calculate Rankings" or "Export PDF" displays an itemized summary showing which games can be locked (✓) and which require data corrections (⚠).
+- **Flexible validation**: In-play games only require non-negative numeric scores and valid innings format. Strict end-of-game rules (winning home team innings, etc.) only apply to locked games.
+
 
 ### For Each Game, Enter:
 

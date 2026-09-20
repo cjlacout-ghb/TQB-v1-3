@@ -6,6 +6,7 @@ import { formatTQBValue, getTieBreakMethodText, calculateDisplayRanks, isGroupPr
 import StepIndicator from '../StepIndicator';
 import TQBExplanationTable from '../TQBExplanationTable';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 import React, { memo, useMemo } from 'react';
 
 interface ERTQBRankingsProps {
@@ -68,13 +69,15 @@ const ERTQBRankings = memo(function ERTQBRankings({
                 <div className="card-header">
                     <div className="flex items-center gap-4">
                         {onBack && (
-                            <button
-                                onClick={onBack}
-                                className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
-                                aria-label={t.common.back}
-                            >
-                                <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-                            </button>
+                            <Tooltip text={t.tooltips.ertqbBack}>
+                                <button
+                                    onClick={onBack}
+                                    className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
+                                    aria-label={t.tooltips.ertqbBack}
+                                >
+                                    <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                                </button>
+                            </Tooltip>
                         )}
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 
@@ -98,14 +101,15 @@ const ERTQBRankings = memo(function ERTQBRankings({
                     <div className="px-6 pt-2">
                         <div className="flex p-1 bg-dark-900/50 rounded-xl border border-dark-600">
                             {(['A', 'B'] as GroupID[]).map(gId => (
-                                <button
-                                    key={gId}
-                                    onClick={() => onSetActiveGroupId(gId)}
-                                    className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all
-                                        ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                >
-                                    {t.common.groupTab.replace('{gId}', gId)}
-                                </button>
+                                <Tooltip key={gId} text={t.tooltips.ertqbGroupTab.replace('{gId}', gId)} className="flex-1">
+                                    <button
+                                        onClick={() => onSetActiveGroupId(gId)}
+                                        className={`w-full py-2 text-sm font-medium rounded-lg transition-all
+                                            ${activeGroupId === gId ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                    >
+                                        {t.common.groupTab.replace('{gId}', gId)}
+                                    </button>
+                                </Tooltip>
                             ))}
                         </div>
                     </div>
@@ -312,20 +316,24 @@ const ERTQBRankings = memo(function ERTQBRankings({
 
                     {/* Actions */}
                     <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                        <button
-                            onClick={onExportPDF}
-                            className="flex-1 btn-primary py-4 shadow-xl shadow-primary-500/20"
-                        >
-                            <FileDown size={20} className="mr-1" />
-                            {t.common.exportPDF}
-                        </button>
-                        <button
-                            onClick={onStartNew}
-                            className="flex-1 btn-ghost border border-dark-500 hover:border-gray-400 py-4"
-                        >
-                            <RotateCcw size={20} className="mr-1" />
-                            {t.common.startNew}
-                        </button>
+                        <Tooltip text={t.tooltips.ertqbExportPDF} className="flex-1">
+                            <button
+                                onClick={onExportPDF}
+                                className="w-full btn-primary py-4 shadow-xl shadow-primary-500/20"
+                            >
+                                <FileDown size={20} className="mr-1" />
+                                {t.common.exportPDF}
+                            </button>
+                        </Tooltip>
+                        <Tooltip text={t.tooltips.ertqbBack} className="flex-1">
+                            <button
+                                onClick={onStartNew}
+                                className="w-full btn-ghost border border-dark-500 hover:border-gray-400 py-4"
+                            >
+                                <RotateCcw size={20} className="mr-1" />
+                                {t.common.startNew}
+                            </button>
+                        </Tooltip>
                     </div>
                 </div>
             </div>

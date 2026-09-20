@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 interface ConfirmResetModalProps {
     isOpen: boolean;
@@ -22,21 +23,25 @@ const ConfirmResetModal: React.FC<ConfirmResetModalProps> = ({ isOpen, onClose, 
                     {t.landing.confirmNew}
                 </h3>
                 <div className="flex flex-col gap-3">
-                    <button 
-                        onClick={() => {
-                            onConfirm();
-                            onClose();
-                        }}
-                        className="w-full py-4 bg-error-600 hover:bg-error-500 text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-error-600/20"
-                    >
-                        {t.landing.yesNew}
-                    </button>
-                    <button 
-                        onClick={onClose}
-                        className="w-full py-4 bg-dark-600 hover:bg-dark-500 text-white font-bold rounded-xl transition-all active:scale-[0.98]"
-                    >
-                        {t.landing.cancel}
-                    </button>
+                    <Tooltip text={t.tooltips.confirmResetSubmit} className="w-full">
+                        <button 
+                            onClick={() => {
+                                onConfirm();
+                                onClose();
+                            }}
+                            className="w-full py-4 bg-error-600 hover:bg-error-500 text-white font-bold rounded-xl transition-all active:scale-[0.98] shadow-lg shadow-error-600/20"
+                        >
+                            {t.landing.yesNew}
+                        </button>
+                    </Tooltip>
+                    <Tooltip text={t.tooltips.modalCancel} className="w-full">
+                        <button 
+                            onClick={onClose}
+                            className="w-full py-4 bg-dark-600 hover:bg-dark-500 text-white font-bold rounded-xl transition-all active:scale-[0.98]"
+                        >
+                            {t.landing.cancel}
+                        </button>
+                    </Tooltip>
                 </div>
             </div>
         </div>

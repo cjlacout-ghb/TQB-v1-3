@@ -5,6 +5,7 @@ import { Calculator, AlertCircle, Info, ArrowLeft } from 'lucide-react';
 import { GameData, GroupID } from '@/lib/types';
 import StepIndicator from '../StepIndicator';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { Tooltip } from '@/components/ui/Tooltip';
 
 interface EarnedRunsEntryProps {
     games: GameData[];
@@ -117,13 +118,15 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
             <div className="card">
                 <div className="card-header flex items-center gap-4">
                     {onBack && (
-                        <button
-                            onClick={onBack}
-                            className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
-                            aria-label={t.common.back}
-                        >
-                            <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
-                        </button>
+                        <Tooltip text={t.tooltips.erEntryBack}>
+                            <button
+                                onClick={onBack}
+                                className="group flex items-center justify-center w-10 h-10 rounded-full bg-dark-600 text-gray-400 hover:text-white hover:bg-dark-500 transition-all duration-200"
+                                aria-label={t.tooltips.erEntryBack}
+                            >
+                                <ArrowLeft size={20} className="group-hover:-translate-x-0.5 transition-transform" />
+                            </button>
+                        </Tooltip>
                     )}
                     <div>
                         <h2 className="text-2xl font-bold text-white">{t.earnedRuns.title}</h2>
@@ -141,20 +144,21 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
                                 const ready = isGroupFilled(gId);
                                 const isActive = activeGroupId === gId;
                                 return (
-                                    <button
-                                        key={gId}
-                                        onClick={() => { onSetActiveGroupId(gId); setErrors({}); }}
-                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
-                                            ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-                                    >
-                                        {t.common.groupTab.replace('{gId}', gId)}
-                                        <span
-                                            title={ready ? 'Completo' : 'Pendiente'}
-                                            className={`w-2 h-2 rounded-full transition-colors ${
-                                                ready ? 'bg-green-400' : 'bg-yellow-500/70'
-                                            }`}
-                                        />
-                                    </button>
+                                    <Tooltip key={gId} text={t.tooltips.erEntryGroupTab.replace('{gId}', gId)} className="flex-1">
+                                        <button
+                                            onClick={() => { onSetActiveGroupId(gId); setErrors({}); }}
+                                            className={`w-full flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-lg transition-all
+                                                ${isActive ? 'bg-primary-500 text-white shadow-lg' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            {t.common.groupTab.replace('{gId}', gId)}
+                                            <span
+                                                title={ready ? 'Completo' : 'Pendiente'}
+                                                className={`w-2 h-2 rounded-full transition-colors ${
+                                                    ready ? 'bg-green-400' : 'bg-yellow-500/70'
+                                                }`}
+                                            />
+                                        </button>
+                                    </Tooltip>
                                 );
                             })}
                         </div>
@@ -205,14 +209,16 @@ const EarnedRunsEntry = React.memo(function EarnedRunsEntry({
 
                     {/* Calculate Button */}
                     <div className="pt-4">
-                        <button
-                            onClick={handleCalculate}
-                            disabled={!allFieldsFilled}
-                            className="w-full btn-success py-4 text-xl shadow-xl shadow-success-500/20"
-                        >
-                            <Calculator size={22} className="mr-1" />
-                            {t.earnedRuns.calculateButton}
-                        </button>
+                        <Tooltip text={t.tooltips.erEntryCalculate} className="w-full">
+                            <button
+                                onClick={handleCalculate}
+                                disabled={!allFieldsFilled}
+                                className="w-full btn-success py-4 text-xl shadow-xl shadow-success-500/20"
+                            >
+                                <Calculator size={22} className="mr-1" />
+                                {t.earnedRuns.calculateButton}
+                            </button>
+                        </Tooltip>
                     </div>
                 </div>
             </div>

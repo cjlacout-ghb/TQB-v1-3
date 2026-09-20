@@ -18,8 +18,15 @@ import {
     isTournamentProvisional,
     getProvisionalGames,
     getProvisionalGameIds,
+    isGameIntegrityValid,
+    isGameFinalAndValid,
+    isGroupValidForCalculation,
+    areAllGroupsValidForCalculation,
+    shouldShowInPlayBadge,
 } from '@/lib/calculations';
+import { MAX_UNFIXED_GAMES_PER_GROUP } from '@/lib/constants';
 import { GameData, TeamStats, Team } from '@/lib/types';
+
 
 
 describe('Unit Tests: calculations.ts Engine', () => {
@@ -643,29 +650,25 @@ describe('Unit Tests: calculations.ts Engine', () => {
             expect(vis.showHelperText).toBe(false);
         });
 
-        it('returns showPanel: true, showHelperText: false when 1 to 4 unfixed games exist with >= 1 locked game', () => {
-            // 2 locked games, 2 unfixed games
+        it('returns showPanel: true, showHelperText: false when 1 unfixed game exists with >= 1 locked game', () => {
+            // 2 locked games, 1 unfixed game
             const games = [
                 mockGame('g1', 'A', true),
                 mockGame('g2', 'A', true),
                 mockGame('g3', 'A', false),
-                mockGame('g4', 'A', false),
             ];
             const vis = getLivePanelVisibility(games, 'A');
             expect(vis.showPanel).toBe(true);
             expect(vis.showHelperText).toBe(false);
-            expect(vis.unfixedGames.map(g => g.id)).toEqual(['g3', 'g4']);
+            expect(vis.unfixedGames.map(g => g.id)).toEqual(['g3']);
         });
 
-        it('returns showPanel: false, showHelperText: true when > 4 unfixed games exist with >= 1 locked game', () => {
-            // 1 locked game, 5 unfixed games
+        it('returns showPanel: false, showHelperText: true when > 1 unfixed games exist with >= 1 locked game', () => {
+            // 1 locked game, 2 unfixed games
             const games = [
                 mockGame('g1', 'A', true),
                 mockGame('g2', 'A', false),
                 mockGame('g3', 'A', false),
-                mockGame('g4', 'A', false),
-                mockGame('g5', 'A', false),
-                mockGame('g6', 'A', false),
             ];
             const vis = getLivePanelVisibility(games, 'A');
             expect(vis.showPanel).toBe(false);
@@ -800,7 +803,7 @@ describe('Unit Tests: calculations.ts Engine', () => {
             const games = [
                 mockGame('g1', 'A', false, true),
                 mockGame('g2', 'A', false, true),
-                mockGame('g3', 'A', false, false), // incomplete (no scores)
+                mockGame('g3', 'A', false, false),
             ];
             const ids = getProvisionalGameIds(games, true);
             expect(ids.has('g1')).toBe(true);
@@ -808,7 +811,194 @@ describe('Unit Tests: calculations.ts Engine', () => {
             expect(ids.has('g3')).toBe(false);
         });
     });
+
+
+    // Helper function for building valid mock games in FASE 9b/9c tests
+    const createMockGame = (id: string, groupId: 'A' | 'B', isLocked: boolean, runsA = 5, runsB = 2, innA = '7', innADef = '7', innB = '7', innBDef = '7'): GameData => ({
+        id,
+        groupId,
+        teamAId: 't1',
+        teamBId: 't2',
+        teamAName: 'Team 1',
+        teamBName: 'Team 2',
+        runsA,
+        runsB,
+        inningsABatting: innA,
+        inningsADefense: innADef,
+        inningsBBatting: innB,
+        inningsBDefense: innBDef,
+        isLocked,
+        earnedRunsA: 0,
+        earnedRunsB: 0,
+    });
+
+    // -------------------------------------------------------------
+    // 12. FASE 9b: In-Play Calculation Rules & Validation
+    // -------------------------------------------------------------
+    describe('12. FASE 9b: In-Play Calculation Rules & Validation', () => {
+        const mockValidGame = createMockGame;
+
+        it('verifies MAX_UNFIXED_GAMES_PER_GROUP constant is exported and equals 1', () => {
+            expect(MAX_UNFIXED_GAMES_PER_GROUP).toBe(1);
+        });
+
+        it('allows 0 unfixed games (all locked) as valid for calculation', () => {
+            const games = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', true),
+            ];
+            expect(isGroupValidForCalculation(games)).toBe(true);
+            expect(areAllGroupsValidForCalculation(games, false)).toBe(true);
+        });
+
+        it('allows exactly 1 unfixed game per group as valid for calculation', () => {
+            const games = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', false), // 1 unfixed game
+            ];
+            expect(isGroupValidForCalculation(games)).toBe(true);
+            expect(areAllGroupsValidForCalculation(games, false)).toBe(true);
+        });
+
+        it('blocks calculation when group has 2 or more unfixed games (> MAX_UNFIXED_GAMES_PER_GROUP)', () => {
+            const games = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', false), // unfixed 1
+                mockValidGame('g3', 'A', false), // unfixed 2
+            ];
+            expect(isGroupValidForCalculation(games)).toBe(false);
+            expect(areAllGroupsValidForCalculation(games, false)).toBe(false);
+        });
+
+        it('evaluates multi-group validity independently (both groups must have <= 1 unfixed game)', () => {
+            // Group A: 1 unfixed (valid) | Group B: 2 unfixed (invalid)
+            const games = [
+                mockValidGame('ga1', 'A', true),
+                mockValidGame('ga2', 'A', false),
+                mockValidGame('gb1', 'B', true),
+                mockValidGame('gb2', 'B', false),
+                mockValidGame('gb3', 'B', false),
+            ];
+
+            expect(isGroupValidForCalculation(games.filter(g => g.groupId === 'A'))).toBe(true);
+            expect(isGroupValidForCalculation(games.filter(g => g.groupId === 'B'))).toBe(false);
+            expect(areAllGroupsValidForCalculation(games, true)).toBe(false);
+        });
+
+        it('scenario (i): 5/5/5/5 with home winning 4-0 calculates correctly as an in-play game', () => {
+            // Home team B winning 4-0, both teams 5 innings at bat (5.0 = 15 outs).
+            // Under strict final rules, winning home team must have fewer innings at bat.
+            // But as an in-play game (!isLocked), it passes basic integrity and calculates TQB accurately.
+            const inPlayGame = mockValidGame('g1', 'A', false, 0, 4, '5', '5', '5', '5');
+
+            expect(isGameIntegrityValid(inPlayGame)).toBe(true);
+            expect(isGameFinalAndValid(inPlayGame)).toBe(false); // Fails strict final rule
+
+            const teams = [{ id: 't1', name: 'Team 1' }, { id: 't2', name: 'Team 2' }];
+            const rankings = calculateRankings(teams, [inPlayGame], false);
+
+            expect(rankings.rankings[0].id).toBe('t2'); // Team 2 (Home) won
+            expect(rankings.rankings[0].tqb).toBeCloseTo((4 / 5) - (0 / 5), 4); // +0.8000
+        });
+
+        it('scenario (ii): mid-inning partial (visitor 5 at-bat / 4 defense, home 4 at-bat / 5 defense)', () => {
+            // Visitor (t1) scored 2, Home (t2) scored 0. Visitor 5.0 inn at bat (15 outs), Home 4.0 inn at bat (12 outs).
+            const inPlayGame = mockValidGame('g1', 'A', false, 2, 0, '5', '4', '4', '5');
+
+            expect(isGameIntegrityValid(inPlayGame)).toBe(true);
+
+            const teams = [{ id: 't1', name: 'Team 1' }, { id: 't2', name: 'Team 2' }];
+            const result = calculateRankings(teams, [inPlayGame], false);
+
+            const statsT1 = result.rankings.find(r => r.id === 't1')!;
+            const statsT2 = result.rankings.find(r => r.id === 't2')!;
+
+            // T1: 2 runs / 5 inn at-bat (0.4) - 0 runs / 4 inn def (0.0) = +0.4000
+            expect(statsT1.tqb).toBeCloseTo(0.4, 4);
+            // T2: 0 runs / 4 inn at-bat (0.0) - 2 runs / 5 inn def (0.4) = -0.4000
+            expect(statsT2.tqb).toBeCloseTo(-0.4, 4);
+        });
+
+        it('scenario (iii): tie in mid-5th inning (2-2) does not grant win or loss to either team', () => {
+            const inPlayTie = mockValidGame('g1', 'A', false, 2, 2, '5', '5', '5', '5');
+
+            expect(isGameIntegrityValid(inPlayTie)).toBe(true);
+
+            const teams = [{ id: 't1', name: 'Team 1' }, { id: 't2', name: 'Team 2' }];
+            const result = calculateRankings(teams, [inPlayTie], false);
+
+            expect(result.rankings[0].wins).toBe(0);
+            expect(result.rankings[0].losses).toBe(0);
+            expect(result.rankings[1].wins).toBe(0);
+            expect(result.rankings[1].losses).toBe(0);
+        });
+
+        it('prevents locking a game if it fails strict final game rules', () => {
+            // Home winning with equal innings (5/5)
+            const invalidFinalGame = mockValidGame('g1', 'A', false, 0, 4, '5', '5', '5', '5');
+            expect(isGameFinalAndValid(invalidFinalGame)).toBe(false);
+
+            // Cannot be locked when invalid
+            const lockedAttempt: GameData = { ...invalidFinalGame, isLocked: true };
+            expect(isGameFinalAndValid(lockedAttempt)).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 13. FASE 9c — "En Juego" Badge Condition (4 States)
+    // -------------------------------------------------------------
+    describe('13. FASE 9c — In-Play Badge Rules', () => {
+        const mockValidGame = createMockGame;
+
+        it('State 1 (New load / 0 locked, 3 unfixed): should NOT show badge on any game', () => {
+            const groupGames = [
+                mockValidGame('g1', 'A', false),
+                mockValidGame('g2', 'A', false),
+                mockValidGame('g3', 'A', false),
+            ];
+            expect(shouldShowInPlayBadge(groupGames, 'g1')).toBe(false);
+            expect(shouldShowInPlayBadge(groupGames, 'g2')).toBe(false);
+            expect(shouldShowInPlayBadge(groupGames, 'g3')).toBe(false);
+        });
+
+        it('State 2 (2 or more unfixed / 1 locked, 2 unfixed): should NOT show badge on any game', () => {
+            const groupGames = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', false),
+                mockValidGame('g3', 'A', false),
+            ];
+            expect(shouldShowInPlayBadge(groupGames, 'g1')).toBe(false); // Locked game -> false
+            expect(shouldShowInPlayBadge(groupGames, 'g2')).toBe(false); // 2 unfixed -> false
+            expect(shouldShowInPlayBadge(groupGames, 'g3')).toBe(false);
+        });
+
+        it('State 3 (Exactly 1 unfixed and at least 1 locked / 2 locked, 1 unfixed): SHOULD show badge on the single unfixed game', () => {
+            const groupGames = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', true),
+                mockValidGame('g3', 'A', false), // 1 unfixed game
+            ];
+            expect(shouldShowInPlayBadge(groupGames, 'g1')).toBe(false); // Locked -> false
+            expect(shouldShowInPlayBadge(groupGames, 'g2')).toBe(false); // Locked -> false
+            expect(shouldShowInPlayBadge(groupGames, 'g3')).toBe(true);  // Single unfixed + 2 locked -> TRUE
+        });
+
+        it('State 4 (All locked / 3 locked, 0 unfixed): should NOT show badge on any game', () => {
+            const groupGames = [
+                mockValidGame('g1', 'A', true),
+                mockValidGame('g2', 'A', true),
+                mockValidGame('g3', 'A', true),
+            ];
+            expect(shouldShowInPlayBadge(groupGames, 'g1')).toBe(false);
+            expect(shouldShowInPlayBadge(groupGames, 'g2')).toBe(false);
+            expect(shouldShowInPlayBadge(groupGames, 'g3')).toBe(false);
+        });
+    });
 });
+
+
+
+
 
 
 

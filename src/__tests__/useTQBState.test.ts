@@ -4,6 +4,7 @@ import { renderHook, act } from '@testing-library/react';
 import { useTQBState } from '@/hooks/useTQBState';
 import { Team, GameData, GroupID } from '@/lib/types';
 import { saveState } from '@/lib/storage';
+import { translations } from '@/data/translations';
 
 // Helper functions for creating test data
 function createMockTeams(count: number, groupId: GroupID = 'A'): Team[] {
@@ -1318,6 +1319,9 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             const { result } = renderHook(() => useTQBState());
             const teams = createMockTeams(3, 'A');
             const games = createClearWinnerGames(teams, 'A');
+            games[0].isLocked = true;
+            games[1].isLocked = true;
+            games[2].isLocked = false;
 
             act(() => {
                 result.current.actions.setTeams(teams);
@@ -1339,7 +1343,7 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             expect(result.current.state.rankings).not.toEqual(initialRankings);
             // games in state must be updated
             expect(result.current.state.games.find(g => g.id === 'g-a-3')?.runsA).toBe(20);
-            // isCalculationStale should be false because all games are complete & valid
+            // isCalculationStale should be false because group has 1 unfixed game and remaining games locked
             expect(result.current.state.isCalculationStale).toBe(false);
         });
 
@@ -1369,6 +1373,9 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             const { result } = renderHook(() => useTQBState());
             const teams = createMockTeams(3, 'A');
             const games = createClearWinnerGames(teams, 'A');
+            games[0].isLocked = true;
+            games[1].isLocked = true;
+            games[2].isLocked = false;
 
             act(() => {
                 result.current.actions.setTeams(teams);
@@ -1393,6 +1400,9 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             const { result } = renderHook(() => useTQBState());
             const teams = createMockTeams(3, 'A');
             const circleTieGames = createCircleTieGames(teams, 'A'); // Circle tie -> needsERTQB true
+            circleTieGames[0].isLocked = true;
+            circleTieGames[1].isLocked = true;
+            circleTieGames[2].isLocked = false;
 
             act(() => {
                 result.current.actions.setTeams(teams);
@@ -1405,19 +1415,7 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
             // Turn games into clear winner games via live update
             const clearWinnerGames = createClearWinnerGames(teams, 'A');
             act(() => {
-                result.current.actions.handleLiveGameUpdate(clearWinnerGames[0].id, {
-                    runsA: clearWinnerGames[0].runsA,
-                    runsB: clearWinnerGames[0].runsB,
-                });
-            });
-            act(() => {
-                result.current.actions.handleLiveGameUpdate(clearWinnerGames[1].id, {
-                    runsA: clearWinnerGames[1].runsA,
-                    runsB: clearWinnerGames[1].runsB,
-                });
-            });
-            act(() => {
-                result.current.actions.handleLiveGameUpdate(clearWinnerGames[2].id, {
+                result.current.actions.handleLiveGameUpdate('g-a-3', {
                     runsA: clearWinnerGames[2].runsA,
                     runsB: clearWinnerGames[2].runsB,
                 });
@@ -1425,9 +1423,120 @@ describe('Unit Tests: useTQBState Hook (State Management & Multi-Group Consisten
 
             expect(result.current.state.needsERTQB).toBe(false);
         });
+    });
 
+    // -------------------------------------------------------------
+    // FASE 9b: In-Play Live Update & Lock Hook Handlers
+    // -------------------------------------------------------------
+    describe('FASE 9b: In-Play Live Update & Lock Hook Handlers', () => {
+        it('allows live calculation when exactly 1 game is unfixed and remaining games are locked', () => {
+            const { result } = renderHook(() => useTQBState());
+
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            // Lock first 2 games, leave 3rd game unfixed
+            games[0].isLocked = true;
+            games[1].isLocked = true;
+            games[2].isLocked = false;
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+            });
+
+            // Initially calculated
+            act(() => {
+                result.current.actions.handleCalculateTQB();
+            });
+
+            expect(result.current.state.isCalculationStale).toBe(false);
+
+            // Update live scores on the unfixed 3rd game
+            act(() => {
+                result.current.actions.handleLiveGameUpdate(games[2].id, {
+                    runsA: 10,
+                    runsB: 0,
+                });
+            });
+
+            // Live update triggered recalculation and is not stale
+            expect(result.current.state.isCalculationStale).toBe(false);
+            expect(result.current.state.rankings.length).toBe(3);
+        });
+
+        it('marks calculation stale when 2 or more games are unfixed', () => {
+            const { result } = renderHook(() => useTQBState());
+
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            // 1 locked game, 2 unfixed games
+            games[0].isLocked = true;
+            games[1].isLocked = false;
+            games[2].isLocked = false;
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+            });
+
+            expect(result.current.state.isCalculationStale).toBe(true);
+        });
+
+        it('prevents handleToggleLockGame from locking a game that fails strict final rules', () => {
+            const { result } = renderHook(() => useTQBState());
+
+            const teams = createMockTeams(3, 'A');
+            const games = createClearWinnerGames(teams, 'A');
+
+            // Create invalid final game (Home winning 4-0 with equal innings 5/5)
+            games[0].runsA = 0;
+            games[0].runsB = 4;
+            games[0].inningsABatting = '5';
+            games[0].inningsADefense = '5';
+            games[0].inningsBBatting = '5';
+            games[0].inningsBDefense = '5';
+            games[0].isLocked = false;
+
+            act(() => {
+                result.current.actions.setTeams(teams);
+                result.current.actions.setGames(games);
+            });
+
+            // Attempt to toggle lock on invalid game
+            act(() => {
+                result.current.actions.handleToggleLockGame(games[0].id);
+            });
+
+            // Lock attempt should be rejected and game remains unlocked
+            expect(result.current.state.games[0].isLocked).toBe(false);
+        });
+    });
+
+    // -------------------------------------------------------------
+    // 15. Tooltips Translation Parity & Integrity
+    // -------------------------------------------------------------
+    describe('15. Tooltips Translation Parity & Integrity', () => {
+        it('has complete parity for all tooltip keys between English and Spanish', () => {
+            const enKeys = Object.keys(translations.en.tooltips).sort();
+            const esKeys = Object.keys(translations.es.tooltips).sort();
+
+            expect(enKeys).toEqual(esKeys);
+            expect(enKeys.length).toBeGreaterThan(30);
+
+            enKeys.forEach(key => {
+                const enVal = translations.en.tooltips[key as keyof typeof translations.en.tooltips];
+                const esVal = translations.es.tooltips[key as keyof typeof translations.es.tooltips];
+                expect(typeof enVal).toBe('string');
+                expect(typeof esVal).toBe('string');
+                expect(enVal.trim().length).toBeGreaterThan(0);
+                expect(esVal.trim().length).toBeGreaterThan(0);
+            });
+        });
     });
 });
+
 
 
 

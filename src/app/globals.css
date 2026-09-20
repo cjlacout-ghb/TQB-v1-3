@@ -24,6 +24,10 @@
   --warning-light: #FBBF24;
   --error: #EF4444;
   --error-light: #F87171;
+  --crimson: #E11D48;
+  --crimson-light: #FB7185;
+  --gold: #EAB308;
+  --gold-light: #FACC15;
   --bg-dark: #0F0F23;
   --bg-card: #1A1A2E;
   --border-color: #374151;
@@ -137,6 +141,14 @@ body {
 
   .badge-error {
     @apply badge bg-error-500/20 text-error-400 border border-error-500/30;
+  }
+
+  .badge-crimson {
+    @apply badge bg-crimson-500/20 text-crimson-400 border border-crimson-500/30;
+  }
+
+  .badge-gold {
+    @apply badge bg-gold-500/20 text-gold-400 border border-gold-500/30;
   }
 
   /* Stats display */

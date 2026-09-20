@@ -47,6 +47,18 @@ export default {
                     600: "#2D2D4A",
                     500: "#374151",
                 },
+                crimson: {
+                    DEFAULT: "#E11D48",
+                    400: "#FB7185",
+                    500: "#E11D48",
+                    600: "#BE123C",
+                },
+                gold: {
+                    DEFAULT: "#F59E0B",
+                    400: "#FACC15",
+                    500: "#EAB308",
+                    600: "#CA8A04",
+                },
             },
             fontFamily: {
                 sans: ["Lato", "Inter", "system-ui", "sans-serif"],

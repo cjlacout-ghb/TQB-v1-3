@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Send, MessageSquare } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import Tooltip from '@/components/ui/Tooltip';
 
 interface FeedbackModalProps {
     isOpen: boolean;
@@ -133,13 +134,15 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                                 <MessageSquare className="text-primary-400" size={24} />
                                 {t.feedback.title}
                             </h2>
-                            <button
-                                onClick={onClose}
-                                className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
-                                aria-label="Close modal"
-                            >
-                                <X size={20} />
-                            </button>
+                            <Tooltip text={t.tooltips.modalClose}>
+                                <button
+                                    onClick={onClose}
+                                    className="p-2 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+                                    aria-label="Close modal"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </Tooltip>
                         </div>
 
                         {/* Body */}
@@ -152,12 +155,14 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                                     <h3 className="text-xl font-bold text-white mb-2">
                                         {t.feedback.success}
                                     </h3>
-                                    <button
-                                        onClick={onClose}
-                                        className="btn-ghost mt-4"
-                                    >
-                                        {t.common.back}
-                                    </button>
+                                    <Tooltip text={t.tooltips.modalClose}>
+                                        <button
+                                            onClick={onClose}
+                                            className="btn-ghost mt-4"
+                                        >
+                                            {t.common.back}
+                                        </button>
+                                    </Tooltip>
                                 </div>
                             ) : (
                                 <>
@@ -249,31 +254,35 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                                         )}
 
                                         <div className="flex gap-3 pt-2">
-                                            <button
-                                                type="button"
-                                                onClick={onClose}
-                                                className="flex-1 btn-ghost"
-                                                disabled={isSubmitting}
-                                            >
-                                                {t.feedback.cancel}
-                                            </button>
-                                            <button
-                                                type="submit"
-                                                disabled={isSubmitting}
-                                                className="flex-[2] btn-primary"
-                                            >
-                                                {isSubmitting ? (
-                                                    <span className="flex items-center gap-2">
-                                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                                        {t.feedback.sending}
-                                                    </span>
-                                                ) : (
-                                                    <span className="flex items-center gap-2">
-                                                        <Send size={18} />
-                                                        {t.feedback.sendButton}
-                                                    </span>
-                                                )}
-                                            </button>
+                                            <Tooltip text={t.tooltips.modalCancel} className="flex-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={onClose}
+                                                    className="w-full btn-ghost"
+                                                    disabled={isSubmitting}
+                                                >
+                                                    {t.feedback.cancel}
+                                                </button>
+                                            </Tooltip>
+                                            <Tooltip text={t.tooltips.feedbackSubmit} className="flex-[2]">
+                                                <button
+                                                    type="submit"
+                                                    disabled={isSubmitting}
+                                                    className="w-full btn-primary"
+                                                >
+                                                    {isSubmitting ? (
+                                                        <span className="flex items-center gap-2 justify-center">
+                                                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                                                            {t.feedback.sending}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="flex items-center gap-2 justify-center">
+                                                            <Send size={18} />
+                                                            {t.feedback.sendButton}
+                                                        </span>
+                                                    )}
+                                                </button>
+                                            </Tooltip>
                                         </div>
                                     </form>
                                 </>
