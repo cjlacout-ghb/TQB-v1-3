@@ -22,10 +22,10 @@ export default function Header({ onOpenManual, onGoHome }: HeaderProps) {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo & Title - Clickable */}
-                    <Tooltip text={t.tooltips.headerHomeReset}>
+                    <Tooltip text={t.tooltips.headerHomeReset} className="min-w-0 flex-1">
                         <button 
                             onClick={onGoHome}
-                            className="flex items-center gap-3 hover:opacity-80 transition-all duration-200 group text-left"
+                            className="flex items-center gap-3 hover:opacity-80 transition-all duration-200 group text-left min-w-0"
                             aria-label={t.tooltips.headerHomeReset}
                         >
                             <Image
@@ -34,10 +34,10 @@ export default function Header({ onOpenManual, onGoHome }: HeaderProps) {
                                 width={40}
                                 height={40}
                                 priority
-                                className="rounded-xl object-contain shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform duration-200"
+                                className="rounded-xl object-contain shadow-lg shadow-primary-500/20 group-hover:scale-105 transition-transform duration-200 flex-shrink-0"
                             />
-                            <div>
-                                <h1 className="text-lg font-bold text-white tracking-tight group-hover:text-primary-400 transition-colors duration-200">
+                            <div className="min-w-0">
+                                <h1 className="text-base sm:text-lg font-bold text-white tracking-tight group-hover:text-primary-400 transition-colors duration-200 break-words min-w-0">
                                     {t.common.title}
                                 </h1>
                             </div>

@@ -6,6 +6,16 @@ export default defineConfig({
         globals: true,
         environment: 'node',
     },
+    esbuild: {
+        jsx: 'automatic',
+        jsxImportSource: 'react',
+    },
+    oxc: {
+        jsx: {
+            runtime: 'automatic',
+            importSource: 'react',
+        },
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'),

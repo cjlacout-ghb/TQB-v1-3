@@ -111,7 +111,7 @@ export const GameCard = memo(function GameCard({
         <div className={`game-card animate-slide-up transition-all ${game.isLocked ? 'border-primary-500/40 bg-dark-800/90 shadow-md shadow-primary-500/5' : ''}`}>
             {/* Game Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-dark-600">
-                <div className="flex items-center gap-3">
+                <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
                     {/* 1. Reorder buttons */}
                     {showReorderButtons && onMoveUp && onMoveDown && (
                         <div className="flex flex-col gap-1 flex-shrink-0">
@@ -152,7 +152,7 @@ export const GameCard = memo(function GameCard({
                             onClick={handleLockClick}
                             aria-label={lockTitle}
                             aria-disabled={!game.isLocked && !canLock}
-                            className={`flex items-center justify-center w-8 h-11 rounded-lg border transition-all ${
+                            className={`flex items-center justify-center w-8 h-11 rounded-lg border transition-all flex-shrink-0 ${
                                 game.isLocked
                                     ? 'bg-crimson-500/20 text-crimson-400 border-crimson-500/40 hover:bg-crimson-500/30 shadow-sm'
                                     : canLock
@@ -165,22 +165,22 @@ export const GameCard = memo(function GameCard({
                     </Tooltip>
 
                     {/* 4. Team names & status badges */}
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-bold text-white tracking-tight">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                            <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight break-words min-w-0">
                                 {game.teamAName}
-                                <span className="mx-2 text-gray-600 font-light">vs</span>
+                                <span className="mx-1.5 sm:mx-2 text-gray-600 font-light inline-block">vs</span>
                                 {game.teamBName}
                             </h3>
                             {game.isLocked ? (
-                                <span className="text-[10px] font-bold text-crimson-400 tracking-widest uppercase bg-crimson-500/10 px-2 py-0.5 rounded border border-crimson-500/20">
+                                <span className="text-[10px] font-bold text-crimson-400 tracking-widest uppercase bg-crimson-500/10 px-2 py-0.5 rounded border border-crimson-500/20 flex-shrink-0 inline-flex items-center">
                                     {t.gameEntry.locked}
                                 </span>
                             ) : (
                                 showInPlayBadge && (
                                     <span
                                         title={t.gameEntry.inPlayTooltip}
-                                        className="text-[10px] font-bold text-gold-400 tracking-widest uppercase bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/20 flex items-center gap-1 cursor-help"
+                                        className="text-[10px] font-bold text-gold-400 tracking-widest uppercase bg-gold-500/10 px-2 py-0.5 rounded border border-gold-500/20 inline-flex items-center gap-1 cursor-help flex-shrink-0"
                                     >
                                         <span className="w-1.5 h-1.5 rounded-full bg-gold-400 animate-pulse" />
                                         {t.gameEntry.inPlay}
@@ -212,7 +212,7 @@ export const GameCard = memo(function GameCard({
                     </div>
                 </div>
 
-                <Tooltip text={game.isLocked ? t.tooltips.gameCardSwapDisabled : t.tooltips.gameCardSwap}>
+                <Tooltip text={game.isLocked ? t.tooltips.gameCardSwapDisabled : t.tooltips.gameCardSwap} className="self-start sm:self-center flex-shrink-0">
                     <button
                         type="button"
                         onClick={() => onSwap(game.id)}
@@ -229,12 +229,12 @@ export const GameCard = memo(function GameCard({
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Team A - Visitor */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-primary-500" />
-                            <span className="font-semibold text-white">{game.teamAName}</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-3 h-3 rounded-full bg-primary-500 flex-shrink-0" />
+                            <span className="font-semibold text-white break-words min-w-0">{game.teamAName}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">
+                        <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20 flex-shrink-0">
                             {t.gameEntry.visitor}
                         </span>
                     </div>
@@ -289,12 +289,12 @@ export const GameCard = memo(function GameCard({
 
                 {/* Team B - Home */}
                 <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-success-500" />
-                            <span className="font-semibold text-white">{game.teamBName}</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex items-center gap-2 min-w-0 flex-1">
+                            <div className="w-3 h-3 rounded-full bg-success-500 flex-shrink-0" />
+                            <span className="font-semibold text-white break-words min-w-0">{game.teamBName}</span>
                         </div>
-                        <span className="text-[10px] font-bold text-success-400 tracking-widest uppercase bg-success-500/10 px-2 py-0.5 rounded border border-success-500/20">
+                        <span className="text-[10px] font-bold text-success-400 tracking-widest uppercase bg-success-500/10 px-2 py-0.5 rounded border border-success-500/20 flex-shrink-0">
                             {t.gameEntry.home}
                         </span>
                     </div>

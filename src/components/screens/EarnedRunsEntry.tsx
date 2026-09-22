@@ -250,23 +250,22 @@ const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, er
         <div className="game-card animate-slide-up">
             {/* Game Header */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 pb-4 border-b border-dark-600">
-                <div className="flex items-center gap-4">
-                    <span className="flex items-center justify-center w-12 h-12 bg-dark-700/50 rounded-xl text-sm font-mono text-primary-400 border border-dark-500 shadow-inner">
+                <div className="flex items-start sm:items-center gap-4 min-w-0 flex-1">
+                    <span className="flex items-center justify-center w-12 h-12 bg-dark-700/50 rounded-xl text-sm font-mono text-primary-400 border border-dark-500 shadow-inner flex-shrink-0">
                         #{gameNumber}
                     </span>
-                    <div>
-                        <div className="flex items-center gap-3">
-                            <h3 className="text-xl font-bold text-white tracking-tight">
+                    <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-lg sm:text-xl font-bold text-white tracking-tight break-words min-w-0">
                                 {game.teamAName}
-                                <span className="mx-2 text-gray-600 font-light">vs</span>
+                                <span className="mx-1.5 sm:mx-2 text-gray-600 font-light inline-block">vs</span>
                                 {game.teamBName}
                             </h3>
                         </div>
-
                     </div>
                 </div>
 
-                <div className="px-4 py-2 bg-dark-600/50 border border-dark-500 rounded-lg text-sm font-mono text-white flex items-center gap-2">
+                <div className="px-4 py-2 bg-dark-600/50 border border-dark-500 rounded-lg text-sm font-mono text-white flex items-center gap-2 self-start sm:self-center flex-shrink-0">
                     <span className="text-gray-500 text-[10px] uppercase font-bold tracking-wider">{t.common.final}:</span>
                     <span className="text-white">{game.runsA}</span>
                     <span className="text-gray-600">-</span>
@@ -278,13 +277,13 @@ const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, er
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Team A - Visitor */}
                 <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-primary-500" />
-                            <span className="font-semibold text-white">{game.teamAName}</span>
-                            <span className="text-sm text-gray-500">(Total: {game.runsA} {t.gameEntry.runsScored})</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
+                            <div className="w-3 h-3 rounded-full bg-primary-500 flex-shrink-0" />
+                            <span className="font-semibold text-white break-words min-w-0">{game.teamAName}</span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">(Total: {game.runsA} {t.gameEntry.runsScored})</span>
                         </div>
-                        <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20">
+                        <span className="text-[10px] font-bold text-primary-400 tracking-widest uppercase bg-primary-500/10 px-2 py-0.5 rounded border border-primary-500/20 flex-shrink-0">
                             {t.gameEntry.visitor}
                         </span>
                     </div>
@@ -308,13 +307,13 @@ const EarnedRunsCard = React.memo(function EarnedRunsCard({ game, gameNumber, er
 
                 {/* Team B - Home */}
                 <div>
-                    <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full bg-success-500" />
-                            <span className="font-semibold text-white">{game.teamBName}</span>
-                            <span className="text-sm text-gray-500">(Total: {game.runsB} {t.gameEntry.runsScored})</span>
+                    <div className="flex items-center justify-between gap-2 mb-3">
+                        <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 min-w-0 flex-1">
+                            <div className="w-3 h-3 rounded-full bg-success-500 flex-shrink-0" />
+                            <span className="font-semibold text-white break-words min-w-0">{game.teamBName}</span>
+                            <span className="text-xs text-gray-500 flex-shrink-0">(Total: {game.runsB} {t.gameEntry.runsScored})</span>
                         </div>
-                        <span className="text-[10px] font-bold text-success-400 tracking-widest uppercase bg-success-500/10 px-2 py-0.5 rounded border border-success-500/20">
+                        <span className="text-[10px] font-bold text-success-400 tracking-widest uppercase bg-success-500/10 px-2 py-0.5 rounded border border-success-500/20 flex-shrink-0">
                             {t.gameEntry.home}
                         </span>
                     </div>
