@@ -207,7 +207,7 @@ export const translations = {
                 hidePanel: "Hide game in progress",
                 showPanel: "Show game in progress"
             },
-            provisionalBanner: "⚠ Provisional standings — includes unconfirmed results. Final positions may change."
+            provisionalBanner: "Provisional standings — includes unconfirmed results. Final positions may change."
         },
         earnedRuns: {
             title: "Enter Earned Runs",
@@ -261,10 +261,10 @@ export const translations = {
             teamB: "Team B",
             runs: "Runs",
             filename: "WBSC_Standings_Report",
-            provisionalHeader: "⚠ PROVISIONAL — UNCONFIRMED RESULTS",
+            provisionalHeader: "PROVISIONAL — UNCONFIRMED RESULTS",
             provisionalFooter: "PROVISIONAL DOCUMENT · Results not yet confirmed",
-            provisionalGameMark: "†",
-            provisionalGameLegend: "† Unconfirmed result"
+            provisionalGameMark: "*",
+            provisionalGameLegend: "* Unconfirmed result"
         },
         tooltips: {
             headerHomeReset: "Go to home page and reset application",
@@ -529,7 +529,7 @@ export const translations = {
                 hidePanel: "Ocultar partido en juego",
                 showPanel: "Mostrar partido en juego"
             },
-            provisionalBanner: "⚠ Posiciones provisionales — incluye resultados sin confirmar. La clasificación final puede cambiar."
+            provisionalBanner: "Posiciones provisionales — incluye resultados sin confirmar. La clasificación final puede cambiar."
         },
         earnedRuns: {
             title: "Ingresar Carreras Limpias",
@@ -583,10 +583,10 @@ export const translations = {
             teamB: "Equipo B",
             runs: "Carreras",
             filename: "WBSC_Reporte_de_Posiciones",
-            provisionalHeader: "⚠ PROVISIONAL — RESULTADOS SIN CONFIRMAR",
+            provisionalHeader: "PROVISIONAL — RESULTADOS SIN CONFIRMAR",
             provisionalFooter: "DOCUMENTO PROVISIONAL · Resultados aún no confirmados",
-            provisionalGameMark: "†",
-            provisionalGameLegend: "† Resultado sin confirmar"
+            provisionalGameMark: "*",
+            provisionalGameLegend: "* Resultado sin confirmar"
         },
         tooltips: {
             headerHomeReset: "Ir al inicio y reiniciar aplicación",

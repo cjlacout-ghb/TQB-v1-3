@@ -270,8 +270,8 @@ Un grupo se clasifica como **Provisional** cuando contiene al menos 1 partido fi
 
 La pantalla indicará cómo se resolvieron los empates:
 - "Empates resueltos usando Resultados Directos"
-- "Empates resueltos usando TQB (Balance de Calidad del Equipo)"
-- "Empates resueltos usando ER-TQB (Balance de Calidad por Carreras Limpias)"
+- "Empates resueltos usando TQB"
+- "Empates resueltos usando ER-TQB"
 - "Se requiere revisión manual para Promedio de Bateo o Lanzamiento de Moneda"
     `,
     },
@@ -290,7 +290,7 @@ En la pantalla de clasificaciones finales, haga clic en **"Exportar a PDF"** par
 4. Haga clic en **"Generar PDF"**
 
 **Controles de Exportación:**
-- **Casilla de Documento Provisional**: Se preselecciona automáticamente si algún grupo es provisional. El usuario puede marcarla o desmarcarla manualmente para esa exportación específica. Al activarse, el PDF incluye encabezados y pies destacados en todas las páginas e identifica los partidos sin fijar con un símbolo (†) y una leyenda explicativa.
+- **Casilla de Documento Provisional**: Se preselecciona automáticamente si algún grupo es provisional. El usuario puede marcarla o desmarcarla manualmente para esa exportación específica. Al activarse, el PDF incluye encabezados y pies destacados en todas las páginas e identifica los partidos sin fijar con un asterisco (*) a la izquierda del equipo y una leyenda explicativa.
 - **Bloqueo por Cálculo Desactualizado**: Si hay partidos con datos incompletos o inválidos, el sistema bloquea automáticamente la generación del PDF con un mensaje claro para evitar la impresión de tablas obsoletas o inconsistentes.
 
 **El PDF incluye:**

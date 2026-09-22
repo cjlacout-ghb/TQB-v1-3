@@ -476,8 +476,8 @@ export function getTieBreakMethodText(method: TieBreakMethod, lang: 'en' | 'es' 
         es: {
             WIN_LOSS: '1) Clasificación determinada por Récord de Victorias-Derrotas',
             HEAD_TO_HEAD: '1) Empates resueltos usando Resultados Directos',
-            TQB: '2) Empates resueltos usando TQB (Balance de Calidad del Equipo)',
-            ER_TQB: '3) Empates resueltos usando ER-TQB (Balance de Calidad por Carreras Limpias)',
+            TQB: '2) Empates resueltos usando TQB',
+            ER_TQB: '3) Empates resueltos usando ER-TQB',
             UNRESOLVED: 'ER-TQB no resolvió todos los empates. Se requiere revisión manual para 4) Promedio de Bateo o 5) Lanzamiento de Moneda.',
         },
     };

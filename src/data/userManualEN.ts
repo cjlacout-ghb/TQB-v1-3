@@ -290,7 +290,7 @@ On the final rankings screen, click **"Export to PDF"** to generate a printable 
 4. Click **"Generate PDF"**
 
 **Export Controls:**
-- **Provisional Document Checkbox**: Pre-selected automatically if any group is provisional. Can be toggled manually for a single export gesture without altering saved data. When enabled, the PDF displays prominent warning banners on all pages and marks unconfirmed games with a symbol (†) and legend.
+- **Provisional Document Checkbox**: Pre-selected automatically if any group is provisional. Can be toggled manually for a single export gesture without altering saved data. When enabled, the PDF displays prominent warning banners on all pages and marks unconfirmed games with an asterisk (*) to the left of Team A and a legend.
 - **Outdated Calculation Blocker**: If any game results are incomplete or invalid, PDF export is automatically blocked with a warning message to prevent printing broken or outdated standings.
 
 **The PDF includes:**

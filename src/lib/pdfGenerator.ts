@@ -215,13 +215,13 @@ function renderGroupContent(
     yPos += 8;
 
     const provGameIds = getProvisionalGameIds(games, !!isProvisional);
-    const provMark = t.pdf.provisionalGameMark || '†';
+    const provMark = t.pdf.provisionalGameMark || '*';
 
     autoTable(doc, {
         startY: yPos,
         head: [[t.pdf.teamA, t.pdf.runs, '', t.pdf.runs, t.pdf.teamB]],
         body: games.map(game => [
-            provGameIds.has(game.id) ? `${game.teamAName} ${provMark}` : game.teamAName,
+            provGameIds.has(game.id) ? `${provMark} ${game.teamAName}` : game.teamAName,
             `${game.runsA ?? 0}`,
             'vs',
             `${game.runsB ?? 0}`,
